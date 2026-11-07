@@ -18,7 +18,7 @@ def _in_repo(d: dict) -> bool:
 
 CATEGORIES = [
     ("Base geography", ["ocgis_parcels", "ocgis_city_boundaries", "ocgis_unincorporated", "census_zcta",
-                        "census_tracts", "ocgis_building_footprints", "overture_buildings", "ocgis_centerlines",
+                        "census_tracts", "ocgis_building_footprints", "overture_buildings", "ocgis_centerlines", "ocgis_address_points",
                         "scag_land_use"]),
     ("Housing policy", ["scag_he_sites", "scag_he_rezone", "hcd_compliance", "hcd_sb35", "apr_table_h",
                         "hcd_sla_notices", "dgs_state_land", "osm_worship", "oc_tax_defaulted"]),
@@ -57,6 +57,7 @@ SPECIAL_USE = {
     "census_tracts": "Gives each parcel a tract GEOID for the ACS, LODES and Opportunity Zone joins.",
     "ocgis_building_footprints": "Footprint area inside the parcel ÷ lot area = building coverage; no footprint = vacant.",
     "overture_buildings": "Alternative footprint source (set FOOTPRINT_SOURCE=overture_buildings).",
+    "ocgis_address_points": "Fills blank parcel addresses from the address point inside the parcel, else the nearest within 150 ft.",
     "ocgis_centerlines": "Frontage = parcel edge within 60 ft of a centerline.",
     "lodes_wac": "Block-level jobs (C000) summed to tract to give `tract_jobs`.",
     "hud_income_limits": "Not joined yet. Reserved for expressing tract income as % of AMI.",

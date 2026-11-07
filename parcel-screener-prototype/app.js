@@ -587,13 +587,35 @@
       '</ul>' : '') +
     '</div>';
   }
+  // Half-circle dial for a 0-100 score: grey track, colored arc to the value, tick at each band edge, needle.
+  function dialHtml(v) {
+    var cx = 100, cy = 100, r = 80;
+    function pt(x, rad) { var a = Math.PI * (1 - x / 100); return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)]; }
+    function arc(from, to) {
+      var a = pt(from, r), b = pt(to, r);
+      return 'M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + ' A' + r + ' ' + r + ' 0 0 1 ' + b[0].toFixed(1) + ' ' + b[1].toFixed(1);
+    }
+    var col = ringColor(v), tip = pt(v, 64);
+    var ticks = [34, 67].map(function (t) {
+      var a = pt(t, r - 12), b = pt(t, r + 8);
+      return '<line x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '" stroke="#8A93A5" stroke-width="2"/>';
+    }).join('');
+    return '<svg class="dial" viewBox="0 0 200 116" role="img" aria-label="Opportunity ' + v + ' of 100, ' + band(v) + '">' +
+      '<path d="' + arc(0, 100) + '" fill="none" stroke="#DDE1E8" stroke-width="16" stroke-linecap="round"/>' +
+      (v > 0 ? '<path d="' + arc(0, v) + '" fill="none" stroke="' + col + '" stroke-width="16" stroke-linecap="round"/>' : '') +
+      ticks +
+      '<line x1="' + cx + '" y1="' + cy + '" x2="' + tip[0].toFixed(1) + '" y2="' + tip[1].toFixed(1) + '" stroke="#1B1F2A" stroke-width="4" stroke-linecap="round"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="8" fill="#1B1F2A"/>' +
+      '<text x="14" y="114" class="dial-end">0</text><text x="186" y="114" class="dial-end" text-anchor="end">100</text>' +
+    '</svg>';
+  }
   function selectedHtml(p, zip) {
     var scored = p.opp !== null;
     var meta = ['APN ' + p.apn, p.jurisdiction, acresLabel(p)].filter(Boolean).join(' · ');
     return '<section class="selected" aria-labelledby="sel-title">' +
       '<div class="sel-head"><div class="sel-id"><span class="card-tag">' + (p.rank ? '#' + p.rank + ' · ' : '') + esc(tagsOf(p).map(function (t) { return t.label; }).join(' · ') || 'Other parcel') + '</span>' +
         '<h2 id="sel-title" tabindex="-1">' + esc(p.address) + '</h2><span class="sel-meta">' + esc(meta) + '</span></div>' +
-        '<div class="sel-score">' + (scored ? '<span class="big">' + p.opp + '<span class="of"> / 100</span></span><span class="sel-sub">Opportunity · ' + band(p.opp) + '</span>'
+        '<div class="sel-score">' + (scored ? dialHtml(p.opp) + '<span class="big">' + p.opp + '<span class="of"> / 100</span></span><span class="sel-sub">Opportunity · ' + band(p.opp) + '</span>'
           : '<span class="big none">Not scored</span><span class="sel-sub">Too little data to score fairly</span>') + confChip(p.level) + '</div>' +
         '<button type="button" class="icon-btn" data-action="close" aria-label="Close selected site">' + ICON_X + '</button></div>' +
       (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100).</span></p>' :
