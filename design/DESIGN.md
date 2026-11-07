@@ -1,5 +1,13 @@
 # OCA design principles and style guide
 
+> **Goal:** Build a web tool where a user enters an Orange County, CA ZIP code and gets a ranked, mapped list of parcels that are strong screening candidates for affordable housing development or preservation, using only free, public datasets.
+>
+> **Candidates come from:** vacant or lightly built parcels (building footprint coverage), Housing Element sites and rezone sites, publicly owned and surplus land, faith-based parcels, tax-defaulted parcels, and existing subsidized housing with expiring affordability (preservation).
+>
+> **Each parcel is scored on:** development potential (lot size, buildable area, coverage, Housing Element status, state-law pathways), location quality (transit, jobs, schools, grocery, opportunity area, CalEnviroScreen, ACS rent burden), and feasibility risk (flood, fire, seismic, coastal, oil wells, contamination, historic). Every score shows its components, sources, and a confidence level.
+
+Every doc, screen and script in this repo should trace back to this goal.
+
 This is the single reference for how OCA looks, sounds and behaves. Every screen, page and video should follow it. The visual source is in `oca-canvas/`.
 
 ## 1. What OCA is

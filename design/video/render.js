@@ -14,10 +14,11 @@ const { execSync } = require('child_process');
   const browser = await chromium.launch();
   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 }, deviceScaleFactor: 1 });
   await page.goto('file://' + path.join(__dirname, 'oca-demo.html') + '#manual');
-  await page.waitForFunction('window.__ready === true', null, { timeout: 30000 });
+  await page.waitForFunction('window.__ready === true', null, { timeout: 90000 });
   const start = Math.round(from * FPS), end = Math.round(to * FPS);
   for (let f = start; f < end; f++) {
     await page.evaluate((t) => window.render(t), f / FPS);
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
     await page.screenshot({ path: path.join(out, 'f' + String(f).padStart(4, '0') + '.png') });
     if (f % 90 === 0) console.log('frame', f);
   }

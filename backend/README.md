@@ -70,3 +70,11 @@ A dataset that isn't present doesn't break anything. Its signals count as missin
 | Real output for 92618 / 92620 / 92705 | **Not yet run.** The build environment couldn't reach county/state hosts. |
 | Registry fully documented | URLs and licenses filled in. Most `license_verified` / `refresh_verified` are False until checked. `GET /registry` → `phase1_gaps` lists them. |
 | Validation vs. APR A2 | Code done. Needs `apr_table_a2.csv`. |
+
+## Notes from the live run (92701, 2026-11-07)
+
+- The county's `Parcels` and `Building_Footprints` **FeatureServer** query endpoints returned HTTP 500 that day, while the **MapServer** versions answered in about a second. The registry now points both at `MapServer/0`. The old centerlines URL returned "Layer not found"; it now uses `Centerlines/MapServer/0`.
+- Transit, neighborhood opportunity and fire hazard are now queried live: SCAG's 2022 high-quality transit corridors (buffered half a mile), SCAG's compiled CTCAC/HCD opportunity map (2022 edition), and CAL FIRE fire hazard zones from the California state geoportal (SRA 2007, LRA 2011; newer official files are on the OSFM page).
+- Result: 5,312 real parcels, all scored. **High** confidence on 4,799 (9 of 10 signals), **Medium** on 513. The one signal missing everywhere is **Rent burden**: the Census API now requires a free key. Get one at https://api.census.gov/data/key_signup.html and run with `CENSUS_API_KEY=your-key`; the loader sends it automatically and caches the result.
+- A layer that loads but returns nothing for the area (for example no fire zones in downtown Santa Ana) counts as found: "not in a zone" is data.
+- Five state-law pathways show as "not checked yet" until their datasets are downloaded (see `docs/scoring.md`).

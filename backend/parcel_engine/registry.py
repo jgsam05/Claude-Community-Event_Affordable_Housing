@@ -35,8 +35,8 @@ TIGERWEB = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb"
 DATASETS: list[dict] = [
     # ---------------- Base geography ----------------
     dict(id="ocgis_parcels", name="OCGIS Parcels", signals=["Lot size", "Year built"],
-         access="arcgis_rest", url=f"{OCGIS}/Parcels/FeatureServer/0",
-         landing_url="https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/FeatureServer",
+         access="arcgis_rest", url=f"{OCGIS}/Parcels/MapServer/0",
+         landing_url="https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/MapServer",
          license=OCGIS_TERMS, license_verified=False,
          refresh_date="Not published on layer (no editingInfo.lastEditDate)", refresh_verified=False,
          notes="Fields: OBJECTID, SITE_ADDRESS, ASSESSMENT_NO (APN), YEAR_BUILT, NBR_BEDROOMS. "
@@ -65,8 +65,8 @@ DATASETS: list[dict] = [
          refresh_date="Current TIGERweb vintage", refresh_verified=False,
          notes="Tract GEOID used to join ACS, LODES, Opportunity Zones. Confirm layer 0 is tracts."),
     dict(id="ocgis_building_footprints", name="OCGIS Building Footprints", signals=["Building coverage"],
-         access="arcgis_rest", url=f"{OCGIS}/Building_Footprints/FeatureServer/0",
-         landing_url=f"{OCGIS}/Building_Footprints/FeatureServer",
+         access="arcgis_rest", url=f"{OCGIS}/Building_Footprints/MapServer/0",
+         landing_url=f"{OCGIS}/Building_Footprints/MapServer",
          license=OCGIS_TERMS, license_verified=False,
          refresh_date="verify at ingest", refresh_verified=False,
          notes="Default footprint source because it is bbox-queryable. Overture/Microsoft are file "
@@ -78,8 +78,8 @@ DATASETS: list[dict] = [
          license="ODbL 1.0 (buildings theme)", license_verified=False,
          refresh_date="Monthly Overture release; record release id at ingest", refresh_verified=False),
     dict(id="ocgis_centerlines", name="OCGIS Street Centerlines", signals=["Frontage"],
-         access="arcgis_rest", url=f"{OCGIS}/Street_Centerlines_With_Labels/FeatureServer/0",
-         landing_url=f"{OCGIS}/Street_Centerlines_With_Labels/FeatureServer",
+         access="arcgis_rest", url=f"{OCGIS}/Centerlines/MapServer/0",
+         landing_url=f"{OCGIS}/Centerlines/MapServer",
          license=OCGIS_TERMS, license_verified=False, refresh_date="verify at ingest", refresh_verified=False,
          notes="Used for frontage. If unavailable, frontage falls back to the short side of the "
                "parcel's minimum rotated rectangle (flagged frontage_method=mrr_estimate)."),
@@ -169,14 +169,15 @@ DATASETS: list[dict] = [
          join=dict(type="apn_list", key=["apn"], column="tax_defaulted"),
          notes="Parsed separately by parcel_engine.tax_default into data/cache/tax_defaulted_apns.csv. "
                "Lists change daily as parcels are redeemed; treat as a snapshot."),
-    dict(id="scag_hqta", name="SCAG High Quality Transit Areas", signals=["Transit (HQTA)"],
-         access="file", local_file="scag_hqta.gpkg",
-         url="https://gisdata-scag.opendata.arcgis.com/", landing_url="https://gisdata-scag.opendata.arcgis.com/",
+    dict(id="scag_hqta", name="SCAG High Quality Transit Corridors, base year 2022 (half-mile buffer)", signals=["Transit (HQTA)"],
+         access="arcgis_rest", url="https://maps.scag.ca.gov/scaggis/rest/services/OpenData/HQTC_Year_2022/MapServer/0",
+         landing_url="https://maps.scag.ca.gov/scaggis/rest/services/OpenData/HQTC_Year_2022/MapServer",
          license=SCAG_TERMS, license_verified=False,
-         refresh_date="Use Connect SoCal 2024 base-year (2022) HQTA; SCAG updates every 4 years", refresh_verified=False,
-         join=dict(type="flag_intersects", column="in_hqta"),
-         notes="SCAG serves the 2024 base-year HQTC lines live (OpenData/HQTC_Year_2022) but I could not find the "
-               "matching HQTA polygon service, so this stays a download from SCAG's portal. Do not use the RTP2020 layers."),
+         refresh_date="Connect SoCal 2024 base year 2022 (SCAG updates every 4 years)", refresh_verified=False,
+         join=dict(type="flag_intersects", column="in_hqta", buffer_ft=2640),
+         notes="Queried live from SCAG. The layer is the corridor lines; the engine buffers them half a mile (2,640 ft) "
+               "to approximate the High Quality Transit Area. Half-mile areas around major rail and BRT stops are not "
+               "in this layer, so HQTA can be undercounted near stations. Do not use the RTP2020 layers."),
     dict(id="octa_gtfs", name="OCTA GTFS stops", signals=["Transit stops"],
          access="file", local_file="octa_gtfs.zip",
          url="https://www.octa.net/current/google_transit.zip",
@@ -213,13 +214,15 @@ DATASETS: list[dict] = [
          join=dict(type="nearest_distance", column="dist_grocery_ft")),
 
     # ---------------- Opportunity & need ----------------
-    dict(id="tcac_opportunity", name="CTCAC/HCD Opportunity Map (2026)", signals=["Opportunity area"],
-         access="file", local_file="tcac_opportunity_map_2026.gpkg",
-         url="https://www.treasurer.ca.gov/ctcac/opportunity.asp", landing_url="https://www.treasurer.ca.gov/ctcac/opportunity.asp",
-         license=CA_PUBLIC, license_verified=False, refresh_date="2026 map, adopted December 2025 (annual)",
-         refresh_verified=True,
+    dict(id="tcac_opportunity", name="CTCAC/HCD Opportunity Map (2022 edition, as compiled by SCAG)", signals=["Opportunity area"],
+         access="arcgis_rest", url="https://maps.scag.ca.gov/scaggis/rest/services/OpenData/REAP/MapServer/1",
+         landing_url="https://maps.scag.ca.gov/scaggis/rest/services/OpenData/REAP/MapServer",
+         license=SCAG_TERMS, license_verified=False, refresh_date="2022 edition (YEAR field = 2022); newer editions are published annually by CTCAC",
+         refresh_verified=False,
          join=dict(type="attr_at_point", fields={"tcac_category": ["oppcat", "OPPCAT", "Category", "category"]}),
-         notes="Published by the State Treasurer's CTCAC with HCD. Shapefile is linked from the page above."),
+         notes="Queried live from SCAG's compiled copy of the CTCAC/HCD map (oppcat = Highest, High, Moderate, Low, Highest "
+               "Poverty). Newer official shapefiles are linked from https://www.treasurer.ca.gov/ctcac/opportunity.asp; "
+               "drop one into data/raw/tcac_opportunity_map_2026.gpkg and switch this entry back to a file to use it."),
     dict(id="acs5", name="ACS 5-year 2020-2024 (rent burden, median household income)", signals=["Rent burden / income"],
          access="census_api", url="https://api.census.gov/data/2024/acs/acs5",
          landing_url="https://www.census.gov/programs-surveys/acs/news/data-releases/2024/release.html",
@@ -256,26 +259,24 @@ DATASETS: list[dict] = [
          join=dict(type="flag_intersects", column="flood_sfha", where="SFHA_TF = 'T'"),
          notes="FEMA's own service. Its robots.txt blocked my automated metadata check, so confirm layer 28 is "
                "'Flood Hazard Zones' on first live run."),
-    dict(id="calfire_fhsz_lra", name="CAL FIRE OSFM Fire Hazard Severity Zones, LRA (2025)", signals=["Hazards"],
-         access="file", local_file="fhsz_lra_2025.zip",
-         url="https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones",
-         landing_url="https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones",
+    dict(id="calfire_fhsz_lra", name="CAL FIRE Fire Hazard Severity Zones, LRA (2011), state geoportal", signals=["Hazards"],
+         access="arcgis_rest", url="https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer/1",
+         landing_url="https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer",
          license="CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use", license_verified=True,
-         refresh_date="LRA maps released in 4 phases, Feb 10 - Mar 24, 2025 (combined file, Phases 1-4)",
-         refresh_verified=True,
+         refresh_date="LRA 2011 recommendations. CAL FIRE released updated LRA zones in 2025; refresh from the OSFM page.",
+         refresh_verified=False,
          join=dict(type="attr_at_point", fields={"fhsz_lra": ["FHSZ_Description", "FHSZ_Descr", "HAZ_CLASS", "Haz_Class", "FHSZ"]}),
-         notes="Download 'LRA FHSZ Combined Data as Recommended by the Office of the State Fire Marshal - Phases 1 "
-               "through 4' (file geodatabase zip) from the OSFM page. Cities adopt these by local ordinance."),
-    dict(id="calfire_fhsz_sra", name="CAL FIRE OSFM Fire Hazard Severity Zones, SRA (effective April 1, 2024)", signals=["Hazards"],
-         access="file", local_file="fhsz_sra_2024.zip",
-         url="https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones",
-         landing_url="https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones",
+         notes="Queried live from the California state geoportal (CAL FIRE content). This is the older 2011 LRA layer. "
+               "For the 2025 LRA update, download the OSFM combined file and switch this entry back to a file."),
+    dict(id="calfire_fhsz_sra", name="CAL FIRE Fire Hazard Severity Zones, SRA (2007), state geoportal", signals=["Hazards"],
+         access="arcgis_rest", url="https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer/0",
+         landing_url="https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer",
          license="CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use", license_verified=True,
-         refresh_date="Effective April 1, 2024; a 2026 SRA update was open for public comment (Nov 2026)",
-         refresh_verified=True,
+         refresh_date="SRA 2007 map. The SRA map effective April 1, 2024 is on the OSFM page; refresh from there.",
+         refresh_verified=False,
          join=dict(type="attr_at_point", fields={"fhsz_sra": ["FHSZ_Description", "FHSZ_Descr", "HAZ_CLASS", "Haz_Class", "FHSZ"]}),
-         notes="Download 'SRA FHSZ Data Effective April 1, 2024' from the OSFM page. Replace when the 2026 SRA "
-               "maps are adopted."),
+         notes="Queried live from the California state geoportal (CAL FIRE content). This is the older 2007 SRA layer. "
+               "For the April 2024 SRA map, download it from the OSFM page and switch this entry back to a file."),
     dict(id="cgs_liquefaction", name="CGS Seismic Hazards Program: Liquefaction Zones", signals=["Hazards"],
          access="arcgis_rest",
          url="https://services2.arcgis.com/zr3KAIbsRSUyARHG/arcgis/rest/services/CGS_Liquefaction_Zones/FeatureServer/0",
@@ -441,7 +442,7 @@ PROVENANCE = {
     "lodes_wac": ("U.S. Census Bureau, LEHD", "original"),
     "cde_schools": ("CA Dept. of Education", "original"),
     "osm_grocery": ("OpenStreetMap contributors (via Geofabrik)", "community"),
-    "tcac_opportunity": ("CA Tax Credit Allocation Committee / HCD", "original"),
+    "tcac_opportunity": ("SCAG (compiled from CA Tax Credit Allocation Committee / HCD)", "compiler"),
     "acs5": ("U.S. Census Bureau", "original"),
     "hud_income_limits": ("U.S. Dept. of Housing and Urban Development", "original"),
     "calenviroscreen4": ("CA Office of Environmental Health Hazard Assessment", "original"),

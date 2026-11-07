@@ -71,12 +71,19 @@ def _flag_intersects(p, data, join, shrunk, **_):
     if data.empty:
         p[col] = False
         return
-    hit = gpd.sjoin(shrunk, data[["geometry"]].to_crs(p.crs), predicate="intersects", how="inner")
+    d = data[["geometry"]].to_crs(p.crs)
+    if join.get("buffer_ft"):                       # e.g. a half-mile area around transit corridor lines
+        d = gpd.GeoDataFrame(geometry=d.geometry.buffer(join["buffer_ft"]), crs=p.crs)
+    hit = gpd.sjoin(shrunk, d, predicate="intersects", how="inner")
     p[col] = p["apn"].isin(set(hit["apn"]))
 
 
 def _attr_at_point(p, data, join, rep, **_):
     if data is None:
+        for out in join["fields"]:
+            p[out] = None
+        return
+    if data.empty:                                  # layer loaded but nothing in this area: "not in the zone" is data
         for out in join["fields"]:
             p[out] = None
         return

@@ -5,10 +5,16 @@
 <title>OCA 30-second demo video</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../parcel-screener-prototype/vendor/leaflet/leaflet.css">
+<script src="../../parcel-screener-prototype/vendor/leaflet/leaflet.js"></script>
+<script src="real-92701.js"></script>
 <style>
 html,body{margin:0;background:#F7F8FA}
 #stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#F7F8FA;color:#1B1F2A;font-family:'IBM Plex Sans',system-ui,sans-serif}
 .abs{position:absolute}
+#realMap{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0;background:#E6EBE5;clip-path:inset(230px 80px 190px 840px round 24px)}
+#realMap .leaflet-tile-pane{filter:sepia(0.28) saturate(1.15) hue-rotate(38deg) brightness(1.01)}
+#realMap .leaflet-control-container{display:none}
 .h{font-family:'Archivo',sans-serif;font-weight:800}
 .scene{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0}
 .paper{position:absolute;width:260px;height:340px;background:#FFFFFF;border:2px solid #C9CFDA;border-radius:10px;box-shadow:0 6px 18px rgba(27,31,42,0.08);background-image:repeating-linear-gradient(#FFFFFF 0 26px,#E3E6EC 26px 28px);background-position:0 40px;background-repeat:no-repeat}
@@ -48,33 +54,24 @@ html,body{margin:0;background:#F7F8FA}
 
 <!-- Scene M: results, scores, finale -->
 <div class="scene" id="sM">
-<svg class="abs" id="mapSvg" style="left:0;top:0" width="1920" height="1080" viewBox="0 0 1920 1080">
-<defs><clipPath id="mapClip"><rect id="mapClipRect" x="840" y="230" width="1000" height="660" rx="24"/></clipPath></defs>
-<g id="mapLayer" clip-path="url(#mapClip)">
-<rect width="1920" height="1080" fill="#E6EBE5"/>
-<path d="M0 830 C300 780 560 880 900 830 S1500 760 1920 820 L1920 920 C1500 860 1200 960 900 930 S300 880 0 940 Z" fill="#C5DCE6"/>
-<rect x="1700" y="250" width="150" height="140" rx="10" fill="#CFE3C4"/>
-<rect x="260" y="60" width="200" height="150" rx="10" fill="#CFE3C4"/>
-<g id="roads" stroke="#FFFFFF" stroke-width="14" fill="none"></g>
-<path d="M0 600 C400 560 900 640 1920 570" stroke="#F4DCA0" stroke-width="26" fill="none"/>
-<g id="buildings"></g>
-<g id="stops" fill="#33394A"><circle cx="960" cy="330" r="9"/><circle cx="1400" cy="520" r="9"/><circle cx="1400" cy="720" r="9"/><circle cx="1640" cy="330" r="9"/></g>
-</g>
-</svg>
+<div id="realMap"></div>
+<div class="abs" id="mapFrame" style="left:840px;top:230px;width:1000px;height:660px;box-sizing:border-box;border:2px solid #DDE1E8;border-radius:24px;pointer-events:none;opacity:0"></div>
+<div class="abs" id="mapAttrib" style="right:90px;bottom:198px;font-size:15px;line-height:20px;color:#33394A;background:rgba(255,255,255,0.9);padding:2px 10px;border-radius:8px;opacity:0">Parcels: County of Orange · Tiles &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors</div>
 
-<div class="abs h" id="mTitle" style="left:80px;top:62px;font-size:62px;line-height:70px">4 places to look in 92701</div>
-<div class="abs" id="mChips" style="left:80px;top:148px;display:flex;gap:12px">
+<div class="abs h" id="mTitle" style="left:80px;top:48px;font-size:60px;line-height:66px">Top places to look in 92701</div>
+<div class="abs" id="mSub" style="left:80px;top:116px;font-size:26px;line-height:32px;color:#4B5363;opacity:0">Showing 4 of 5,312 scored parcels · public records</div>
+<div class="abs" id="mChips" style="left:80px;top:160px;display:flex;gap:12px">
 <span class="fchip" style="background:#2B5FC7;border-color:#2B5FC7;color:#FFFFFF">All sites</span><span class="fchip">Vacant</span><span class="fchip">Public</span><span class="fchip">Faith-based</span><span class="fchip">Preservation</span>
 </div>
 <div id="mList"></div>
 <div class="abs" id="mDetail" style="left:80px;top:230px;width:720px;height:660px;box-sizing:border-box;background:#FFFFFF;border:2px solid #DDE1E8;border-radius:22px;padding:30px 36px;opacity:0">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
-<div><div style="font-size:24px;font-weight:600;color:#4B5363">#1 · Vacant or lightly built</div><div class="h" style="font-size:40px;line-height:46px;margin-top:4px">Vacant lot near<br>rail corridor</div></div>
+<div><div id="dTag" style="font-size:24px;font-weight:600;color:#4B5363"></div><div class="h" id="dName" style="font-size:40px;line-height:46px;margin-top:4px"></div></div>
 <div style="text-align:right"><div class="h" style="font-size:96px;line-height:96px"><span id="dScore">0</span></div><div style="font-size:22px;color:#4B5363">out of 100</div></div>
 </div>
 <div id="dRows" style="margin-top:26px;display:flex;flex-direction:column;gap:20px"></div>
-<div id="dSrc" style="margin-top:24px;opacity:0;font-size:24px;color:#33394A;line-height:34px">Sources: OC Assessor · OCTA transit data · FEMA flood map <span class="chip" style="background:#E3F3EA;color:#0B5E34;margin-left:6px">High confidence</span></div>
-<div id="dWarn" style="margin-top:16px;opacity:0;background:#FFF3CC;border-radius:14px;padding:12px 18px;font-size:24px;color:#33394A"><strong style="font-weight:600">Check first:</strong> liquefaction zone. Confirm with a soil report.</div>
+<div id="dSrc" style="margin-top:24px;opacity:0;font-size:24px;color:#33394A;line-height:34px">Sources: county parcels · footprints · SCAG land use and transit · FEMA <span class="chip" id="dConf" style="margin-left:6px"></span></div>
+<div id="dWarn" style="margin-top:16px;opacity:0;background:#FFF3CC;border-radius:14px;padding:12px 18px;font-size:24px;color:#33394A"><strong style="font-weight:600">State-law pathways:</strong> <span id="dPaths"></span></div>
 </div>
 
 <svg class="abs" id="pieceSvg" style="left:0;top:0" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
@@ -105,17 +102,45 @@ const NS='http://www.w3.org/2000/svg';
 
 /* ---------- data ---------- */
 const COL={blue:'#2B5FC7',yellow:'#E8A800',green:'#12844A',orange:'#C2490F'};
-const sites=[
- {name:'Vacant lot near rail corridor',tag:'Vacant or lightly built',meta:'1.8 acres',score:82,col:'blue',txt:'#FFFFFF',conf:'High',poly:[[3,5],[22,3],[23,21],[4,23]],ringCol:'#2B5FC7'},
- {name:'City-owned surplus parking lot',tag:'Public or surplus land',meta:'2.4 acres',score:80,col:'yellow',txt:'#1B1F2A',conf:'Medium',poly:[[26,4],[45,6],[44,24],[25,22]],ringCol:'#E8A800'},
- {name:'Congregation parking lot',tag:'Faith-based',meta:'1.1 acres',score:74,col:'green',txt:'#FFFFFF',conf:'Medium',poly:[[4,27],[23,26],[21,45],[5,43]],ringCol:'#12844A'},
- {name:'Subsidized building, affordability ending',tag:'Preservation',meta:'64 homes',score:72,col:'orange',txt:'#FFFFFF',conf:'Medium',poly:[[27,25],[44,28],[43,44],[24,46]],ringCol:'#C2490F'}
-];
+const R=window.REAL92701;
+const POLY={blue:[[3,5],[22,3],[23,21],[4,23]],yellow:[[26,4],[45,6],[44,24],[25,22]],green:[[4,27],[23,26],[21,45],[5,43]],orange:[[27,25],[44,28],[43,44],[24,46]]};
+const TXT={blue:'#FFFFFF',yellow:'#1B1F2A',green:'#FFFFFF',orange:'#FFFFFF'};
+const ROT={blue:-6,yellow:7,green:4,orange:-7};
+function niceAddr(a){
+  if(!a||/^address not available$/i.test(a.trim()))return '';
+  return a.trim().toLowerCase().replace(/\b([a-z])([a-z]*)/g,(m,f,rest)=>(rest.length===0&&/^[nsew]$/.test(f))?f.toUpperCase():f.toUpperCase()+rest).replace(/\b(\d+)(St|Nd|Rd|Th)\b/g,(m,n,suf)=>n+suf.toLowerCase());
+}
+const sites=R.highlights.slice().sort((a,b)=>a.rank-b.rank).map(h=>({
+  rank:h.rank,apn:h.apn,name:niceAddr(h.address)||('APN '+h.apn),tag:h.tag,meta:h.acres.toFixed(2)+' acres',pathways:h.pathways,
+  score:h.opp,dp:h.dp,risk:h.risk,sig:h.sig,col:h.color,txt:TXT[h.color],conf:h.level,poly:POLY[h.color],ringCol:COL[h.color],ring:h.ring
+}));
 sites.forEach(s=>{
   s.c=[s.poly.reduce((a,p)=>a+p[0],0)/4,s.poly.reduce((a,p)=>a+p[1],0)/4];
   s.local=s.poly.map(p=>[p[0]-s.c[0],p[1]-s.c[1]]);
+  const lons=s.ring.map(c=>c[0]),lats=s.ring.map(c=>c[1]);
+  s.ll=[(Math.min(...lats)+Math.max(...lats))/2,(Math.min(...lons)+Math.max(...lons))/2];
 });
-const mapPose=[{x:1020,y:420,r:-6,s:6.4},{x:1470,y:380,r:7,s:5.8},{x:1150,y:700,r:4,s:6.2},{x:1590,y:690,r:-7,s:5.8}];
+
+/* ---------- real map (Leaflet, county parcels, Esri tiles) ---------- */
+const map=L.map('realMap',{zoomControl:false,attributionControl:false,zoomSnap:0.5,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false,inertia:false});
+const cLat=sites.reduce((a,s)=>a+s.ll[0],0)/sites.length, cLon=sites.reduce((a,s)=>a+s.ll[1],0)/sites.length;
+map.setView([cLat,cLon],15.5,{animate:false});
+map.panBy([-380,-20],{animate:false});
+const baseTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:16,crossOrigin:true});
+map.createPane('labels');map.getPane('labels').style.zIndex=450;map.getPane('labels').style.pointerEvents='none';
+const labelTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:16,pane:'labels',crossOrigin:true});
+window.__tilesPromise=Promise.all([new Promise(r=>baseTiles.once('load',r)),new Promise(r=>labelTiles.once('load',r))]);
+baseTiles.addTo(map);labelTiles.addTo(map);
+const rend=L.canvas({padding:0.6});
+const allRings=R.parcels.map(r=>r.map(c=>[c[1],c[0]]));
+const parcelLayer=L.polygon(allRings,{renderer:rend,color:'#8A93A5',weight:0.7,opacity:0,fillColor:'#C9CED8',fillOpacity:0,interactive:false}).addTo(map);
+sites.forEach(s=>{
+  s.layer=L.polygon(s.ring.map(c=>[c[1],c[0]]),{renderer:rend,color:COL[s.col],weight:3,opacity:0,fillColor:COL[s.col],fillOpacity:0,interactive:false}).addTo(map);
+  s.last='';
+});
+const mapPose=sites.map(s=>{const pt=map.latLngToContainerPoint(s.ll);return {x:pt.x,y:pt.y,r:ROT[s.col],s:4.6};});
+window.__mapPose=mapPose;
+let lastParcelKey='';
 const LS=9, LCX=960, LCY=540, SHIFT=540;
 const logoPose=sites.map(s=>({x:LCX+(s.c[0]-24)*LS,y:LCY+(s.c[1]-24)*LS,r:0,s:LS}));
 
@@ -139,30 +164,6 @@ groups.forEach((g,i)=>{
   $('sB').appendChild(d);
 });
 
-/* ---------- map: roads and buildings ---------- */
-const hy=[90,330,520,720,960,1040], vx=[300,560,960,1200,1400,1640,1800];
-hy.forEach(y=>{const l=document.createElementNS(NS,'path');l.setAttribute('d','M0 '+y+' H1920');$('roads').appendChild(l);});
-vx.forEach(x=>{const l=document.createElementNS(NS,'path');l.setAttribute('d','M'+x+' 0 V1080');$('roads').appendChild(l);});
-let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
-const xs=[0,...vx,1920], ys=[0,...hy,1080];
-for(let a=0;a<xs.length-1;a++)for(let b=0;b<ys.length-1;b++){
-  const bx0=xs[a]+26,bx1=xs[a+1]-26,by0=ys[b]+26,by1=ys[b+1]-26;
-  if(bx1-bx0<70||by1-by0<70)continue;
-  const n=2+Math.floor(rnd()*3);
-  for(let k=0;k<n;k++){
-    const w=40+rnd()*70,h=34+rnd()*60;
-    const x=bx0+rnd()*Math.max(1,bx1-bx0-w),y=by0+rnd()*Math.max(1,by1-by0-h);
-    if(y>760&&y<960)continue; // keep water clear
-    const cx=x+w/2,cy=y+h/2;
-    let near=false;mapPose.forEach(p=>{if(Math.hypot(cx-p.x,cy-p.y)<150)near=true;});
-    if(near)continue;
-    const r=document.createElementNS(NS,'rect');
-    r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx',4);
-    r.setAttribute('fill','#D3D8DF');r.setAttribute('stroke','#BFC5CE');r.setAttribute('stroke-width',2);
-    $('buildings').appendChild(r);
-  }
-}
-
 /* ---------- map: pieces ---------- */
 const pieceEls=sites.map((s,i)=>{
   const g=document.createElementNS(NS,'g');
@@ -175,7 +176,7 @@ const pieceEls=sites.map((s,i)=>{
   c.setAttribute('fill',COL[s.col]);c.setAttribute('stroke','#FFFFFF');c.setAttribute('stroke-width','0.55');
   const t=document.createElementNS(NS,'text');
   t.setAttribute('x',0);t.setAttribute('y',1.7);t.setAttribute('text-anchor','middle');
-  t.setAttribute('font-family','Archivo, sans-serif');t.setAttribute('font-weight','800');t.setAttribute('font-size','4.6');
+  t.setAttribute('font-family','Archivo, sans-serif');t.setAttribute('font-weight','800');t.setAttribute('font-size',s.score>=100?'3.6':'4.6');
   t.setAttribute('fill',s.txt);t.textContent=s.score;
   g.appendChild(poly);g.appendChild(c);g.appendChild(t);
   $('pieceSvg').appendChild(g);
@@ -185,16 +186,22 @@ const pieceEls=sites.map((s,i)=>{
 /* ---------- list cards ---------- */
 sites.forEach((s,i)=>{
   const d=document.createElement('div');d.className='card';d.id='card'+i;d.style.top=(230+i*170)+'px';
-  const cc=s.conf==='High'?['#E3F3EA','#0B5E34']:['#FFF3CC','#5A4000'];
-  d.innerHTML='<div class="ring" style="background:conic-gradient('+s.ringCol+' '+s.score+'%, #DDE1E8 0)"><span>'+s.score+'</span></div>'+
-   '<div style="min-width:0"><div style="font-size:22px;font-weight:600;color:#4B5363">#'+(i+1)+' · '+s.tag+'</div>'+
+  const cc=s.conf==='High'?['#E3F3EA','#0B5E34']:s.conf==='Medium'?['#FFF3CC','#5A4000']:['#FBE7DD','#8A3208'];
+  d.innerHTML='<div class="ring" style="background:conic-gradient('+s.ringCol+' '+s.score+'%, #DDE1E8 0)"><span style="font-size:'+(s.score>=100?'27px':'36px')+'">'+s.score+'</span></div>'+
+   '<div style="min-width:0"><div style="font-size:22px;font-weight:600;color:#4B5363">#'+s.rank+' · '+s.tag+'</div>'+
    '<div style="font-size:29px;line-height:36px;font-weight:600;margin-top:2px">'+s.name+'</div>'+
    '<div style="margin-top:8px"><span class="chip" style="background:#E8EEFB;color:#1E4399;margin-right:8px">'+s.meta+'</span><span class="chip" style="background:'+cc[0]+';color:'+cc[1]+'">'+s.conf+' confidence</span></div></div>';
   $('mList').appendChild(d);
 });
 
 /* ---------- detail rows ---------- */
-const rowsData=[['Can homes fit?',86,'#12844A'],['Is it a good location?',78,'#2B5FC7'],['What could go wrong?',22,'#C2490F']];
+const rowsData=[['Can homes fit?',sites[0].dp,'#12844A'],['What could go wrong?',sites[0].risk,'#C2490F'],['How much data is there?',sites[0].sig*10,'#2B5FC7',true]];
+$('dName').textContent=sites[0].name;
+$('dTag').textContent='#'+sites[0].rank+' · '+sites[0].tag+' · '+sites[0].meta;
+const CC={High:['#E3F3EA','#0B5E34'],Medium:['#FFF3CC','#5A4000'],Low:['#FBE7DD','#8A3208']};
+$('dConf').textContent=sites[0].conf+' confidence';$('dConf').style.background=CC[sites[0].conf][0];$('dConf').style.color=CC[sites[0].conf][1];
+const PN={density:'density bonus',parking:'no parking minimums near transit',commercial:'AB 2011 / SB 6 (commercial land) possible',sb35:'streamlined approval',he:'Housing Element site',sla:'surplus land'};
+$('dPaths').textContent=sites[0].pathways.map(x=>PN[x]||x).join(' · ');
 rowsData.forEach((r,i)=>{
   const d=document.createElement('div');
   d.innerHTML='<div style="display:flex;justify-content:space-between;font-size:30px;font-weight:600"><span>'+r[0]+'</span><span class="h" id="dv'+i+'">0</span></div><div style="height:18px;background:#DDE1E8;border-radius:9px;margin-top:8px;overflow:hidden"><div id="db'+i+'" style="height:18px;width:0;background:'+r[2]+';border-radius:9px"></div></div>';
@@ -252,6 +259,7 @@ function render(t){
   const mFade=1-prog(t,25.0,25.5);
   $('mTitle').style.opacity=prog(t,15.2,15.8)*mFade;
   $('mChips').style.opacity=prog(t,15.4,16.0)*mFade;
+  $('mSub').style.opacity=prog(t,15.3,15.9)*mFade;
   $('mTitle').style.transform='translateY('+(1-easeOut(prog(t,15.2,15.8)))*20+'px)';
   // list
   const listFade=(1-prog(t,19.7,20.1));
@@ -267,24 +275,25 @@ function render(t){
   const dk=easeOut(prog(t,20.1,20.7));
   $('mDetail').style.opacity=dk*(1-prog(t,25.0,25.5));
   $('mDetail').style.transform='translateX('+(-40*(1-dk))+'px)';
-  $('dScore').textContent=Math.round(82*easeOut(prog(t,20.6,21.6)));
+  $('dScore').textContent=Math.round(sites[0].score*easeOut(prog(t,20.6,21.6)));
   rowsData.forEach((r,i)=>{
     const k=easeOut(prog(t,21.2+i*0.6,22.0+i*0.6));
     $('db'+i).style.width=(r[1]*k)+'%';
-    $('dv'+i).textContent=Math.round(r[1]*k);
+    $('dv'+i).textContent=r[3]?(Math.round(r[1]/10*k)+' of 10'):Math.round(r[1]*k);
   });
   $('dSrc').style.opacity=prog(t,23.2,23.7);
   $('dWarn').style.opacity=prog(t,23.9,24.4);
 
-  // map clip rect (window -> full screen)
+  // real map: window -> full screen
   const q=easeInOut(prog(t,25.2,26.1));
-  const cr=$('mapClipRect');
-  cr.setAttribute('x',lerp(840,0,q));cr.setAttribute('y',lerp(230,0,q));
-  cr.setAttribute('width',lerp(1000,1920,q));cr.setAttribute('height',lerp(660,1080,q));
-  cr.setAttribute('rx',lerp(24,0,q));
-  $('mapLayer').style.opacity=prog(t,15.7,16.3)*(1-prog(t,26.7,27.7));
-  $('buildings').style.opacity=1-prog(t,26.2,26.9);
-  $('stops').style.opacity=1-prog(t,26.2,26.9);
+  const mapOp=prog(t,15.7,16.3)*(1-prog(t,26.7,27.7));
+  const rm=$('realMap');
+  rm.style.clipPath='inset('+lerp(230,0,q)+'px '+lerp(80,0,q)+'px '+lerp(190,0,q)+'px '+lerp(840,0,q)+'px round '+lerp(24,0,q)+'px)';
+  rm.style.opacity=mapOp;
+  $('mapFrame').style.opacity=prog(t,15.7,16.3)*(1-q);
+  const ma=$('mapAttrib');ma.style.opacity=mapOp;ma.style.right=lerp(90,16,q)+'px';ma.style.bottom=lerp(198,14,q)+'px';
+  const pk=(0.8*prog(t,16.0,16.8)).toFixed(2);
+  if(pk!==lastParcelKey){lastParcelKey=pk;parcelLayer.setStyle({opacity:+pk,fillOpacity:+pk*0.5});}
 
   // pieces
   const cp=easeInOut(prog(t,26.2,27.7));
@@ -306,8 +315,14 @@ function render(t){
     pe.g.setAttribute('transform','translate('+x+','+y+') rotate('+r+') scale('+sc+')');
     pe.g.setAttribute('opacity',(clamp(pop*2)*dim));
     pe.t.setAttribute('opacity',1-prog(t,26.3,26.9));
+    const quad=prog(t,25.9,26.4);
+    pe.poly.setAttribute('opacity',quad);
     const sw=(i===0&&t>=19.6&&t<25.2)?0.9:0.55;
     pe.poly.setAttribute('stroke-width',sw);
+    const real=clamp(pop*1.5)*dim*(1-quad);
+    const wgt=(i===0&&t>=19.6&&t<25.2)?5:3;
+    const key=real.toFixed(2)+'|'+wgt;
+    if(key!==s.last){s.last=key;s.layer.setStyle({opacity:real,fillOpacity:0.5*real,weight:wgt});}
   });
 
   // wordmark
@@ -326,7 +341,7 @@ function render(t){
   $('capWrap').style.opacity=co;
 }
 window.render=render;
-document.fonts.ready.then(()=>{window.__ready=true;
+Promise.all([document.fonts.ready,window.__tilesPromise]).then(()=>new Promise(r=>setTimeout(r,800))).then(()=>{window.__ready=true;
   if(!location.hash.includes('manual')){const t0=performance.now();(function loop(){const t=(performance.now()-t0)/1000;render(Math.min(t,30));if(t<30)requestAnimationFrame(loop);})();}
 });
 render(0);

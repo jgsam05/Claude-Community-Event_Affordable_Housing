@@ -27,6 +27,12 @@
   var SIGNALS = ['Lot size', 'Building coverage', 'Year built', 'Land use code', 'Housing Element status',
     'Transit access', 'Jobs access', 'Opportunity area', 'Rent burden / income', 'Hazard layers'];
   var DATA_AS_OF = 'sample data';
+  // Real basemap: Esri Light Gray canvas (free with attribution), so the brand-colored parcels carry the color.
+  // Leaflet itself is vendored in ./vendor/leaflet, so the page has no CDN dependency for the map code.
+  var TILE_BASE = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+  var TILE_LABELS = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
+  var TILE_ATTRIB = 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors';
+  var OC_CENTER = [33.7175, -117.8311];            // Orange County, CA
 
   var LEVELS = ['High', 'Medium', 'Low', 'Insufficient'];
   var CONF = {
@@ -82,6 +88,13 @@
     }); });
     return b;
   }
+  // County records are upper case ("1660 E 1ST ST SANTA ANA") and sometimes "ADDRESS NOT AVAILABLE".
+  function niceAddress(a) {
+    if (!a || /^address not available$/i.test(a.trim())) return '';
+    return a.trim().toLowerCase().replace(/\b([a-z])([a-z]*)/g, function (m, f, rest) {
+      return (rest.length === 0 && /^[nsew]$/.test(f)) ? f.toUpperCase() : f.toUpperCase() + rest;
+    }).replace(/\b(\d+)(St|Nd|Rd|Th)\b/g, function (m, n, suf) { return n + suf.toLowerCase(); });
+  }
   // GeoJSON FeatureCollection from the backend -> parcel objects with map placement in %.
   function adaptFeatures(fc) {
     var feats = fc.features.filter(function (f) { return f.geometry; });
@@ -97,12 +110,13 @@
       for (var k in p) o[k] = p[k];
       o.id = i;
       o.geometry = f.geometry;  // EPSG:4326, drawn by the live Leaflet map
-      o.address = (p.address && String(p.address).trim()) || NO_ADDRESS;
+      o.address = niceAddress(p.address) || NO_ADDRESS;
       o.missing = p.missing || [];
       o.reasons = p.reasons || [];
       o.lowInputs = p.low_confidence_inputs || [];
       o.dp = p.development_potential; o.risk = p.feasibility_risk;
       o.opp = isNum(p.opp) ? p.opp : null;
+      o.geometry = f.geometry; o.bbox = b;           // real lon/lat polygon, drawn on the Leaflet map
       o.left = pad + (b[0] - ext[0]) * kx / spanX * (100 - 2 * pad);
       o.top = pad + (ext[3] - b[3]) / spanY * (100 - 2 * pad);
       o.w = Math.max((b[2] - b[0]) * kx / spanX * (100 - 2 * pad), 0.5);
@@ -117,15 +131,28 @@
         if (!r.ok) { var e = new Error(body.detail || ('HTTP ' + r.status)); e.status = r.status; throw e; }
         return body;
       });
-    }).then(function (fc) {
-      apiMeta[zip] = fc.metadata || {};
-      if (apiMeta[zip].signals) SIGNALS = apiMeta[zip].signals;
-      if (apiMeta[zip].data_as_of) DATA_AS_OF = apiMeta[zip].data_as_of;
-      var ps = adaptFeatures(fc);
-      rank(ps);
-      cache[zip] = ps;
-      return ps;
-    });
+    }).then(function (fc) { return ingest(zip, fc); });
+  }
+  function ingest(zip, fc) {
+    apiMeta[zip] = fc.metadata || {};
+    if (apiMeta[zip].signals) SIGNALS = apiMeta[zip].signals;
+    if (apiMeta[zip].data_as_of) DATA_AS_OF = apiMeta[zip].data_as_of;
+    var ps = adaptFeatures(fc);
+    rank(ps);
+    cache[zip] = ps;
+    return ps;
+  }
+  // Without a backend, a ZIP can still be real: data/<zip>.geojson(.gz) is a saved copy of the backend's /zip/<zip> output.
+  var snapshots = {}, snapshotTried = {};
+  function loadSnapshot(zip) {
+    snapshotTried[zip] = true;
+    var base = 'data/' + zip + '.geojson';
+    return fetch(base + '.gz').then(function (r) {          // gzipped copy first: smaller, decompressed in the browser
+      if (!r.ok || typeof DecompressionStream === 'undefined') throw new Error('no gz snapshot');
+      return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).json();
+    }).catch(function () {
+      return fetch(base).then(function (r) { if (!r.ok) throw new Error('no snapshot'); return r.json(); });
+    }).then(function (fc) { snapshots[zip] = true; return ingest(zip, fc); });
   }
   function rank(ps) {
     ps.slice().filter(function (p) { return p.opp !== null; })
@@ -218,7 +245,7 @@
     });
   }
   function dataLabel(zip) {
-    if (!API_BASE) return 'Sample data';
+    if (!API_BASE && !snapshots[zip]) return 'Sample data';
     return apiMeta[zip] && apiMeta[zip].mode === 'fixture' ? 'Synthetic test data' : 'Public records';
   }
 
@@ -266,7 +293,11 @@
       });
       return;
     }
-    if (!API_BASE && SAMPLE_ZIPS.indexOf(zip) < 0) { renderOutside(zip); return; }
+    if (!API_BASE && !cache[zip] && !snapshotTried[zip] && location.protocol !== 'file:') {
+      loadSnapshot(zip).then(function () { if (parseRoute().zip === zip) render(opts); }, function () { if (parseRoute().zip === zip) render(opts); });
+      return;
+    }
+    if (!API_BASE && !snapshots[zip] && SAMPLE_ZIPS.indexOf(zip) < 0) { renderOutside(zip); return; }
     headerCtx.innerHTML = '<span class="pill-data">' + esc(dataLabel(zip)) + '</span>';
     if (route.name === 'report') renderReport(route); else renderResults(route, opts);
   }
@@ -414,7 +445,8 @@
         '</div>' +
       '</div>';
 
-    if (hasLiveMap(all)) mountLeafletMap(zip, all, shown, sel);
+    var mapEl = document.getElementById('oca-map');
+    if (mapEl) mountMap(mapEl, zip, all, shown, sel);
     if (opts.focusKey) { var el = app.querySelector('[data-key="' + opts.focusKey + '"]'); if (el) el.focus(); }
     if (opts.focusDetail) { var h = app.querySelector('#sel-title'); if (h) { h.focus(); if (window.innerWidth < 900) h.scrollIntoView({ block: 'start' }); } }
   }
@@ -446,14 +478,17 @@
       }).join('') + '</tbody></table></div>';
   }
 
+  // Opportunity fill uses the four logo colors, low to high: orange tint, yellow, blue, green.
+  var OPP_STEPS = [['Under 25', '#F2BFA5'], ['25 to 49', '#E8A800'], ['50 to 74', '#2B5FC7'], ['75 and up', '#12844A']];
   function parcelFill(p) {
     if (p.level === 'Insufficient') return HATCH;
     if (state.mode === 'confidence') return CONF[p.level].map;
     if (p.level === 'Low') return p.opp < 50 ? '#E4E7EE' : '#C9CED8';
     var o = p.opp;
-    return o < 20 ? '#E8EEFB' : o < 40 ? '#BCCDF1' : o < 60 ? '#86A5E4' : o < 80 ? '#2B5FC7' : '#1E4399';
+    return o < 25 ? OPP_STEPS[0][1] : o < 50 ? OPP_STEPS[1][1] : o < 75 ? OPP_STEPS[2][1] : OPP_STEPS[3][1];
   }
   function mapHtml(all, shown, sel) {
+    var live = all.length > 0 && !!all[0].geometry;
     var pinSet = {};
     shown.forEach(function (p) { if (p.opp !== null) pinSet[p.id] = true; });
     if (sel) pinSet[sel.id] = true;
@@ -470,95 +505,73 @@
       ? '<span class="lg-title">Parcels by confidence</span>' + LEVELS.map(function (l) {
           return '<span class="lg-row"><span class="swatch" style="background:' + (CONF[l].map || HATCH) + '"></span>' + l + '</span>';
         }).join('')
-      : '<span class="lg-title">Parcels by opportunity</span><span class="lg-row"><span class="swatch wide" style="background:linear-gradient(90deg,#E8EEFB 0 20%,#BCCDF1 20% 40%,#86A5E4 40% 60%,#2B5FC7 60% 80%,#1E4399 80%)"></span>Low → high</span>' +
+      : '<span class="lg-title">Parcels by opportunity</span><span class="lg-row"><span class="swatch wide" style="background:linear-gradient(90deg,' + OPP_STEPS.map(function (st, i) { return st[1] + ' ' + (i * 25) + '% ' + ((i + 1) * 25) + '%'; }).join(',') + ')"></span>Low → high</span>' +
         '<span class="lg-row"><span class="swatch" style="background:linear-gradient(90deg,#E4E7EE 0 50%,#C9CED8 50%)"></span>Low confidence (muted)</span><span class="lg-row"><span class="swatch" style="background:' + HATCH + '"></span>Not scored</span>';
     var modeBtns = [['opportunity', 'Opportunity'], ['confidence', 'Confidence']].map(function (m) {
       return '<button type="button" data-action="mode" data-value="' + m[0] + '" data-key="mode-' + m[0] + '" aria-pressed="' + (state.mode === m[0]) + '">' + m[1] + '</button>';
     }).join('');
-    // Live map when the backend sent real polygons; schematic map for sample data.
-    var live = hasLiveMap(all);
     return '<section class="map-panel' + (live ? ' has-live-map' : '') + '" aria-label="Map of sites. The list has the same information as text.">' +
-      (live ? '<div class="map-canvas is-live" id="leaflet-map" role="application" aria-label="Orange County parcel map"></div>'
-            : '<div class="map-canvas">' + polys + pins + '</div>') +
+      '<div class="map-canvas' + (live ? ' is-live' : '') + '">' + (live ? '<div id="oca-map" role="application" aria-label="Map of Orange County parcels. The list has the same information as text."></div>' : polys + pins) + '</div>' +
       '<div class="map-mode"><span id="mode-label" class="sr-only">Color parcels by</span><div class="segmented sm" role="group" aria-labelledby="mode-label">' + modeBtns + '</div></div>' +
       '<div class="legend" role="group" aria-label="Map legend"><span class="lg-row"><span class="pin-key"></span>Candidate site (rank)</span><span class="lg-row"><span class="pin-key sel"></span>Selected</span>' + legend + '</div>' +
-      '<span class="attribution">Schematic map from parcel boundaries · Records as of ' + esc(DATA_AS_OF) + '</span>' +
+      '<span class="attribution">' + (live ? 'Parcels from county records as of ' : 'Schematic map from parcel boundaries · Records as of ') + esc(DATA_AS_OF) + '</span>' +
     '</section>';
   }
-  // ---------- Live parcel map (Leaflet) ----------
-  // render() replaces innerHTML, so the map is rebuilt each time; the view is kept per ZIP.
-  var leafletMap = null, leafletView = {};
-  var mapToken = 0;
-  function waitForLeaflet(token, args) {
-    setTimeout(function () {
-      if (token !== mapToken) return;  // a newer render took over
-      if (typeof L === 'undefined') waitForLeaflet(token, args); else mountLeafletMap.apply(null, args);
-    }, 50);
+  // ---------- Live map (Leaflet over real parcel polygons) ----------
+  var ocaMap = { map: null, zip: null, view: null };
+  function parcelStyle(p, dim, isSel) {
+    var f = parcelFill(p), hatch = typeof f === 'string' && f.indexOf('gradient') >= 0;
+    return {
+      color: isSel ? '#C2490F' : '#6B7385', weight: isSel ? 3 : 0.6, opacity: dim ? 0.12 : (isSel ? 1 : 0.6),
+      fillColor: hatch ? '#B4BAC6' : f, fillOpacity: dim ? 0.07 : (hatch ? 0.45 : 0.72)
+    };
   }
-  function hasLiveMap(all) { return all.length > 0 && !!all[0].geometry; }
-  function isDim(p) { return !!state.off[p.level] || (state.tag !== 'all' && !tagsOf(p).some(function (t) { return t.id === state.tag; })); }
-  function mountLeafletMap(zip, all, shown, sel) {
-    var token = ++mapToken;
-    if (typeof L === 'undefined') { waitForLeaflet(token, arguments); return; }
-    var el = document.getElementById('leaflet-map');
-    if (!el) return;
-    if (leafletMap) { try { leafletMap.remove(); } catch (_) {} leafletMap = null; }
-    var map = leafletMap = L.map(el, { zoomControl: true, preferCanvas: true });
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Records as of ' + esc(DATA_AS_OF)
-    }).addTo(map);
-
-    function styleFor(p) {
-      var isSel = sel && sel.id === p.id, fill = parcelFill(p), hatch = fill.indexOf('gradient') >= 0, dim = isDim(p);
-      return {
-        color: isSel ? '#C2490F' : '#1B1F2A', weight: isSel ? 3 : 0.6, opacity: dim ? 0.25 : 0.7,
-        fillColor: hatch ? '#B4BAC6' : fill, fillOpacity: dim ? 0.15 : hatch ? 0.45 : 0.8
-      };
+  function mountMap(el, zip, all, shown, sel) {
+    if (typeof L === 'undefined') { el.innerHTML = '<p class="map-fallback">The map library did not load. The list has the same information as text.</p>'; return; }
+    if (ocaMap.map) {
+      ocaMap.view = { zip: ocaMap.zip, center: ocaMap.map.getCenter(), zoom: ocaMap.map.getZoom() };
+      try { ocaMap.map.remove(); } catch (e) { /* container already gone */ }
     }
-    function select(p) { pendingFocus = { focusDetail: true }; go('#/zip/' + zip + '/' + encodeURIComponent(p.apn)); }
+    var map = L.map(el, { zoomControl: true, preferCanvas: true, scrollWheelZoom: true, zoomSnap: 0.5 }).setView(OC_CENTER, 11);
+    L.tileLayer(TILE_BASE, { maxZoom: 19, maxNativeZoom: 16, attribution: TILE_ATTRIB }).addTo(map);
+    map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
+    L.tileLayer(TILE_LABELS, { maxZoom: 19, maxNativeZoom: 16, pane: 'labels' }).addTo(map);
 
-    var layer = L.geoJSON({ type: 'FeatureCollection', features: all.map(function (p) {
-      return { type: 'Feature', geometry: p.geometry, properties: { _p: p } };
-    }) }, {
-      style: function (f) { return styleFor(f.properties._p); },
-      onEachFeature: function (f, lyr) {
-        var p = f.properties._p;
-        lyr.bindTooltip('<b>' + esc(p.address) + '</b><br>' + (p.rank ? 'Rank ' + p.rank + ' · ' : '') +
-          'Opportunity ' + (p.opp === null ? 'not scored' : p.opp) + ' · ' + esc(p.level) + ' confidence', { sticky: true });
-        lyr.on('click', function () { select(p); });
-        lyr.on('mouseover', function () { lyr.setStyle({ weight: 2, color: '#1B1F2A' }); });
-        lyr.on('mouseout', function () { lyr.setStyle(styleFor(p)); });
-      }
-    }).addTo(map);
-
-    // Rank pins for the sites shown in the list, same look as the schematic map.
+    var group = L.featureGroup().addTo(map);
     var pinSet = {};
     shown.forEach(function (p) { if (p.opp !== null) pinSet[p.id] = true; });
     if (sel) pinSet[sel.id] = true;
     var selLayer = null;
-    layer.eachLayer(function (lyr) {
-      var p = lyr.feature.properties._p;
-      if (sel && sel.id === p.id) selLayer = lyr;
-      if (!pinSet[p.id]) return;
-      var isSel = sel && sel.id === p.id;
-      var m = L.marker(lyr.getBounds().getCenter(), {
-        icon: L.divIcon({ className: 'map-pin' + (isSel ? ' is-selected' : ''), html: '<span>' + (p.rank || '•') + '</span>', iconSize: isSel ? [38, 38] : [28, 28] }),
-        title: (p.rank ? 'Rank ' + p.rank + ', ' : '') + p.address, alt: p.address, zIndexOffset: isSel ? 1000 : 0, keyboard: true
-      }).addTo(map);
-      m.on('click', function () { select(p); });
+    all.forEach(function (p) {
+      if (!p.geometry) return;
+      var dim = !!state.off[p.level] || (state.tag !== 'all' && !tagsOf(p).some(function (t) { return t.id === state.tag; }));
+      var isSel = !!(sel && sel.id === p.id);
+      var layer = L.geoJSON({ type: 'Feature', geometry: p.geometry, properties: {} }, { style: function () { return parcelStyle(p, dim, isSel); } });
+      layer.on('click', function () { pendingFocus = { focusDetail: true }; go('#/zip/' + encodeURIComponent(zip) + '/' + encodeURIComponent(p.apn)); });
+      layer.on('mouseover', function () { layer.setStyle({ weight: 2.5, color: '#1B1F2A' }); });
+      layer.on('mouseout', function () { layer.setStyle(parcelStyle(p, dim, isSel)); });
+      layer.bindTooltip(esc(p.address) + (p.opp === null ? ' · not scored' : ' · opportunity ' + p.opp), { sticky: true, direction: 'top' });
+      layer.addTo(group);
+      if (isSel) selLayer = layer;
     });
-    if (selLayer) selLayer.bringToFront();
+    all.filter(function (p) { return pinSet[p.id] && p.geometry; }).forEach(function (p) {
+      var isSel = !!(sel && sel.id === p.id);
+      var c = [(p.bbox[1] + p.bbox[3]) / 2, (p.bbox[0] + p.bbox[2]) / 2];
+      var label = (p.rank ? 'Rank ' + p.rank + ', ' : '') + p.address + ', opportunity ' + (p.opp === null ? 'not scored' : p.opp) + ', ' + p.level + ' confidence';
+      var icon = L.divIcon({
+        className: 'pin-wrap', iconSize: [44, 44], iconAnchor: [22, 22],
+        html: '<button type="button" class="pin' + (isSel ? ' is-selected' : '') + '" data-action="select" data-value="' + esc(p.apn) + '" data-key="pin-' + esc(p.apn) + '" aria-label="' + esc(label) + '" aria-pressed="' + isSel + '" title="' + esc(label) + '"><span>' + (p.rank || '•') + '</span></button>'
+      });
+      L.marker(c, { icon: icon, keyboard: false, zIndexOffset: isSel ? 1000 : (p.rank ? 500 - p.rank : 0) }).addTo(map);
+    });
 
-    var v = leafletView[zip];
-    if (v) map.setView(v.center, v.zoom, { animate: false });
-    else if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [20, 20] });
-    else map.setView([33.7175, -117.8311], 11);
-    if (selLayer && !map.getBounds().contains(selLayer.getBounds())) map.panTo(selLayer.getBounds().getCenter(), { animate: false });
-    map.on('moveend', function () { leafletView[zip] = { center: map.getCenter(), zoom: map.getZoom() }; });
-    leafletView[zip] = { center: map.getCenter(), zoom: map.getZoom() };
-    setTimeout(function () { if (leafletMap === map) map.invalidateSize(); }, 0);
+    var v = ocaMap.view;
+    if (v && v.zip === zip) map.setView(v.center, v.zoom, { animate: false });       // keep the user's pan and zoom
+    else if (selLayer && sel && ocaMap.zip === zip) map.fitBounds(selLayer.getBounds(), { maxZoom: 17, padding: [40, 40] });
+    else if (group.getLayers().length && group.getBounds().isValid()) map.fitBounds(group.getBounds(), { padding: [24, 24] });
+    ocaMap.map = map; ocaMap.zip = zip;
+    setTimeout(function () { map.invalidateSize(); }, 0);
   }
-
   function selectPrompt() {
     return '<section class="selected empty" aria-label="Selected site"><p>Choose a site from the list or the map to see its three scores, the reasons behind them and where the data comes from.</p></section>';
   }
@@ -591,6 +604,32 @@
       '</ul>' : '') +
     '</div>';
   }
+  // State-law pathways (from the backend's pathways module). Status is always a word, never color alone.
+  var PATH_STATUS = {
+    applies: { label: 'Applies', cls: 'c-high', tip: 'The data shows the main trigger is met.' },
+    likely: { label: 'Likely', cls: 'c-high', tip: 'Trigger met; a condition we can’t see in public data must be confirmed.' },
+    possible: { label: 'Possible', cls: 'c-medium', tip: 'A stand-in measure suggests it may apply.' },
+    blocked: { label: 'Probably blocked', cls: 'c-low', tip: 'A known exclusion is present.' }
+  };
+  var PATH_ORDER = { applies: 0, likely: 1, possible: 2, blocked: 3 };
+  function pathwaysOf(p) { return (p.pathways || []).slice().sort(function (a, b) { return (PATH_ORDER[a.status] - PATH_ORDER[b.status]); }); }
+  function pathwayList(p, detail) {
+    var list = pathwaysOf(p);
+    if (!p.pathways) return '';
+    var items = list.map(function (x) {
+      var st = PATH_STATUS[x.status] || PATH_STATUS.possible;
+      return '<li><span class="path-head"><span class="chip-conf ' + st.cls + '">' + st.label + '</span><span class="path-name">' + esc(x.name) + '</span><span class="path-law">' + esc(x.law) + '</span></span>' +
+        '<span class="path-why">' + esc(x.why) + '</span>' +
+        (detail ? '<span class="path-meta"><b>Based on:</b> ' + esc(x.basis) + '. <b>Confirm:</b> ' + esc(x.caveat) + '</span>' : '') + '</li>';
+    }).join('');
+    var unchecked = (p.pathways_unchecked || []);
+    var un = unchecked.length ? '<details class="path-unchecked"><summary>' + unchecked.length + ' pathway' + (unchecked.length > 1 ? 's' : '') + ' not checked yet</summary><ul>' +
+      unchecked.map(function (u) { return '<li><b>' + esc(u.name) + '</b> (' + esc(u.law) + '). Needs: ' + esc(u.needs) + '.</li>'; }).join('') + '</ul></details>' : '';
+    return '<div class="pathways"><h3>State-law pathways</h3>' +
+      '<p class="muted-note">Laws that may help, or block, housing on this parcel. Zoning isn’t in the data, so these are screening hints, not legal advice.</p>' +
+      (items ? '<ul class="path-list">' + items + '</ul>' : '<p class="muted-note">No pathway applies from the data we have.</p>') + un + '</div>';
+  }
+
   // Half-circle dial for a 0-100 score: grey track, colored arc to the value, needle.
   // mini = compact version for list cards (number inside the dial, no end labels or ticks).
   function dialHtml(v, mini) {
@@ -624,9 +663,10 @@
         '<div class="sel-score">' + (scored ? dialHtml(p.opp) + '<span class="big">' + p.opp + '<span class="of"> / 100</span></span><span class="sel-sub">Opportunity · ' + band(p.opp) + '</span>'
           : '<span class="big none">Not scored</span><span class="sel-sub">Too little data to score fairly</span>') + confChip(p.level) + '</div>' +
         '<button type="button" class="icon-btn" data-action="close" aria-label="Close selected site">' + ICON_X + '</button></div>' +
-      (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100), multiplied by 0.66 when confidence is Low.</span></p>' :
+      (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100), multiplied by 0.66 when confidence is Low, then pulled toward the ZIP median when signals are missing.</span></p>' :
         '<p class="sel-reason">No score is shown because fewer than 5 of 10 signals are available. Check county records directly.</p>') +
       '<div class="tiles">' + (scored ? scoreTile('dp', p) + scoreTile('risk', p) : '') + confTile(p) + '</div>' +
+      pathwayList(p, false) +
       '<p class="muted-note">Zoning isn’t included yet, so these scores don’t reflect what is allowed on this parcel.</p>' +
       '<div class="sel-actions"><a class="btn-primary" href="#/zip/' + esc(zip) + '/' + encodeURIComponent(p.apn) + '/report">See how it was scored</a></div>' +
     '</section>';
@@ -700,6 +740,7 @@
                 (has ? '<span class="chip-conf ' + CONF[r[4]].cls + '">' + r[4] + '</span>' : '<span class="chip-conf c-insufficient">Missing</span>') + '</td></tr>';
             }).join('') + '</tbody></table></div></section>';
         }).join('') +
+        (p.pathways ? '<section>' + pathwayList(p, true).replace('<h3>State-law pathways</h3>', '<h2>State-law pathways <span class="h-note">(adds points to development potential where noted)</span></h2>') + '</section>' : '') +
         '<section class="limits"><h2>Limits</h2><p>OCA points to where to look first. It does not confirm zoning, ownership, price or buildability. Zoning isn’t included yet. Verify every figure with the city or county and a professional before making an offer or decision.</p>' +
         '<p>Confidence per input: <b>High</b> = direct public record, <b>Medium</b> = derived or estimated from geometry or tract data, <b>Low</b> = matched from an indirect source. <a href="#/methods">Full dataset list</a>.</p></section>' +
       '</div>';
@@ -759,7 +800,9 @@
       '<div class="page">' +
         '<h1 tabindex="-1">Sources &amp; methods</h1>' + phase +
         '<section><h2>How the scores combine</h2><p><b>Opportunity = development potential × (1 − 0.7 × feasibility risk ÷ 100).</b> A parcel with no risk keeps its full potential; at maximum risk it keeps 30%.</p>' +
-          '<p><b>Development potential</b> weights lot size and building coverage (25 each), transit (15), jobs and opportunity area (10 each), underused land use (8), building age (4) and nearby grocery and schools (3), using only the components with data. Bonus points: Housing Element site +15, public or surplus land +10, faith-based +5, SB 35 jurisdiction +3, Housing Element out of compliance +2, tax-defaulted +2. Capped at 100.</p>' +
+        '<p><b>Keeping scores honest.</b> Three rules stop scores from running high. (1) A score above the ZIP’s median is pulled back toward the median by the share of the 10 signals that are missing, so 9 of 10 signals keeps 90% of the distance and 8 of 10 keeps 80%. Scores at or below the median are never raised. (2) Risk is a minimum: a risk layer that isn’t loaded adds no points, and each parcel lists the layers it didn’t check. (3) Facts are counted once: nothing in the bonus list repeats a core component. In our real run of ZIP 92701 the median score is about 36 and the highest is 82.</p>' +
+          '<p><b>Development potential</b> weights lot size and building coverage (25 each), transit (15), jobs and opportunity area (10 each), underused land use (8), building age (4) and nearby grocery and schools (3), using only the components with data. Bonus points: Housing Element site +15, public or surplus land +10, faith-based +5, SB 35 jurisdiction +3, Housing Element out of compliance +2, tax-defaulted +2. Capped at 100. State-law pathways that restate facts already scored (commercial land under AB 2011 / SB 6, transit under AB 2097) are shown but earn no extra points, so nothing is counted twice.</p>' +
+          '<p><b>State-law pathways.</b> Each parcel lists the California laws that may help or block housing on it: streamlined approval (SB 35 / SB 423), housing on commercial land (AB 2011 and SB 6), faith-based land (SB 4), the Surplus Land Act, parking limits near transit (AB 2097), the State Density Bonus Law, Housing Element sites, the builder’s remedy and notice rules for expiring affordable housing. Each is marked Applies, Likely, Possible or Probably blocked, with what it is based on and what to confirm. A pathway whose dataset isn’t loaded is listed as “not checked yet” instead of being left out. Zoning isn’t in the data, so these are screening hints, not legal advice.</p>' +
           '<p><b>Feasibility risk</b> adds points for flood (20), fire (5–20), liquefaction (10), fault zone (15), Coastal Zone (10), oil wells (8–15), cleanup sites (6–15), National Register status (15), small lot (10), narrow frontage (5), existing affordable housing (20, preservation rather than redevelopment) and CalEnviroScreen 75th percentile or higher (5). Capped at 100.</p>' +
           '<p>Every weight is a starting assumption, tested against permits reported in APR Table A2, not a calibrated value.</p></section>' +
         '<section><h2>Confidence levels</h2><div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Level</th><th scope="col">Rule</th><th scope="col">Score shown</th></tr></thead><tbody>' +

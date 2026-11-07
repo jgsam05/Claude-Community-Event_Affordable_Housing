@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import io
 import logging
+import os
 import zipfile
 from datetime import datetime
 from pathlib import Path
@@ -82,7 +83,7 @@ class LiveSources(Sources):
                 return gpd.read_parquet(cached)
             join = spec.get("join") or {}
             where = join.get("where", "1=1")
-            if area is not None and join.get("type") == "nearest_distance":
+            if area is not None and (join.get("type") == "nearest_distance" or join.get("buffer_ft")):
                 area = area.buffer(0.05)  # ~3 mi pad so the nearest feature just outside the ZIP is found
             gdf = arcgis.query(spec["url"], where=where, geometry=area)
             if cached is not None:
@@ -137,8 +138,14 @@ class LiveSources(Sources):
             return pd.read_csv(path, dtype={"tract_geoid": str})
         spec = registry.BY_ID["acs5"]
         vars_ = ["B19013_001E", "B25070_001E", "B25070_007E", "B25070_008E", "B25070_009E", "B25070_010E"]
-        r = requests.get(spec["url"], params={"get": ",".join(vars_), "for": "tract:*",
-                                              "in": f"state:{OC_STATE} county:{OC_COUNTY}"}, timeout=60)
+        params = {"get": ",".join(vars_), "for": "tract:*", "in": f"state:{OC_STATE} county:{OC_COUNTY}"}
+        key = os.environ.get("CENSUS_API_KEY")
+        if key:
+            params["key"] = key
+        r = requests.get(spec["url"], params=params, timeout=60)
+        if "missing_key" in r.url or "invalid_key" in r.url:
+            raise RuntimeError("The Census API needs a free key. Get one at https://api.census.gov/data/key_signup.html "
+                               "and set CENSUS_API_KEY before running the build.")
         r.raise_for_status()
         rows = r.json()
         df = pd.DataFrame(rows[1:], columns=rows[0])

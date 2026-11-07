@@ -11,6 +11,12 @@ from parcel_engine import arcgis, registry, sources
 from parcel_engine.sources import LiveSources
 
 
+def as_file(monkeypatch, dataset_id, local_file):
+    """Some datasets are now queried live; these tests still cover the file loader by pointing one at a local file."""
+    spec = dict(registry.BY_ID[dataset_id], access="file", local_file=local_file)
+    monkeypatch.setitem(registry.BY_ID, dataset_id, spec)
+
+
 @pytest.fixture
 def raw(tmp_path, monkeypatch):
     monkeypatch.setattr(sources, "RAW", tmp_path / "raw")
@@ -44,7 +50,8 @@ def test_gtfs_zip(raw):
     assert len(LiveSources().get("octa_gtfs", AREA)) == 2
 
 
-def test_vector_file_clipped(raw):
+def test_vector_file_clipped(raw, monkeypatch):
+    as_file(monkeypatch, "scag_hqta", "scag_hqta.gpkg")
     gpd.GeoDataFrame({"HAZ": [1, 2]}, geometry=[box(-117.76, 33.68, -117.75, 33.69), box(-110, 30, -109, 31)],
                      crs=4326).to_file(raw / "scag_hqta.gpkg")
     assert len(LiveSources().get("scag_hqta", AREA)) == 1
@@ -57,6 +64,7 @@ def test_acs_api_parse(raw, monkeypatch):
             ["-666666666", "0", "0", "0", "0", "0", "06", "059", "099999"]]
 
     class R:
+        url = "https://api.census.gov/data/2024/acs/acs5"
         def raise_for_status(self): pass
         def json(self): return rows
     monkeypatch.setattr(sources.requests, "get", lambda *a, **k: R())
@@ -90,7 +98,8 @@ def test_arcgis_query_pages_by_object_id(monkeypatch):
     assert len(calls) == 3  # ids + 2 pages
 
 
-def test_publisher_zip_with_shapefile(raw, tmp_path):
+def test_publisher_zip_with_shapefile(raw, tmp_path, monkeypatch):
+    as_file(monkeypatch, "calfire_fhsz_lra", "fhsz_lra_2025.zip")
     shp_dir = tmp_path / "shp"
     shp_dir.mkdir()
     gpd.GeoDataFrame({"FHSZ_Description": ["Very High"]}, geometry=[box(-117.76, 33.68, -117.75, 33.69)],
@@ -100,3 +109,27 @@ def test_publisher_zip_with_shapefile(raw, tmp_path):
             z.write(f, f"fhsz/{f.name}")
     g = LiveSources().get("calfire_fhsz_lra", AREA)
     assert len(g) == 1 and "FHSZ_Descr" in g.columns   # shapefile truncates to 10 chars
+
+
+def test_acs_without_key_explains_how_to_get_one(raw, monkeypatch):
+    class R:
+        url = "https://api.census.gov/data/missing_key.html"
+        def raise_for_status(self): pass
+    monkeypatch.setattr(sources.requests, "get", lambda *a, **k: R())
+    monkeypatch.delenv("CENSUS_API_KEY", raising=False)
+    sources_ = LiveSources()
+    assert sources_.get("acs5") is None
+    assert "CENSUS_API_KEY" in sources_.status["acs5"]
+
+
+def test_acs_sends_key_when_set(raw, monkeypatch):
+    seen = {}
+
+    class R:
+        url = "https://api.census.gov/data/2024/acs/acs5"
+        def raise_for_status(self): pass
+        def json(self): return [["B19013_001E", "B25070_001E", "B25070_007E", "B25070_008E", "B25070_009E",
+                                 "B25070_010E", "state", "county", "tract"], ["1", "1", "0", "0", "0", "0", "06", "059", "000100"]]
+    monkeypatch.setattr(sources.requests, "get", lambda url, params=None, **k: seen.update(params or {}) or R())
+    monkeypatch.setenv("CENSUS_API_KEY", "test-key")
+    assert LiveSources().get("acs5") is not None and seen["key"] == "test-key"

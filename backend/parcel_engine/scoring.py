@@ -9,6 +9,8 @@ import math
 import numpy as np
 import pandas as pd
 
+from . import pathways
+
 # ---------------- Confidence ----------------
 # Ten signals, matching the front end's "N of 10 signals" display.
 SIGNALS = ["Lot size", "Building coverage", "Year built", "Land use code", "Housing Element status",
@@ -19,6 +21,8 @@ LOW_CONFIDENCE_PENALTY = 0.5  # each low-confidence input that is true for the p
 # ---------------- Development Potential ----------------
 CORE_WEIGHTS = {"lot": 25, "coverage": 25, "transit": 15, "jobs": 10, "opportunity": 10,
                 "land_use": 8, "age": 4, "amenities": 3}
+# The AB 2011 / SB 6 (commercial land) and AB 2097 (parking near transit) pathways are shown on each parcel but
+# earn no bonus: land use and transit already score the same facts in the core components.
 BONUS_POINTS = {"he": 15, "public": 10, "faith": 5, "sb35": 3, "he_noncompliant": 2, "tax_defaulted": 2}
 
 # SCAG existing land use codes treated as underused for housing. VERIFY against the
@@ -37,6 +41,18 @@ RISK_DAMPING = 0.7  # Opportunity = DP x (1 - 0.7 x Risk/100)
 # A Low-confidence score stands on thin data, so it is discounted. 0.66 keeps the result at or below 66,
 # i.e. never in the High band (67+), while preserving the order of parcels. Keep in sync with the front end.
 LOW_CONFIDENCE_OPP_FACTOR = 0.66
+
+# Each risk the score can penalize, and the datasets that must be loaded to check it. A layer that is not
+# loaded adds no points, so the risk score is a minimum, and each parcel lists what was not checked.
+RISK_LAYERS = [
+    ("flood", ["fema_nfhl"]), ("fire", ["calfire_fhsz_lra", "calfire_fhsz_sra"]),
+    ("liquefaction", ["cgs_liquefaction"]), ("earthquake faults", ["cgs_fault_zones"]),
+    ("coastal zone", ["coastal_zone"]), ("oil wells", ["calgem_wells"]),
+    ("contamination", ["dtsc_envirostor", "geotracker"]), ("historic properties", ["nrhp"]),
+    ("CalEnviroScreen", ["calenviroscreen4"]),
+    ("existing subsidized housing", ["hud_lihtc", "hud_mf_s8", "hcd_mobilehome_parks"]),
+]
+EVIDENCE_SIGNALS = 10  # an opportunity score above the ZIP median is discounted by (signals found / 10)
 
 
 def level_for(effective: float) -> str:
@@ -66,6 +82,18 @@ def _pct_rank(series: pd.Series) -> pd.Series:
 
 def _fmt_acres(acres: float, sqft: float) -> str:
     return f"{acres:.2f} acres ({sqft:,.0f} sq ft)"
+
+
+def _opportunity_value(cat) -> float:
+    """TCAC/HCD category -> 0..1. "High Segregation & Poverty" is the LOWEST tier, not a high one."""
+    c = str(cat).lower()
+    if "segregation" in c or "poverty" in c or "low resource" in c:
+        return 0.0
+    if "highest" in c or "high resource" in c or c.strip() == "high":
+        return 1.0
+    if "moderate" in c:
+        return 0.5
+    return 0.0
 
 
 def _fire_class(*vals) -> str | None:
@@ -162,7 +190,7 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
                             f"Jobs in tract {g('tract_jobs'):,.0f} — {'more' if f >= 0.5 else 'fewer'} than most parcels in this ZIP."))
         if found["Opportunity area"]:
             cat = str(g("tcac_category"))
-            f = 1.0 if "high" in cat.lower() else 0.5 if "moderate" in cat.lower() else 0.0
+            f = _opportunity_value(cat)
             core["opportunity"] = f
             contrib.append(("opportunity", f, "up" if f >= 0.5 else "down", f"TCAC {cat}",
                             f"TCAC/HCD opportunity area: {cat}."))
@@ -186,6 +214,8 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
 
         wsum = sum(CORE_WEIGHTS[k] for k in core)
         dp_core = 100 * sum(CORE_WEIGHTS[k] * v for k, v in core.items()) / wsum if wsum else None
+        paths, paths_unchecked = pathways.analyze(g, a)
+        pid = {x["id"]: x for x in paths}
         bonus = []
         if _true(g("he_site")) or _true(g("he_rezone")):
             bonus.append(("he", "Housing Element " + ("rezone site" if _true(g("he_rezone")) else "site")))
@@ -194,7 +224,7 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
         if _true(g("faith_based")):
             bonus.append(("faith", "faith-based parcel (SB 4, low confidence)"))
         sb35 = str(g("sb35_status") or "").lower()
-        if "subject" in sb35 or "10%" in sb35 or "50%" in sb35:
+        if ("subject" in sb35 or "10%" in sb35 or "50%" in sb35) and pid.get("sb35", {}).get("status") != "blocked":
             bonus.append(("sb35", "jurisdiction subject to SB 35"))
         he_status = str(g("he_status") or "").lower()
         if he_status and ("out of compliance" in he_status or "not in compliance" in he_status or "due" in he_status):
@@ -256,12 +286,11 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
             f"{band(dp)}: " + (", ".join(dp_phrases[:3]) if dp_phrases else
                                ", ".join(c[3] for c in downs[:3]) or "few positive signals") + ".")
         risk_phrases = [ph for _, ph in risk_items]
-        missing_hazard = [n for ok, n in ((a("fema_nfhl"), "flood"),
-                                          (a("calfire_fhsz_lra") or a("calfire_fhsz_sra"), "fire"),
-                                          (a("cgs_liquefaction"), "liquefaction")) if not ok]
+        risk_unchecked = [name for name, ids in RISK_LAYERS if not any(a(i) for i in ids)]
         risk_reason = None if risk is None else (
             f"{band(risk, 'risk')}: " + (", ".join(risk_phrases[:3]) if risk_phrases else "no hazard or constraint flags found")
-            + (f" ({', '.join(missing_hazard)} data unavailable)" if missing_hazard else "") + ".")
+            + (f". Risk is a minimum: {', '.join(risk_unchecked)} not checked" if risk_unchecked else "") + ".")
+        opp_raw = opp
         opp_reason = (f"{band(opp)}: development potential {dp:.0f}"
                       + (f", reduced by feasibility risk {risk:.0f}" if risk else ", no risk deductions")
                       + (", then discounted because confidence is Low" if discounted else "") + "."
@@ -282,5 +311,30 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
             "opp": opp,
             "dev_reason": dp_reason if scored else None, "risk_reason": risk_reason if scored else None,
             "opp_reason": opp_reason, "reasons": reasons[:5],
+            "pathways": paths, "pathways_unchecked": paths_unchecked,
+            "risk_unchecked": risk_unchecked, "evidence": effective, "opp_raw": opp_raw,
         })
-    return pd.concat([p.reset_index(drop=True), pd.DataFrame(rows)], axis=1)
+    out = pd.concat([p.reset_index(drop=True), pd.DataFrame(rows)], axis=1)
+    return _discount_for_missing_evidence(out)
+
+
+def _discount_for_missing_evidence(df: pd.DataFrame) -> pd.DataFrame:
+    """Pull opportunity scores that sit above the ZIP median toward it in proportion to missing evidence.
+
+    A score built from 9 of 10 signals keeps 90% of its distance above the median, 8 of 10 keeps 80%. Scores at or
+    below the median are never raised. This stops thin evidence from producing the highest scores in a ZIP."""
+    scored = df["opp"].notna()
+    if not scored.any():
+        return df
+    median = float(df.loc[scored, "opp"].median())
+    df = df.copy()
+    for i in df.index[scored]:
+        raw = float(df.at[i, "opp"])
+        factor = min(1.0, float(df.at[i, "evidence"]) / EVIDENCE_SIGNALS)
+        if raw > median and factor < 1.0:
+            new = round(median + (raw - median) * factor)
+            df.at[i, "opp"] = new
+            df.at[i, "opp_reason"] = (f"{band(new)}: development potential {df.at[i, 'development_potential']:.0f}"
+                                      + (f", reduced by feasibility risk {df.at[i, 'feasibility_risk']:.0f}" if df.at[i, "feasibility_risk"] else ", no risk deductions")
+                                      + f". Discounted from {raw:.0f} because only {df.at[i, 'evidence']:g} of {EVIDENCE_SIGNALS} signals were found.")
+    return df
