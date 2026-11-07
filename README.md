@@ -49,6 +49,18 @@ http://localhost:8001/?api=http://localhost:8000#/zip/92705
 
 Sample ZIPs: `92618` and `92620` (Irvine) and `92705` (crosses Santa Ana, Tustin and North Tustin). Without `?api=` the front end runs on built-in sample data, labeled as such.
 
+**Which ZIP codes work**
+
+- Fixture mode (offline demo): only `92618`, `92620` and `92705`.
+- Live mode: any Orange County ZIP. A valid OC ZIP has at least 5% of its area inside OC cities or unincorporated land. Anything else returns 404, and a ZIP that is not 5 digits returns 400. Only the three sample ZIPs have been designed around; other OC ZIPs are untested.
+- Front end without `?api=`: built-in sample data only.
+
+| Sample ZIP | Why |
+|---|---|
+| `92618` | Irvine, the normal case |
+| `92620` | Irvine, thin data (warning banner, many Insufficient parcels) |
+| `92705` | Crosses city lines: Santa Ana, Tustin and North Tustin |
+
 **Tests:** `cd backend && PARCEL_ENGINE_MODE=fixture python -m pytest -q`
 
 **Data:** live scoring uses datasets in `backend/data/raw/`. A missing dataset does not break anything: its signals count as missing and lower confidence. `docs/DATASETS.md` lists every source and download link; `backend/README.md` explains which are automatic and which are manual.
