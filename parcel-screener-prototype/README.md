@@ -24,7 +24,7 @@ Without `?api=`, the page runs on generated sample data for 92618, 92620 and 927
 When the backend (or a saved snapshot) provides parcel polygons, the map is a live Leaflet map over the Esri Light Gray basemap, with the real county parcels drawn at their true coordinates and colored in the OCA palette (opportunity: orange tint, yellow, blue, green, low to high; Low-confidence parcels stay muted). Zoom and drag work; clicking a parcel or a numbered pin selects the site. Without polygons (sample mode) it falls back to the schematic map.
 
 - Leaflet is vendored in `vendor/leaflet/` (BSD-2), so the map code has no CDN dependency.
-- `data/92701.geojson` is a saved copy of the backend's `/zip/92701` output (5,312 real Santa Ana parcels, built from county records on 2026-11-07), so the page shows a real ZIP with no backend running: open `http://localhost:8001/#/zip/92701`. Any `data/<zip>.geojson` works the same way.
+- `data/92701.geojson.gz` is a saved, gzipped copy of the backend's `/zip/92701` output (5,312 real Santa Ana parcels, built from public records on 2026-11-07), so the page shows a real ZIP with no backend running: open `http://localhost:8001/#/zip/92701`. Any `data/<zip>.geojson.gz` (or plain `.geojson`) works the same way.
 - Tiles: Esri World Light Gray (free with attribution, shown on the map). Swap `TILE_BASE` and `TILE_LABELS` in `app.js` to change providers. Carto's free tiles now require an API key.
 
 ## Screens

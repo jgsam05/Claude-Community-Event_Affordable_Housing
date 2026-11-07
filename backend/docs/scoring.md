@@ -43,7 +43,7 @@ Core components are each 0–1, weighted, and renormalised over the components t
 | Age | 4 | built before 1980 |
 | Amenities | 3 | grocery / school within ½ mi |
 
-Bonus points are added on top, with the total capped at 100: HE site or rezone +15, public/surplus land +10, faith-based +5, SB 35 jurisdiction +3, HE out of compliance (builder's remedy watch) +2, tax-defaulted +2.
+Bonus points are added on top, with the total capped at 100: HE site or rezone +15, public/surplus land +10, faith-based +5, SB 35 jurisdiction +3 (not when a hazard blocks the pathway), HE out of compliance (builder's remedy watch) +2, tax-defaulted +2, commercial land where AB 2011 / SB 6 may apply +3, near transit where AB 2097 limits parking minimums +2.
 
 ## Feasibility Risk (0–100, higher = harder)
 
@@ -79,3 +79,18 @@ A parcel with zero risk keeps its full potential. At maximum risk it keeps 30%.
 ## Validation
 
 `validation.validate()` compares scored parcels with APNs in APR Table A2. It reports base rate, top-decile hit rate, lift and AUC. A2 includes ADUs and single-unit permits, so it tests "where housing gets built", not affordable feasibility. Read lift and AUC as a sanity check, not as accuracy.
+
+## State-law pathways
+
+`parcel_engine/pathways.py` lists, for each parcel, the California laws that may help or block housing there. It is a screening aid: zoning is not in the data, so every entry says what it was based on and what must be confirmed. It does not change risk, only development potential through the bonuses above.
+
+| Status | Meaning |
+|---|---|
+| applies | The data shows the law's main trigger is met |
+| likely | Trigger met; a condition we can't see in public data still needs confirming |
+| possible | A stand-in measure suggests it may apply (for example commercial land use instead of zoning) |
+| blocked | A known exclusion is present (flood zone, very high fire zone, earthquake fault zone, historic property, cleanup site) |
+
+Pathways: SB 35 / SB 423 streamlined approval, AB 2011 and SB 6 (housing on commercial land), SB 4 (faith-based land), Surplus Land Act, AB 2097 (no parking minimums near transit), State Density Bonus Law, Housing Element sites and rezone sites, builder's remedy (Housing Accountability Act), and notice rules for expiring affordable housing (Gov. Code 65863.10).
+
+A pathway whose dataset isn't loaded is not guessed. It appears in `pathways_unchecked` with the dataset it needs: SB 35 / SB 423 needs `hcd_sb35`, SB 4 needs `osm_worship`, the Surplus Land Act needs `hcd_sla_notices`, `apr_table_h` or `dgs_state_land`, the builder's remedy needs `hcd_compliance`, and preservation needs `hud_lihtc`, `hud_mf_s8` or `hcd_mobilehome_parks`.

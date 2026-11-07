@@ -6,9 +6,9 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ## Status
 
-- 43 datasets: 15 pulled live by the backend, 2 committed in `backend/data/raw/` (lodes_wac, cde_schools), 26 still need a manual download.
+- 43 datasets: 19 pulled live by the backend, 2 committed in `backend/data/raw/` (lodes_wac, cde_schools), 22 still need a manual download.
 - License checked against the publisher: 22 of 43.
-- Refresh date checked against the publisher: 24 of 43.
+- Refresh date checked against the publisher: 21 of 43.
 - Source (publisher, URL, vintage) checked on 2026-11-07: 38 of 43.
 - Authority: **original** = the agency responsible for the data, serving it itself; **compiler** = a public agency compiling other governments' records (SCAG); **community** = OpenStreetMap, used only where the project plan calls for it and always low confidence; **consortium** = Overture, alternative only. No dataset is read from a third-party mirror.
 - Phase 1 requires every source documented with source, license and refresh date. Rows marked **no** under *Verified* still need someone to open the publisher's page and confirm.
@@ -36,20 +36,20 @@ Most data files are not stored in this repo. They are either queried live by the
 | [DGS Statewide Property Inventory (state-owned real property)](#dgs-state-land) | CA Dept. of General Services (original) | Public land | file | No license stated by DGS (state public record) | Updated annually by agencies; RealProperty last modified 2025-10-22 | yes / yes |
 | [OSM places of worship](#osm-worship) | OpenStreetMap contributors (via Geofabrik) (community) | Faith-based (SB 4) | file | ODbL 1.0 (attribution + share-alike) | Geofabrik daily extract; record extract date | yes / **no** |
 | [OC Treasurer-Tax Collector tax-defaulted property lists (PDF)](#oc-tax-defaulted) | Orange County Treasurer-Tax Collector (original) | Tax-defaulted | pdf_dir | County public notice (published under Rev. & Tax. Code 3371 / 3702) | Delinquency list published each September (latest seen: executed Sept 2, 2025); auction Exhibit I each spring | yes / yes |
-| [SCAG High Quality Transit Areas](#scag-hqta) | Southern California Association of Governments (original) | Transit (HQTA) | file | SCAG Open Data terms of use | Use Connect SoCal 2024 base-year (2022) HQTA; SCAG updates every 4 years | **no** / **no** |
+| [SCAG High Quality Transit Corridors, base year 2022 (half-mile buffer)](#scag-hqta) | Southern California Association of Governments (original) | Transit (HQTA) | arcgis_rest | SCAG Open Data terms of use | Connect SoCal 2024 base year 2022 (SCAG updates every 4 years) | **no** / **no** |
 | [OCTA GTFS stops](#octa-gtfs) | Orange County Transportation Authority (original) | Transit stops | file | OCTA open data terms: free use, OCTA retains ownership, no warranty | Quarterly service changes; read feed_info.txt / calendar.txt | yes / yes |
 | [Metrolink GTFS stops](#metrolink-gtfs) | Southern California Regional Rail Authority (Metrolink) (original) | Transit stops | file | Metrolink: provided as is, no liability | Updated with schedule changes (about 5 times a year) | yes / yes |
 | [Census LEHD LODES8 WAC (jobs by workplace)](#lodes-wac) | U.S. Census Bureau, LEHD (original) | Jobs access | in repo | Public domain (U.S. Government work) | Committed file is job year 2022; LODES 8.4 (Dec 18, 2025) adds 2023 | yes / yes |
 | [CDE public schools](#cde-schools) | CA Dept. of Education (original) | Schools | in repo | California public record; state open-data terms | Updated daily; record download date | **no** / **no** |
 | [OSM/Overture grocery stores](#osm-grocery) | OpenStreetMap contributors (via Geofabrik) (community) | Grocery | file | ODbL 1.0 (attribution + share-alike) | Record extract date | yes / **no** |
-| [CTCAC/HCD Opportunity Map (2026)](#tcac-opportunity) | CA Tax Credit Allocation Committee / HCD (original) | Opportunity area | file | California public record; state open-data terms | 2026 map, adopted December 2025 (annual) | **no** / yes |
+| [CTCAC/HCD Opportunity Map (2022 edition, as compiled by SCAG)](#tcac-opportunity) | SCAG (compiled from CA Tax Credit Allocation Committee / HCD) (compiler) | Opportunity area | arcgis_rest | SCAG Open Data terms of use | 2022 edition (YEAR field = 2022); newer editions are published annually by CTCAC | **no** / **no** |
 | [ACS 5-year 2020-2024 (rent burden, median household income)](#acs5) | U.S. Census Bureau (original) | Rent burden / income | census_api | Public domain (U.S. Government work) | 2020-2024 ACS 5-year, released January 29, 2026 | yes / yes |
 | [HUD FY2026 income limits (Orange County AMI)](#hud-income-limits) | U.S. Dept. of Housing and Urban Development (original) | AMI | file | Public domain (U.S. Government work) | FY2026, effective May 1, 2026 | yes / yes |
 | [CalEnviroScreen 5.0 (OEHHA)](#calenviroscreen4) | CA Office of Environmental Health Hazard Assessment (original) | Environmental burden | file | OEHHA conditions of use | CalEnviroScreen 5.0, final released July 2026 (replaces 4.0, Oct 2021) | **no** / yes |
 | [Treasury/CDFI Fund Qualified Opportunity Zones (2026 list)](#cdfi-oz) | U.S. Treasury, CDFI Fund (original) | Opportunity Zone | file | Public domain (U.S. Government work) | 2026 designations announced Nov 5, 2026 (2018 list superseded) | yes / yes |
 | [FEMA National Flood Hazard Layer (flood zones)](#fema-nfhl) | Federal Emergency Management Agency (original) | Hazards | arcgis_rest | Public domain (U.S. Government work) | Continuously updated; record query date | yes / yes |
-| [CAL FIRE OSFM Fire Hazard Severity Zones, LRA (2025)](#calfire-fhsz-lra) | CAL FIRE, Office of the State Fire Marshal (original) | Hazards | file | CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use | LRA maps released in 4 phases, Feb 10 - Mar 24, 2025 (combined file, Phases 1-4) | yes / yes |
-| [CAL FIRE OSFM Fire Hazard Severity Zones, SRA (effective April 1, 2024)](#calfire-fhsz-sra) | CAL FIRE, Office of the State Fire Marshal (original) | Hazards | file | CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use | Effective April 1, 2024; a 2026 SRA update was open for public comment (Nov 2026) | yes / yes |
+| [CAL FIRE Fire Hazard Severity Zones, LRA (2011), state geoportal](#calfire-fhsz-lra) | CAL FIRE, Office of the State Fire Marshal (original) | Hazards | arcgis_rest | CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use | LRA 2011 recommendations. CAL FIRE released updated LRA zones in 2025; refresh from the OSFM page. | yes / **no** |
+| [CAL FIRE Fire Hazard Severity Zones, SRA (2007), state geoportal](#calfire-fhsz-sra) | CAL FIRE, Office of the State Fire Marshal (original) | Hazards | arcgis_rest | CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use | SRA 2007 map. The SRA map effective April 1, 2024 is on the OSFM page; refresh from there. | yes / **no** |
 | [CGS Seismic Hazards Program: Liquefaction Zones](#cgs-liquefaction) | CA Dept. of Conservation, California Geological Survey (original) | Hazards | arcgis_rest | CC BY (California Department of Conservation) | Last modified 2025-11-19 (publisher metadata) | yes / yes |
 | [CGS Alquist-Priolo Earthquake Fault Zones](#cgs-fault-zones) | CA Dept. of Conservation, California Geological Survey (original) | Hazards | arcgis_rest | CC BY (California Department of Conservation) | Last modified 2025-11-19 (publisher metadata) | yes / yes |
 | [California Coastal Commission Coastal Zone Boundary](#coastal-zone) | California Coastal Commission (original) | Hazards | file | CCC disclaimer: no warranty; users indemnify the Commission; not survey accuracy | Digital CZB from CCC GIS/Mapping Unit (2014-2016 vintages); official boundary adopted 1977 and amended since | yes / yes |
@@ -71,8 +71,8 @@ Most data files are not stored in this repo. They are either queried live by the
 - **Publisher:** County of Orange, OC Survey (authority: original)
 - **Source checked against publisher:** 2026-11-07
 - **Signals:** Lot size, Year built
-- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/FeatureServer/0
-- **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/FeatureServer
+- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/MapServer/0
+- **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/MapServer
 - **License:** OC Survey / OCGIS public data; terms of use on ocgis.com (verified: **no**)
 - **Refresh date:** Not published on layer (no editingInfo.lastEditDate) (verified: **no**)
 - **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
@@ -146,8 +146,8 @@ Most data files are not stored in this repo. They are either queried live by the
 - **Publisher:** County of Orange, OC Survey (authority: original)
 - **Source checked against publisher:** 2026-11-07
 - **Signals:** Building coverage
-- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Building_Footprints/FeatureServer/0
-- **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Building_Footprints/FeatureServer
+- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Building_Footprints/MapServer/0
+- **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Building_Footprints/MapServer
 - **License:** OC Survey / OCGIS public data; terms of use on ocgis.com (verified: **no**)
 - **Refresh date:** verify at ingest (verified: **no**)
 - **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
@@ -175,8 +175,8 @@ Most data files are not stored in this repo. They are either queried live by the
 - **Publisher:** County of Orange, OC Survey (authority: original)
 - **Source checked against publisher:** 2026-11-07
 - **Signals:** Frontage
-- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Street_Centerlines_With_Labels/FeatureServer/0
-- **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Street_Centerlines_With_Labels/FeatureServer
+- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Centerlines/MapServer/0
+- **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Centerlines/MapServer
 - **License:** OC Survey / OCGIS public data; terms of use on ocgis.com (verified: **no**)
 - **Refresh date:** verify at ingest (verified: **no**)
 - **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
@@ -339,18 +339,18 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### scag-hqta
 
-**SCAG High Quality Transit Areas**
+**SCAG High Quality Transit Corridors, base year 2022 (half-mile buffer)**
 
 - **Publisher:** Southern California Association of Governments (authority: original)
 - **Source checked against publisher:** 2026-11-07
 - **Signals:** Transit (HQTA)
-- **Source URL:** https://gisdata-scag.opendata.arcgis.com/
-- **Publisher page:** https://gisdata-scag.opendata.arcgis.com/
+- **Source URL:** https://maps.scag.ca.gov/scaggis/rest/services/OpenData/HQTC_Year_2022/MapServer/0
+- **Publisher page:** https://maps.scag.ca.gov/scaggis/rest/services/OpenData/HQTC_Year_2022/MapServer
 - **License:** SCAG Open Data terms of use (verified: **no**)
-- **Refresh date:** Use Connect SoCal 2024 base-year (2022) HQTA; SCAG updates every 4 years (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/scag_hqta.gpkg`.
+- **Refresh date:** Connect SoCal 2024 base year 2022 (SCAG updates every 4 years) (verified: **no**)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel gets `in_hqta` = true if it overlaps any feature.
-- **Notes:** SCAG serves the 2024 base-year HQTC lines live (OpenData/HQTC_Year_2022) but I could not find the matching HQTA polygon service, so this stays a download from SCAG's portal. Do not use the RTP2020 layers.
+- **Notes:** Queried live from SCAG. The layer is the corridor lines; the engine buffers them half a mile (2,640 ft) to approximate the High Quality Transit Area. Half-mile areas around major rail and BRT stops are not in this layer, so HQTA can be undercounted near stations. Do not use the RTP2020 layers.
 
 ### octa-gtfs
 
@@ -427,18 +427,18 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### tcac-opportunity
 
-**CTCAC/HCD Opportunity Map (2026)**
+**CTCAC/HCD Opportunity Map (2022 edition, as compiled by SCAG)**
 
-- **Publisher:** CA Tax Credit Allocation Committee / HCD (authority: original)
+- **Publisher:** SCAG (compiled from CA Tax Credit Allocation Committee / HCD) (authority: compiler)
 - **Source checked against publisher:** 2026-11-07
 - **Signals:** Opportunity area
-- **Source URL:** https://www.treasurer.ca.gov/ctcac/opportunity.asp
-- **Publisher page:** https://www.treasurer.ca.gov/ctcac/opportunity.asp
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** 2026 map, adopted December 2025 (annual) (verified: yes)
-- **How to get it:** Manual download. Save as `backend/data/raw/tcac_opportunity_map_2026.gpkg`.
+- **Source URL:** https://maps.scag.ca.gov/scaggis/rest/services/OpenData/REAP/MapServer/1
+- **Publisher page:** https://maps.scag.ca.gov/scaggis/rest/services/OpenData/REAP/MapServer
+- **License:** SCAG Open Data terms of use (verified: **no**)
+- **Refresh date:** 2022 edition (YEAR field = 2022); newer editions are published annually by CTCAC (verified: **no**)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel takes `tcac_category` from the polygon containing its interior point.
-- **Notes:** Published by the State Treasurer's CTCAC with HCD. Shapefile is linked from the page above.
+- **Notes:** Queried live from SCAG's compiled copy of the CTCAC/HCD map (oppcat = Highest, High, Moderate, Low, Highest Poverty). Newer official shapefiles are linked from https://www.treasurer.ca.gov/ctcac/opportunity.asp; drop one into data/raw/tcac_opportunity_map_2026.gpkg and switch this entry back to a file to use it.
 
 ### acs5
 
@@ -518,33 +518,33 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### calfire-fhsz-lra
 
-**CAL FIRE OSFM Fire Hazard Severity Zones, LRA (2025)**
+**CAL FIRE Fire Hazard Severity Zones, LRA (2011), state geoportal**
 
 - **Publisher:** CAL FIRE, Office of the State Fire Marshal (authority: original)
 - **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
-- **Publisher page:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
+- **Source URL:** https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer/1
+- **Publisher page:** https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer
 - **License:** CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use (verified: yes)
-- **Refresh date:** LRA maps released in 4 phases, Feb 10 - Mar 24, 2025 (combined file, Phases 1-4) (verified: yes)
-- **How to get it:** Manual download. Save as `backend/data/raw/fhsz_lra_2025.zip`.
+- **Refresh date:** LRA 2011 recommendations. CAL FIRE released updated LRA zones in 2025; refresh from the OSFM page. (verified: **no**)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel takes `fhsz_lra` from the polygon containing its interior point.
-- **Notes:** Download 'LRA FHSZ Combined Data as Recommended by the Office of the State Fire Marshal - Phases 1 through 4' (file geodatabase zip) from the OSFM page. Cities adopt these by local ordinance.
+- **Notes:** Queried live from the California state geoportal (CAL FIRE content). This is the older 2011 LRA layer. For the 2025 LRA update, download the OSFM combined file and switch this entry back to a file.
 
 ### calfire-fhsz-sra
 
-**CAL FIRE OSFM Fire Hazard Severity Zones, SRA (effective April 1, 2024)**
+**CAL FIRE Fire Hazard Severity Zones, SRA (2007), state geoportal**
 
 - **Publisher:** CAL FIRE, Office of the State Fire Marshal (authority: original)
 - **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
-- **Publisher page:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
+- **Source URL:** https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer/0
+- **Publisher page:** https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer
 - **License:** CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use (verified: yes)
-- **Refresh date:** Effective April 1, 2024; a 2026 SRA update was open for public comment (Nov 2026) (verified: yes)
-- **How to get it:** Manual download. Save as `backend/data/raw/fhsz_sra_2024.zip`.
+- **Refresh date:** SRA 2007 map. The SRA map effective April 1, 2024 is on the OSFM page; refresh from there. (verified: **no**)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel takes `fhsz_sra` from the polygon containing its interior point.
-- **Notes:** Download 'SRA FHSZ Data Effective April 1, 2024' from the OSFM page. Replace when the 2026 SRA maps are adopted.
+- **Notes:** Queried live from the California state geoportal (CAL FIRE content). This is the older 2007 SRA layer. For the April 2024 SRA map, download it from the OSFM page and switch this entry back to a file.
 
 ### cgs-liquefaction
 

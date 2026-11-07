@@ -30,7 +30,7 @@ Everything in this guide, the app and the video comes back to this goal:
 | ZIP in, ranked and mapped list out | **Built.** Real map, ranked list, filters, selected-site panel. |
 | Free, public datasets only | **Built.** 43 datasets cataloged with publisher, license and refresh date. |
 | Six kinds of candidates | **Built** as filters: vacant or lightly built, Housing Element and rezone sites, public or surplus land, faith-based, tax-defaulted, preservation. Some need datasets that still have to be downloaded. |
-| Development potential: lot size, buildable area, coverage, Housing Element status, state-law pathways | **Built.** Lot size, buildable area, coverage, HE status; state-law pathways as bonus points (SB 35 / SB 423, SB 4 faith-based). |
+| Development potential: lot size, buildable area, coverage, Housing Element status, state-law pathways | **Built.** Lot size, buildable area, coverage, HE status. State-law pathways are analyzed for each parcel (SB 35 / SB 423, AB 2011 and SB 6, SB 4, Surplus Land Act, AB 2097, density bonus, Housing Element sites, builder's remedy, preservation notice rules), each marked Applies, Likely, Possible or Probably blocked. Pathways whose data isn't loaded are listed as "not checked yet". |
 | Location quality: transit, jobs, schools, grocery, opportunity area, CalEnviroScreen, rent burden | **Partly.** Transit, jobs, opportunity area, schools and grocery are scored inside development potential. CalEnviroScreen adds risk points. Rent burden is counted as a confidence signal but not yet in the score. A separate location-quality score is the next step. |
 | Feasibility risk: flood, fire, seismic, coastal, oil wells, contamination, historic | **Built.** Each one adds risk points. |
 | Every score shows components, sources and confidence | **Built.** Reasons on every score, a full score report per parcel, and a confidence level (High, Medium, Low or not scored). |
@@ -215,15 +215,15 @@ OCA pulls every parcel in that ZIP from the county's official records: **[5,312]
 
 On the left is a ranked list of the best places to look. On the right is a real map of Santa Ana with the actual parcels drawn on it. The numbered pins are the top sites.
 
-I'll click the first one. It's a **[6-acre]** vacant parcel. OCA shows three things:
+I'll click the first one. It's a **[1.5-acre]** vacant parcel on **[N Van Ness Ave]**. OCA shows three things:
 
-- **Can homes fit?** The development potential: **[97 out of 100]**.
+- **Can homes fit?** The development potential: **[100 out of 100]**.
 - **What could go wrong?** The feasibility risk: **[0]**, since no hazard flags were found.
-- **How much data is this based on?** The confidence: **[6 of 10]** data signals found.
+- **How much data is this based on?** The confidence: **[9 of 10]** data signals found, so **High** confidence.
 
 And it says in plain words why it ranked here: a large lot, vacant, no building on it. Location matters too: things like transit, jobs, schools and groceries are built into that potential score, and flood, fire, earthquake and contamination count against it as risk.
 
-Notice the confidence is **Low** for this ZIP. That's on purpose. Some of our datasets, like transit and neighborhood opportunity data, aren't loaded yet, so OCA tells you so instead of pretending to be sure. It never hides what it doesn't know."
+Below the scores, OCA lists the **state-law pathways** that may help build here: a density bonus, no parking minimums near transit, and AB 2011 and SB 6 for commercial land. Each one says what it's based on and what still has to be confirmed. And notice what it tells us is missing: rent burden data isn't in the score yet, and OCA says so. It never hides what it doesn't know."
 
 ## How it works (2:00 to 2:25)
 
@@ -279,10 +279,10 @@ Add these to the 3-minute script:
 |---|---|
 | Data signals per parcel | 10 |
 | Confidence levels | High (9 to 10 signals), Medium (7 to 8.5), Low (5 to 6.5), Not scored (under 5) |
-| Datasets cataloged | 43 (15 pulled live, 2 stored in the repo, 26 still need manual download) |
+| Datasets cataloged | 43 (19 pulled live, 2 stored in the repo, 22 still need manual download) |
 | Scoring lenses | 3 (development potential, location quality, feasibility risk), combined into an overall opportunity score, plus confidence |
 | Kinds of sites | 6 (vacant or lightly built, Housing Element, public or surplus land, faith-based, tax-defaulted, preservation) |
-| Our real test run | ZIP 92701 (Santa Ana): **5,312 parcels** pulled from county records, 5,311 scored |
+| Our real test run | ZIP 92701 (Santa Ana): **5,312 parcels** pulled from county records and all scored. **High** confidence on 4,799 (9 of 10 signals), Medium on 513 |
 | Opportunity formula | Development potential x (1 - 0.7 x risk / 100) |
 
 ## What counts as location quality
@@ -326,8 +326,8 @@ Judges respect clear limits. Say these plainly.
 
 ## What is not finished (and what we say about it)
 
-- **Confidence is Low in our real run.** Only 6 of 10 signals loaded. Missing: transit access, opportunity area, rent burden and hazard layers. The census rent data now needs an API key. The scores are real, and OCA labels the gaps instead of hiding them.
-- **26 datasets still need a manual download.** Examples: transit schedules, the state opportunity map, CalEnviroScreen, and the tax-defaulted property lists.
+- **Confidence is High for most parcels, but not all 10 signals load.** In our real run, 4,799 parcels have 9 of 10 signals (High) and 513 have 8 (Medium, mostly missing year built). The one signal missing everywhere is rent burden, because the Census API needs a free key (the backend uses one automatically when `CENSUS_API_KEY` is set). Some fire-hazard layers are older versions (2007 and 2011), and the newer official files should be swapped in.
+- **22 datasets still need a manual download.** Examples: CalEnviroScreen, the HCD lists (SB 423 determination, Housing Element compliance, surplus-land notices), HUD subsidized housing, and the tax-defaulted property lists. Five state-law pathways depend on them (streamlined approval, SB 4, the Surplus Land Act, the builder's remedy and preservation notices), so they show as "not checked yet" instead of being guessed.
 - **Location quality isn't its own score yet.** Transit, jobs, opportunity area, schools and grocery are scored inside development potential. Rent burden counts toward confidence, not the score. Splitting out a separate location score is a next step.
 - **Zoning is not included yet.** OCA says so in the footer of every page.
 - **Scores aren't validated yet.** The backend has code to compare scores against where housing actually got built (state APR Table A2), but we haven't run it. The weights are starting assumptions to test.
@@ -345,8 +345,8 @@ On the day of the run, the county's main "FeatureServer" parcel service returned
 **Is this real data or fake?**
 "Real. The 92701 results come from the County of Orange's own parcel records and public datasets, pulled live. The first demo screens used sample data and were labeled that way."
 
-**Why is the confidence Low?**
-"Because we're honest about what's missing. We counted 10 data signals; our run found 6. Transit, opportunity-area and rent data aren't loaded yet. The scores are real, but the label tells you they stand on less evidence."
+**Why isn't confidence 10 out of 10?**
+"Because we're honest about what's missing. We count 10 data signals; our real run found 9 for most parcels. Rent burden needs a free Census key we haven't added yet, and the label tells you exactly what's missing."
 
 **How do you know the scores are right?**
 "We don't claim they're final. They're a transparent starting formula. Every reason is shown so a person can disagree. The backend includes a validation step that compares scores to where housing was actually permitted. That's the next test we run."
@@ -364,7 +364,7 @@ On the day of the run, the county's main "FeatureServer" parcel service returned
 "Preservation is one of our six site types: existing subsidized housing, like mobile home parks and tax-credit or Section 8 properties, is flagged. Those parcels also get risk points, because redeveloping them could mean losing affordable homes."
 
 **What state laws does it consider?**
-"Streamlining under SB 35 (now SB 423) and faith-based housing under SB 4. They add bonus points to development potential, and the reason is shown on the card."
+"Nine pathways. For every parcel OCA shows which of these may help or block housing: streamlined approval under SB 35 and SB 423, housing on commercial land under AB 2011 and SB 6, faith-based land under SB 4, the Surplus Land Act, no parking minimums near transit under AB 2097, the State Density Bonus Law, Housing Element sites, the builder's remedy, and notice rules for expiring affordable housing. Each is marked Applies, Likely, Possible or Probably blocked, with what it's based on and what to confirm. Some add points to development potential. And where a dataset isn't loaded yet, like the SB 423 determination, OCA says 'not checked yet' instead of guessing."
 
 **What about zoning?**
 "Not included yet, and we say so on every screen. It's the first thing we'd add. Housing Element status is included as a proxy, since those sites are already identified for housing."
@@ -394,9 +394,9 @@ Before you present:
 - [ ] Check the internet connection (the map tiles load from Esri).
 - [ ] Have the **demo video** ready as a backup.
 - [ ] Practice clicking: ZIP, first site, the score report.
-- [ ] Know your numbers: **5,312 parcels**, **10 signals**, **3 scores**, **6 kinds of sites**, **43 datasets**.
+- [ ] Know your numbers: **5,312 parcels**, **9 of 10 signals found**, **3 scoring lenses**, **6 kinds of sites**, **43 datasets**, **9 state-law pathways**.
 - [ ] Decide who says what: **[Presenter 1: problem and demo]**, **[Presenter 2: how it works and close]**.
-- [ ] Prepare to answer: "Why is confidence Low?" and "What about zoning?"
+- [ ] Prepare to answer: "Why isn't confidence 10 out of 10?" and "What about zoning?"
 
 If the map doesn't load: the list and score report show the same information as text. Say so, and continue.
 

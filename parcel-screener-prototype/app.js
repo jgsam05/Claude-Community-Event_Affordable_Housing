@@ -139,13 +139,16 @@
     cache[zip] = ps;
     return ps;
   }
-  // Without a backend, a ZIP can still be real: data/<zip>.geojson is a saved copy of the backend's /zip/<zip> output.
+  // Without a backend, a ZIP can still be real: data/<zip>.geojson(.gz) is a saved copy of the backend's /zip/<zip> output.
   var snapshots = {}, snapshotTried = {};
   function loadSnapshot(zip) {
     snapshotTried[zip] = true;
-    return fetch('data/' + zip + '.geojson').then(function (r) {
-      if (!r.ok) throw new Error('no snapshot');
-      return r.json();
+    var base = 'data/' + zip + '.geojson';
+    return fetch(base + '.gz').then(function (r) {          // gzipped copy first: smaller, decompressed in the browser
+      if (!r.ok || typeof DecompressionStream === 'undefined') throw new Error('no gz snapshot');
+      return new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).json();
+    }).catch(function () {
+      return fetch(base).then(function (r) { if (!r.ok) throw new Error('no snapshot'); return r.json(); });
     }).then(function (fc) { snapshots[zip] = true; return ingest(zip, fc); });
   }
   function rank(ps) {
@@ -596,6 +599,31 @@
       '</ul>' : '') +
     '</div>';
   }
+  // State-law pathways (from the backend's pathways module). Status is always a word, never color alone.
+  var PATH_STATUS = {
+    applies: { label: 'Applies', cls: 'c-high', tip: 'The data shows the main trigger is met.' },
+    likely: { label: 'Likely', cls: 'c-high', tip: 'Trigger met; a condition we can’t see in public data must be confirmed.' },
+    possible: { label: 'Possible', cls: 'c-medium', tip: 'A stand-in measure suggests it may apply.' },
+    blocked: { label: 'Probably blocked', cls: 'c-low', tip: 'A known exclusion is present.' }
+  };
+  var PATH_ORDER = { applies: 0, likely: 1, possible: 2, blocked: 3 };
+  function pathwaysOf(p) { return (p.pathways || []).slice().sort(function (a, b) { return (PATH_ORDER[a.status] - PATH_ORDER[b.status]); }); }
+  function pathwayList(p, detail) {
+    var list = pathwaysOf(p);
+    if (!p.pathways) return '';
+    var items = list.map(function (x) {
+      var st = PATH_STATUS[x.status] || PATH_STATUS.possible;
+      return '<li><span class="path-head"><span class="chip-conf ' + st.cls + '">' + st.label + '</span><span class="path-name">' + esc(x.name) + '</span><span class="path-law">' + esc(x.law) + '</span></span>' +
+        '<span class="path-why">' + esc(x.why) + '</span>' +
+        (detail ? '<span class="path-meta"><b>Based on:</b> ' + esc(x.basis) + '. <b>Confirm:</b> ' + esc(x.caveat) + '</span>' : '') + '</li>';
+    }).join('');
+    var unchecked = (p.pathways_unchecked || []);
+    var un = unchecked.length ? '<details class="path-unchecked"><summary>' + unchecked.length + ' pathway' + (unchecked.length > 1 ? 's' : '') + ' not checked yet</summary><ul>' +
+      unchecked.map(function (u) { return '<li><b>' + esc(u.name) + '</b> (' + esc(u.law) + '). Needs: ' + esc(u.needs) + '.</li>'; }).join('') + '</ul></details>' : '';
+    return '<div class="pathways"><h3>State-law pathways</h3>' +
+      '<p class="muted-note">Laws that may help, or block, housing on this parcel. Zoning isn’t in the data, so these are screening hints, not legal advice.</p>' +
+      (items ? '<ul class="path-list">' + items + '</ul>' : '<p class="muted-note">No pathway applies from the data we have.</p>') + un + '</div>';
+  }
   function selectedHtml(p, zip) {
     var scored = p.opp !== null;
     var meta = ['APN ' + p.apn, p.jurisdiction, acresLabel(p)].filter(Boolean).join(' · ');
@@ -608,6 +636,7 @@
       (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100).</span></p>' :
         '<p class="sel-reason">No score is shown because fewer than 5 of 10 signals are available. Check county records directly.</p>') +
       '<div class="tiles">' + (scored ? scoreTile('dp', p) + scoreTile('risk', p) : '') + confTile(p) + '</div>' +
+      pathwayList(p, false) +
       '<p class="muted-note">Zoning isn’t included yet, so these scores don’t reflect what is allowed on this parcel.</p>' +
       '<div class="sel-actions"><a class="btn-primary" href="#/zip/' + esc(zip) + '/' + encodeURIComponent(p.apn) + '/report">See how it was scored</a></div>' +
     '</section>';
@@ -681,6 +710,7 @@
                 (has ? '<span class="chip-conf ' + CONF[r[4]].cls + '">' + r[4] + '</span>' : '<span class="chip-conf c-insufficient">Missing</span>') + '</td></tr>';
             }).join('') + '</tbody></table></div></section>';
         }).join('') +
+        (p.pathways ? '<section>' + pathwayList(p, true).replace('<h3>State-law pathways</h3>', '<h2>State-law pathways <span class="h-note">(adds points to development potential where noted)</span></h2>') + '</section>' : '') +
         '<section class="limits"><h2>Limits</h2><p>OCA points to where to look first. It does not confirm zoning, ownership, price or buildability. Zoning isn’t included yet. Verify every figure with the city or county and a professional before making an offer or decision.</p>' +
         '<p>Confidence per input: <b>High</b> = direct public record, <b>Medium</b> = derived or estimated from geometry or tract data, <b>Low</b> = matched from an indirect source. <a href="#/methods">Full dataset list</a>.</p></section>' +
       '</div>';
@@ -740,7 +770,8 @@
       '<div class="page">' +
         '<h1 tabindex="-1">Sources &amp; methods</h1>' + phase +
         '<section><h2>How the scores combine</h2><p><b>Opportunity = development potential × (1 − 0.7 × feasibility risk ÷ 100).</b> A parcel with no risk keeps its full potential; at maximum risk it keeps 30%.</p>' +
-          '<p><b>Development potential</b> weights lot size and building coverage (25 each), transit (15), jobs and opportunity area (10 each), underused land use (8), building age (4) and nearby grocery and schools (3), using only the components with data. Bonus points: Housing Element site +15, public or surplus land +10, faith-based +5, SB 35 jurisdiction +3, Housing Element out of compliance +2, tax-defaulted +2. Capped at 100.</p>' +
+          '<p><b>Development potential</b> weights lot size and building coverage (25 each), transit (15), jobs and opportunity area (10 each), underused land use (8), building age (4) and nearby grocery and schools (3), using only the components with data. Bonus points: Housing Element site +15, public or surplus land +10, faith-based +5, SB 35 jurisdiction +3, Housing Element out of compliance +2, tax-defaulted +2, commercial land where AB 2011 / SB 6 may apply +3, near transit where parking minimums are limited (AB 2097) +2. Capped at 100.</p>' +
+          '<p><b>State-law pathways.</b> Each parcel lists the California laws that may help or block housing on it: streamlined approval (SB 35 / SB 423), housing on commercial land (AB 2011 and SB 6), faith-based land (SB 4), the Surplus Land Act, parking limits near transit (AB 2097), the State Density Bonus Law, Housing Element sites, the builder’s remedy and notice rules for expiring affordable housing. Each is marked Applies, Likely, Possible or Probably blocked, with what it is based on and what to confirm. A pathway whose dataset isn’t loaded is listed as “not checked yet” instead of being left out. Zoning isn’t in the data, so these are screening hints, not legal advice.</p>' +
           '<p><b>Feasibility risk</b> adds points for flood (20), fire (5–20), liquefaction (10), fault zone (15), Coastal Zone (10), oil wells (8–15), cleanup sites (6–15), National Register status (15), small lot (10), narrow frontage (5), existing affordable housing (20, preservation rather than redevelopment) and CalEnviroScreen 75th percentile or higher (5). Capped at 100.</p>' +
           '<p>Every weight is a starting assumption, tested against permits reported in APR Table A2, not a calibrated value.</p></section>' +
         '<section><h2>Confidence levels</h2><div class="table-wrap"><table class="data-table"><thead><tr><th scope="col">Level</th><th scope="col">Rule</th><th scope="col">Score shown</th></tr></thead><tbody>' +

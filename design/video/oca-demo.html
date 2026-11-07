@@ -59,19 +59,19 @@ html,body{margin:0;background:#F7F8FA}
 <div class="abs" id="mapAttrib" style="right:90px;bottom:198px;font-size:15px;line-height:20px;color:#33394A;background:rgba(255,255,255,0.9);padding:2px 10px;border-radius:8px;opacity:0">Parcels: County of Orange · Tiles &copy; Esri, HERE, Garmin, &copy; OpenStreetMap contributors</div>
 
 <div class="abs h" id="mTitle" style="left:80px;top:48px;font-size:60px;line-height:66px">Top places to look in 92701</div>
-<div class="abs" id="mSub" style="left:80px;top:116px;font-size:26px;line-height:32px;color:#4B5363;opacity:0">Showing 4 of 5,311 scored parcels · public records</div>
+<div class="abs" id="mSub" style="left:80px;top:116px;font-size:26px;line-height:32px;color:#4B5363;opacity:0">Showing 4 of 5,312 scored parcels · public records</div>
 <div class="abs" id="mChips" style="left:80px;top:160px;display:flex;gap:12px">
 <span class="fchip" style="background:#2B5FC7;border-color:#2B5FC7;color:#FFFFFF">All sites</span><span class="fchip">Vacant</span><span class="fchip">Public</span><span class="fchip">Faith-based</span><span class="fchip">Preservation</span>
 </div>
 <div id="mList"></div>
 <div class="abs" id="mDetail" style="left:80px;top:230px;width:720px;height:660px;box-sizing:border-box;background:#FFFFFF;border:2px solid #DDE1E8;border-radius:22px;padding:30px 36px;opacity:0">
 <div style="display:flex;justify-content:space-between;align-items:flex-start">
-<div><div style="font-size:24px;font-weight:600;color:#4B5363">#1 · Vacant or lightly built · 6.15 acres</div><div class="h" id="dName" style="font-size:40px;line-height:46px;margin-top:4px"></div></div>
+<div><div id="dTag" style="font-size:24px;font-weight:600;color:#4B5363"></div><div class="h" id="dName" style="font-size:40px;line-height:46px;margin-top:4px"></div></div>
 <div style="text-align:right"><div class="h" style="font-size:96px;line-height:96px"><span id="dScore">0</span></div><div style="font-size:22px;color:#4B5363">out of 100</div></div>
 </div>
 <div id="dRows" style="margin-top:26px;display:flex;flex-direction:column;gap:20px"></div>
-<div id="dSrc" style="margin-top:24px;opacity:0;font-size:24px;color:#33394A;line-height:34px">Sources: county parcels · building footprints · SCAG land use <span class="chip" style="background:#FBE7DD;color:#8A3208;margin-left:6px">Low confidence</span></div>
-<div id="dWarn" style="margin-top:16px;opacity:0;background:#FFF3CC;border-radius:14px;padding:12px 18px;font-size:24px;color:#33394A"><strong style="font-weight:600">Not scored yet:</strong> transit, opportunity area, rent burden and hazards.</div>
+<div id="dSrc" style="margin-top:24px;opacity:0;font-size:24px;color:#33394A;line-height:34px">Sources: county parcels · footprints · SCAG land use and transit · FEMA <span class="chip" id="dConf" style="margin-left:6px"></span></div>
+<div id="dWarn" style="margin-top:16px;opacity:0;background:#FFF3CC;border-radius:14px;padding:12px 18px;font-size:24px;color:#33394A"><strong style="font-weight:600">State-law pathways:</strong> <span id="dPaths"></span></div>
 </div>
 
 <svg class="abs" id="pieceSvg" style="left:0;top:0" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
@@ -111,7 +111,7 @@ function niceAddr(a){
   return a.trim().toLowerCase().replace(/\b([a-z])([a-z]*)/g,(m,f,rest)=>(rest.length===0&&/^[nsew]$/.test(f))?f.toUpperCase():f.toUpperCase()+rest).replace(/\b(\d+)(St|Nd|Rd|Th)\b/g,(m,n,suf)=>n+suf.toLowerCase());
 }
 const sites=R.highlights.slice().sort((a,b)=>a.rank-b.rank).map(h=>({
-  rank:h.rank,apn:h.apn,name:niceAddr(h.address)||('APN '+h.apn),tag:'Vacant or lightly built',meta:h.acres.toFixed(2)+' acres',
+  rank:h.rank,apn:h.apn,name:niceAddr(h.address)||('APN '+h.apn),tag:h.tag,meta:h.acres.toFixed(2)+' acres',pathways:h.pathways,
   score:h.opp,dp:h.dp,risk:h.risk,sig:h.sig,col:h.color,txt:TXT[h.color],conf:h.level,poly:POLY[h.color],ringCol:COL[h.color],ring:h.ring
 }));
 sites.forEach(s=>{
@@ -124,7 +124,7 @@ sites.forEach(s=>{
 /* ---------- real map (Leaflet, county parcels, Esri tiles) ---------- */
 const map=L.map('realMap',{zoomControl:false,attributionControl:false,zoomSnap:0.5,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false,inertia:false});
 const cLat=sites.reduce((a,s)=>a+s.ll[0],0)/sites.length, cLon=sites.reduce((a,s)=>a+s.ll[1],0)/sites.length;
-map.setView([cLat,cLon],15.5,{animate:false});
+map.setView([cLat,cLon],16,{animate:false});
 map.panBy([-380,-20],{animate:false});
 const baseTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:16,crossOrigin:true});
 map.createPane('labels');map.getPane('labels').style.zIndex=450;map.getPane('labels').style.pointerEvents='none';
@@ -176,7 +176,7 @@ const pieceEls=sites.map((s,i)=>{
   c.setAttribute('fill',COL[s.col]);c.setAttribute('stroke','#FFFFFF');c.setAttribute('stroke-width','0.55');
   const t=document.createElementNS(NS,'text');
   t.setAttribute('x',0);t.setAttribute('y',1.7);t.setAttribute('text-anchor','middle');
-  t.setAttribute('font-family','Archivo, sans-serif');t.setAttribute('font-weight','800');t.setAttribute('font-size','4.6');
+  t.setAttribute('font-family','Archivo, sans-serif');t.setAttribute('font-weight','800');t.setAttribute('font-size',s.score>=100?'3.6':'4.6');
   t.setAttribute('fill',s.txt);t.textContent=s.score;
   g.appendChild(poly);g.appendChild(c);g.appendChild(t);
   $('pieceSvg').appendChild(g);
@@ -187,7 +187,7 @@ const pieceEls=sites.map((s,i)=>{
 sites.forEach((s,i)=>{
   const d=document.createElement('div');d.className='card';d.id='card'+i;d.style.top=(230+i*170)+'px';
   const cc=s.conf==='High'?['#E3F3EA','#0B5E34']:s.conf==='Medium'?['#FFF3CC','#5A4000']:['#FBE7DD','#8A3208'];
-  d.innerHTML='<div class="ring" style="background:conic-gradient('+s.ringCol+' '+s.score+'%, #DDE1E8 0)"><span>'+s.score+'</span></div>'+
+  d.innerHTML='<div class="ring" style="background:conic-gradient('+s.ringCol+' '+s.score+'%, #DDE1E8 0)"><span style="font-size:'+(s.score>=100?'27px':'36px')+'">'+s.score+'</span></div>'+
    '<div style="min-width:0"><div style="font-size:22px;font-weight:600;color:#4B5363">#'+s.rank+' · '+s.tag+'</div>'+
    '<div style="font-size:29px;line-height:36px;font-weight:600;margin-top:2px">'+s.name+'</div>'+
    '<div style="margin-top:8px"><span class="chip" style="background:#E8EEFB;color:#1E4399;margin-right:8px">'+s.meta+'</span><span class="chip" style="background:'+cc[0]+';color:'+cc[1]+'">'+s.conf+' confidence</span></div></div>';
@@ -197,6 +197,11 @@ sites.forEach((s,i)=>{
 /* ---------- detail rows ---------- */
 const rowsData=[['Can homes fit?',sites[0].dp,'#12844A'],['What could go wrong?',sites[0].risk,'#C2490F'],['How much data is there?',sites[0].sig*10,'#2B5FC7',true]];
 $('dName').textContent=sites[0].name;
+$('dTag').textContent='#'+sites[0].rank+' · '+sites[0].tag+' · '+sites[0].meta;
+const CC={High:['#E3F3EA','#0B5E34'],Medium:['#FFF3CC','#5A4000'],Low:['#FBE7DD','#8A3208']};
+$('dConf').textContent=sites[0].conf+' confidence';$('dConf').style.background=CC[sites[0].conf][0];$('dConf').style.color=CC[sites[0].conf][1];
+const PN={density:'density bonus',parking:'no parking minimums near transit',commercial:'AB 2011 / SB 6 (commercial land) possible',sb35:'streamlined approval',he:'Housing Element site',sla:'surplus land'};
+$('dPaths').textContent=sites[0].pathways.map(x=>PN[x]||x).join(' · ');
 rowsData.forEach((r,i)=>{
   const d=document.createElement('div');
   d.innerHTML='<div style="display:flex;justify-content:space-between;font-size:30px;font-weight:600"><span>'+r[0]+'</span><span class="h" id="dv'+i+'">0</span></div><div style="height:18px;background:#DDE1E8;border-radius:9px;margin-top:8px;overflow:hidden"><div id="db'+i+'" style="height:18px;width:0;background:'+r[2]+';border-radius:9px"></div></div>';

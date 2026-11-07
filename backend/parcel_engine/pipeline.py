@@ -19,6 +19,7 @@ PROPERTIES = [
     "apn", "address", "zip", "jurisdiction", "straddles_city_line",
     "opp", "development_potential", "feasibility_risk", "level", "sig", "signals_total",
     "opp_reason", "dev_reason", "risk_reason", "reasons", "missing", "low_confidence_inputs", "confidence_cap",
+    "pathways", "pathways_unchecked",
     "lot_sqft", "lot_acres", "frontage_ft", "frontage_method", "buildable_sqft", "building_sqft",
     "building_coverage", "coverage_source", "vacant", "year_built", "land_use_code",
     "he_site", "he_rezone", "he_status", "sb35_status", "public_surplus", "sla_notice", "state_owned",

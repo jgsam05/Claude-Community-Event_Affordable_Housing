@@ -9,6 +9,8 @@ import math
 import numpy as np
 import pandas as pd
 
+from . import pathways
+
 # ---------------- Confidence ----------------
 # Ten signals, matching the front end's "N of 10 signals" display.
 SIGNALS = ["Lot size", "Building coverage", "Year built", "Land use code", "Housing Element status",
@@ -19,7 +21,8 @@ LOW_CONFIDENCE_PENALTY = 0.5  # each low-confidence input that is true for the p
 # ---------------- Development Potential ----------------
 CORE_WEIGHTS = {"lot": 25, "coverage": 25, "transit": 15, "jobs": 10, "opportunity": 10,
                 "land_use": 8, "age": 4, "amenities": 3}
-BONUS_POINTS = {"he": 15, "public": 10, "faith": 5, "sb35": 3, "he_noncompliant": 2, "tax_defaulted": 2}
+BONUS_POINTS = {"he": 15, "public": 10, "faith": 5, "sb35": 3, "he_noncompliant": 2, "tax_defaulted": 2,
+                "commercial_pathway": 3, "parking_reform": 2}
 
 # SCAG existing land use codes treated as underused for housing. VERIFY against the
 # SCAG land use code book before relying on them.
@@ -183,6 +186,8 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
 
         wsum = sum(CORE_WEIGHTS[k] for k in core)
         dp_core = 100 * sum(CORE_WEIGHTS[k] * v for k, v in core.items()) / wsum if wsum else None
+        paths, paths_unchecked = pathways.analyze(g, a)
+        pid = {x["id"]: x for x in paths}
         bonus = []
         if _true(g("he_site")) or _true(g("he_rezone")):
             bonus.append(("he", "Housing Element " + ("rezone site" if _true(g("he_rezone")) else "site")))
@@ -191,8 +196,12 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
         if _true(g("faith_based")):
             bonus.append(("faith", "faith-based parcel (SB 4, low confidence)"))
         sb35 = str(g("sb35_status") or "").lower()
-        if "subject" in sb35 or "10%" in sb35 or "50%" in sb35:
+        if ("subject" in sb35 or "10%" in sb35 or "50%" in sb35) and pid.get("sb35", {}).get("status") != "blocked":
             bonus.append(("sb35", "jurisdiction subject to SB 35"))
+        if pid.get("commercial", {}).get("status") == "possible":
+            bonus.append(("commercial_pathway", "commercial land use (AB 2011 / SB 6 may apply)"))
+        if pid.get("parking", {}).get("status") in ("likely", "applies"):
+            bonus.append(("parking_reform", "near transit, where parking minimums are limited (AB 2097)"))
         he_status = str(g("he_status") or "").lower()
         if he_status and ("out of compliance" in he_status or "not in compliance" in he_status or "due" in he_status):
             bonus.append(("he_noncompliant", "jurisdiction out of HE compliance (builder's remedy watch)"))
@@ -275,5 +284,6 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
             "opp": opp,
             "dev_reason": dp_reason if scored else None, "risk_reason": risk_reason if scored else None,
             "opp_reason": opp_reason, "reasons": reasons[:5],
+            "pathways": paths, "pathways_unchecked": paths_unchecked,
         })
     return pd.concat([p.reset_index(drop=True), pd.DataFrame(rows)], axis=1)
