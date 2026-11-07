@@ -170,6 +170,18 @@ main { flex: 1; outline: none; }
 .pin-key.sel { background: var(--orange); }
 .attribution { position: absolute; right: 12px; bottom: 12px; font-size: 13px; color: var(--text-2); background: rgba(255,255,255,.9); padding: 2px 8px; border-radius: 6px; }
 
+/* Live map (Leaflet, backend data). Overlays sit above Leaflet's panes. */
+.map-canvas.is-live { isolation: isolate; z-index: 0; background: #E9EEE8; font-family: var(--body); }
+.map-panel.has-live-map .map-mode, .map-panel.has-live-map .legend { z-index: 1000; }
+.map-panel.has-live-map .attribution { display: none; }
+.map-canvas.is-live .leaflet-interactive:focus { outline: none; }
+.map-canvas.is-live .leaflet-control-attribution { font-size: 11px; }
+.map-canvas.is-live .leaflet-tooltip { font-family: var(--body); font-size: 13px; color: var(--ink); }
+.map-pin { display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.map-pin span { width: 100%; height: 100%; border-radius: 50%; background: var(--blue); color: #fff; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(27,31,42,.4); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-family: var(--body); }
+.map-pin:hover span { background: var(--blue-dark); }
+.map-pin.is-selected span { background: var(--orange); font-size: 15px; }
+
 /* Selected site */
 .selected { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; display: flex; flex-direction: column; gap: 16px; }
 .selected.empty p { margin: 0; color: var(--muted); font-size: 15px; }

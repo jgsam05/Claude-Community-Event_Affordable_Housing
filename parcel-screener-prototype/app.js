@@ -95,6 +95,7 @@
       var o = {};
       for (var k in p) o[k] = p[k];
       o.id = i;
+      o.geometry = f.geometry;  // EPSG:4326, drawn by the live Leaflet map
       o.address = p.address || ('APN ' + p.apn);
       o.missing = p.missing || [];
       o.reasons = p.reasons || [];
@@ -409,6 +410,7 @@
         '</div>' +
       '</div>';
 
+    if (hasLiveMap(all)) mountLeafletMap(zip, all, shown, sel);
     if (opts.focusKey) { var el = app.querySelector('[data-key="' + opts.focusKey + '"]'); if (el) el.focus(); }
     if (opts.focusDetail) { var h = app.querySelector('#sel-title'); if (h) { h.focus(); if (window.innerWidth < 900) h.scrollIntoView({ block: 'start' }); } }
   }
@@ -469,13 +471,90 @@
     var modeBtns = [['opportunity', 'Opportunity'], ['confidence', 'Confidence']].map(function (m) {
       return '<button type="button" data-action="mode" data-value="' + m[0] + '" data-key="mode-' + m[0] + '" aria-pressed="' + (state.mode === m[0]) + '">' + m[1] + '</button>';
     }).join('');
-    return '<section class="map-panel" aria-label="Map of sites. The list has the same information as text.">' +
-      '<div class="map-canvas">' + polys + pins + '</div>' +
+    // Live map when the backend sent real polygons; schematic map for sample data.
+    var live = hasLiveMap(all);
+    return '<section class="map-panel' + (live ? ' has-live-map' : '') + '" aria-label="Map of sites. The list has the same information as text.">' +
+      (live ? '<div class="map-canvas is-live" id="leaflet-map" role="application" aria-label="Orange County parcel map"></div>'
+            : '<div class="map-canvas">' + polys + pins + '</div>') +
       '<div class="map-mode"><span id="mode-label" class="sr-only">Color parcels by</span><div class="segmented sm" role="group" aria-labelledby="mode-label">' + modeBtns + '</div></div>' +
       '<div class="legend" role="group" aria-label="Map legend"><span class="lg-row"><span class="pin-key"></span>Candidate site (rank)</span><span class="lg-row"><span class="pin-key sel"></span>Selected</span>' + legend + '</div>' +
       '<span class="attribution">Schematic map from parcel boundaries · Records as of ' + esc(DATA_AS_OF) + '</span>' +
     '</section>';
   }
+  // ---------- Live parcel map (Leaflet) ----------
+  // render() replaces innerHTML, so the map is rebuilt each time; the view is kept per ZIP.
+  var leafletMap = null, leafletView = {};
+  var mapToken = 0;
+  function waitForLeaflet(token, args) {
+    setTimeout(function () {
+      if (token !== mapToken) return;  // a newer render took over
+      if (typeof L === 'undefined') waitForLeaflet(token, args); else mountLeafletMap.apply(null, args);
+    }, 50);
+  }
+  function hasLiveMap(all) { return all.length > 0 && !!all[0].geometry; }
+  function isDim(p) { return !!state.off[p.level] || (state.tag !== 'all' && !tagsOf(p).some(function (t) { return t.id === state.tag; })); }
+  function mountLeafletMap(zip, all, shown, sel) {
+    var token = ++mapToken;
+    if (typeof L === 'undefined') { waitForLeaflet(token, arguments); return; }
+    var el = document.getElementById('leaflet-map');
+    if (!el) return;
+    if (leafletMap) { try { leafletMap.remove(); } catch (_) {} leafletMap = null; }
+    var map = leafletMap = L.map(el, { zoomControl: true, preferCanvas: true });
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors · Records as of ' + esc(DATA_AS_OF)
+    }).addTo(map);
+
+    function styleFor(p) {
+      var isSel = sel && sel.id === p.id, fill = parcelFill(p), hatch = fill.indexOf('gradient') >= 0, dim = isDim(p);
+      return {
+        color: isSel ? '#C2490F' : '#1B1F2A', weight: isSel ? 3 : 0.6, opacity: dim ? 0.25 : 0.7,
+        fillColor: hatch ? '#B4BAC6' : fill, fillOpacity: dim ? 0.15 : hatch ? 0.45 : 0.8
+      };
+    }
+    function select(p) { pendingFocus = { focusDetail: true }; go('#/zip/' + zip + '/' + encodeURIComponent(p.apn)); }
+
+    var layer = L.geoJSON({ type: 'FeatureCollection', features: all.map(function (p) {
+      return { type: 'Feature', geometry: p.geometry, properties: { _p: p } };
+    }) }, {
+      style: function (f) { return styleFor(f.properties._p); },
+      onEachFeature: function (f, lyr) {
+        var p = f.properties._p;
+        lyr.bindTooltip('<b>' + esc(p.address) + '</b><br>' + (p.rank ? 'Rank ' + p.rank + ' · ' : '') +
+          'Opportunity ' + (p.opp === null ? 'not scored' : p.opp) + ' · ' + esc(p.level) + ' confidence', { sticky: true });
+        lyr.on('click', function () { select(p); });
+        lyr.on('mouseover', function () { lyr.setStyle({ weight: 2, color: '#1B1F2A' }); });
+        lyr.on('mouseout', function () { lyr.setStyle(styleFor(p)); });
+      }
+    }).addTo(map);
+
+    // Rank pins for the sites shown in the list, same look as the schematic map.
+    var pinSet = {};
+    shown.forEach(function (p) { if (p.opp !== null) pinSet[p.id] = true; });
+    if (sel) pinSet[sel.id] = true;
+    var selLayer = null;
+    layer.eachLayer(function (lyr) {
+      var p = lyr.feature.properties._p;
+      if (sel && sel.id === p.id) selLayer = lyr;
+      if (!pinSet[p.id]) return;
+      var isSel = sel && sel.id === p.id;
+      var m = L.marker(lyr.getBounds().getCenter(), {
+        icon: L.divIcon({ className: 'map-pin' + (isSel ? ' is-selected' : ''), html: '<span>' + (p.rank || '•') + '</span>', iconSize: isSel ? [38, 38] : [28, 28] }),
+        title: (p.rank ? 'Rank ' + p.rank + ', ' : '') + p.address, alt: p.address, zIndexOffset: isSel ? 1000 : 0, keyboard: true
+      }).addTo(map);
+      m.on('click', function () { select(p); });
+    });
+    if (selLayer) selLayer.bringToFront();
+
+    var v = leafletView[zip];
+    if (v) map.setView(v.center, v.zoom, { animate: false });
+    else if (layer.getBounds().isValid()) map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+    else map.setView([33.7175, -117.8311], 11);
+    if (selLayer && !map.getBounds().contains(selLayer.getBounds())) map.panTo(selLayer.getBounds().getCenter(), { animate: false });
+    map.on('moveend', function () { leafletView[zip] = { center: map.getCenter(), zoom: map.getZoom() }; });
+    leafletView[zip] = { center: map.getCenter(), zoom: map.getZoom() };
+    setTimeout(function () { if (leafletMap === map) map.invalidateSize(); }, 0);
+  }
+
   function selectPrompt() {
     return '<section class="selected empty" aria-label="Selected site"><p>Choose a site from the list or the map to see its three scores, the reasons behind them and where the data comes from.</p></section>';
   }
