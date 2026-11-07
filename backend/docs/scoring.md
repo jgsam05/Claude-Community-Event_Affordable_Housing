@@ -76,6 +76,7 @@ A parcel with zero risk keeps its full potential. At maximum risk it keeps 30%.
 2. **Risk is a minimum.** A risk layer that is not loaded adds no points. Each parcel lists them in `risk_unchecked` and the risk reason says so, so "risk 0" is never read as "risk-free". Layers checked: flood, fire, liquefaction, earthquake faults, coastal zone, oil wells, contamination, historic properties, CalEnviroScreen, existing subsidized housing.
 3. **Nothing counted twice.** Pathway bonuses that restate a core component earn no points: AB 2011 / SB 6 (commercial land use is already in the land use component) and AB 2097 (transit is already in the transit component).
 4. **Opportunity tiers.** TCAC/HCD "High Segregation & Poverty" and "Low Resource" score 0; only "Highest Resource" and "High Resource" score 1; "Moderate Resource" scores 0.5. An earlier version matched the word "high" and scored the lowest tier as the highest.
+5. **Low-confidence discount.** A Low-confidence parcel's score stands on thin data, so it is multiplied by 0.66 (`LOW_CONFIDENCE_OPP_FACTOR`). That keeps it at 66 or below, never in the High band (67+), and keeps the order of parcels unchanged. Medium and High confidence are not discounted. Insufficient parcels are not scored. Development potential and Feasibility risk are shown undiscounted.
 
 Real run, ZIP 92701 (5,312 parcels): median 36, 95th percentile 59, 99th percentile 68, highest 82, three parcels at 80 or above.
 

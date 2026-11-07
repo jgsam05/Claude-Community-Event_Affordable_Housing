@@ -32,7 +32,7 @@ When the backend (or a saved snapshot) provides parcel polygons, the map is a li
 | Route | Screen |
 |---|---|
 | `#/` | Home: ZIP search, "What OCA does", the three scores |
-| `#/zip/92705` | Results: site-type filters, confidence filter, sort, cards or data table, map, selected site with Development potential, Feasibility risk and Confidence tiles, CSV export |
+| `#/zip/92705` | Results: site-type filters, confidence filter, sort, cards or data table, map, selected site with Development potential, Feasibility risk and Confidence tiles. Site-type filters with 0 results are hidden. Opportunity is a half-circle dial on each card and in the selected site. Parcels with no address show ADDRESS NOT AVAILABLE. The “Public records” label above the list downloads the list as CSV |
 | `#/zip/92705/<apn>/report` | Parcel score report: every input, its value, public source and confidence; print or save as PDF |
 | `#/how` | How to use OCA: audience, five steps, reading scores, six kinds of sites, limits, glossary |
 | `#/methods` | Sources & methods: formula, weights, confidence rules, datasets, what's excluded |

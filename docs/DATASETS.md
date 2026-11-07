@@ -6,10 +6,10 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ## Status
 
-- 43 datasets: 19 pulled live by the backend, 2 committed in `backend/data/raw/` (lodes_wac, cde_schools), 22 still need a manual download.
-- License checked against the publisher: 22 of 43.
-- Refresh date checked against the publisher: 21 of 43.
-- Source (publisher, URL, vintage) checked on 2026-11-07: 38 of 43.
+- 44 datasets: 20 pulled live by the backend, 2 committed in `backend/data/raw/` (lodes_wac, cde_schools), 22 still need a manual download.
+- License checked against the publisher: 22 of 44.
+- Refresh date checked against the publisher: 21 of 44.
+- Source (publisher, URL, vintage) checked on 2026-11-07: 39 of 44.
 - Authority: **original** = the agency responsible for the data, serving it itself; **compiler** = a public agency compiling other governments' records (SCAG); **community** = OpenStreetMap, used only where the project plan calls for it and always low confidence; **consortium** = Overture, alternative only. No dataset is read from a third-party mirror.
 - Phase 1 requires every source documented with source, license and refresh date. Rows marked **no** under *Verified* still need someone to open the publisher's page and confirm.
 - Ingest date is recorded per run in `backend/data/registry_state.json` and served by `GET /registry`.
@@ -26,6 +26,7 @@ Most data files are not stored in this repo. They are either queried live by the
 | [OCGIS Building Footprints](#ocgis-building-footprints) | County of Orange, OC Survey (original) | Building coverage | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
 | [Overture Maps buildings](#overture-buildings) | Overture Maps Foundation (consortium) | Building coverage | file | ODbL 1.0 (buildings theme) | Monthly Overture release; record release id at ingest | **no** / **no** |
 | [OCGIS Street Centerlines](#ocgis-centerlines) | County of Orange, OC Survey (original) | Frontage | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
+| [OCGIS Address Points](#ocgis-address-points) | County of Orange, OC Survey (original) | Address | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
 | [SCAG 2024 Existing Land Use, Orange County](#scag-land-use) | Southern California Association of Governments (from county assessor rolls) (compiler) | Land use code | arcgis_rest | SCAG Open Data terms of use | 2024 Annual Land Use, released June 2025 (on 2024 parcels, March 2025) | **no** / yes |
 | [SCAG Region 6th Cycle Housing Element Sites (Table A)](#scag-he-sites) | SCAG (compiled from HCD Housing Element sites inventory forms) (compiler) | Housing Element site | arcgis_rest | SCAG Open Data terms of use | HCD sites inventory forms retrieved by SCAG October 2025 (168 jurisdictions) | **no** / yes |
 | [SCAG Region 6th Cycle Housing Element Rezone Sites (Table B)](#scag-he-rezone) | SCAG (compiled from HCD Housing Element sites inventory forms) (compiler) | Housing Element site | arcgis_rest | SCAG Open Data terms of use | HCD sites inventory forms retrieved by SCAG October 2025 | **no** / yes |
@@ -182,6 +183,21 @@ Most data files are not stored in this repo. They are either queried live by the
 - **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Frontage = parcel edge within 60 ft of a centerline.
 - **Notes:** Used for frontage. If unavailable, frontage falls back to the short side of the parcel's minimum rotated rectangle (flagged frontage_method=mrr_estimate).
+
+### ocgis-address-points
+
+**OCGIS Address Points**
+
+- **Publisher:** County of Orange, OC Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
+- **Signals:** Address
+- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Address_Point_Final_Planning_Addressing/FeatureServer/0
+- **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Address_Point_Final_Planning_Addressing/FeatureServer
+- **License:** OC Survey / OCGIS public data; terms of use on ocgis.com (verified: **no**)
+- **Refresh date:** verify at ingest (verified: **no**)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
+- **How it's used:** Fills blank parcel addresses from the address point inside the parcel, else the nearest within 150 ft.
+- **Notes:** Fills parcels whose SITE_ADDRESS is blank: the address point inside the parcel, else the nearest one within 150 ft. Parcels with no address point stay blank and the front end shows ADDRESS NOT AVAILABLE.
 
 ### scag-land-use
 

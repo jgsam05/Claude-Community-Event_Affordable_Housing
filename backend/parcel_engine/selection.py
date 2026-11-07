@@ -43,6 +43,33 @@ def _city_name_col(cities: gpd.GeoDataFrame) -> str:
     return pick(cities, ["CITY", "JURISDICTI", "NAME", "city"])
 
 
+ADDRESS_NEAR_FT = 150
+
+
+def _fill_addresses(parcels: gpd.GeoDataFrame, points: gpd.GeoDataFrame | None) -> pd.Series:
+    """Fill blank addresses. Blank SITE_ADDRESS -> address point inside the parcel, else the
+    nearest point within ADDRESS_NEAR_FT, else left blank (open space, ROW and similar have no address;
+    the front end shows ADDRESS NOT AVAILABLE)."""
+    addr = parcels["address"].fillna("").astype(str).str.strip()
+    blank = addr == ""
+    if blank.any() and points is not None and not points.empty and "Address" in points.columns:
+        pts = points.to_crs(WORK_CRS)
+        pts = pts[pts.geometry.notna() & pts["Address"].notna()].copy()
+        city = pts["City"].fillna("").astype(str).str.strip().str.upper() if "City" in pts.columns else ""
+        pts["label"] = (pts["Address"].astype(str).str.split().str.join(" ") + " " + city).str.strip()
+        pts = pts[pts["label"] != ""][["label", "geometry"]]
+        todo = gpd.GeoDataFrame(geometry=parcels.geometry[blank])
+        inside = gpd.sjoin(todo, pts, predicate="contains", how="inner")
+        inside = inside[~inside.index.duplicated()]
+        addr.loc[inside.index] = inside["label"]
+        left = todo.loc[addr.loc[todo.index] == ""]
+        if not left.empty:
+            near = gpd.sjoin_nearest(left, pts, max_distance=ADDRESS_NEAR_FT, how="inner")
+            near = near[~near.index.duplicated()]
+            addr.loc[near.index] = near["label"]
+    return addr
+
+
 def select_parcels(zip_code: str, src: Sources) -> tuple[gpd.GeoDataFrame, dict, gpd.GeoDataFrame]:
     zcta = zcta_polygon(zip_code, src)
     zgeom = zcta.geometry.iloc[0]
@@ -86,6 +113,7 @@ def select_parcels(zip_code: str, src: Sources) -> tuple[gpd.GeoDataFrame, dict,
     out.loc[(out["year_built"] < 1800) | (out["year_built"] > 2100), "year_built"] = pd.NA
     # Stacked condo/duplicate records: keep one row per APN.
     out = out.drop_duplicates("apn").reset_index(drop=True)
+    out["address"] = _fill_addresses(out, src.get("ocgis_address_points", area_4326, cache_key=zip_code))
     rep = out.geometry.representative_point()
 
     # Jurisdiction tagging.

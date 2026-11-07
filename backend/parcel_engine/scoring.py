@@ -38,6 +38,9 @@ RISK_POINTS = {"flood": 20, "fire_very_high": 20, "fire_high": 12, "fire_moderat
                "fault": 15, "coastal": 10, "oil_on": 15, "oil_near": 8, "contam_on": 15, "contam_near": 6,
                "nrhp": 15, "small_lot": 10, "narrow": 5, "preservation": 20, "env_burden": 5}
 RISK_DAMPING = 0.7  # Opportunity = DP x (1 - 0.7 x Risk/100)
+# A Low-confidence score stands on thin data, so it is discounted. 0.66 keeps the result at or below 66,
+# i.e. never in the High band (67+), while preserving the order of parcels. Keep in sync with the front end.
+LOW_CONFIDENCE_OPP_FACTOR = 0.66
 
 # Each risk the score can penalize, and the datasets that must be loaded to check it. A layer that is not
 # loaded adds no points, so the risk score is a minimum, and each parcel lists what was not checked.
@@ -271,6 +274,9 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
         # ---- opportunity ----
         scored = level != "Insufficient" and dp is not None
         opp = round(dp * (1 - RISK_DAMPING * risk / 100)) if scored else None
+        discounted = scored and level == "Low"
+        if discounted:
+            opp = round(opp * LOW_CONFIDENCE_OPP_FACTOR)
 
         # ---- reasons ----
         ups = sorted([c for c in contrib if c[2] == "up"], key=lambda c: -CORE_WEIGHTS[c[0]] * c[1])
@@ -286,7 +292,8 @@ def score(p: pd.DataFrame, avail: dict[str, bool]) -> pd.DataFrame:
             + (f". Risk is a minimum: {', '.join(risk_unchecked)} not checked" if risk_unchecked else "") + ".")
         opp_raw = opp
         opp_reason = (f"{band(opp)}: development potential {dp:.0f}"
-                      + (f", reduced by feasibility risk {risk:.0f}" if risk else ", no risk deductions") + "."
+                      + (f", reduced by feasibility risk {risk:.0f}" if risk else ", no risk deductions")
+                      + (", then discounted because confidence is Low" if discounted else "") + "."
                       ) if scored else f"Not scored: {n_found} of {len(SIGNALS)} signals found."
 
         reasons = [{"dir": "up", "score": "development_potential", "text": f"{ph[0].upper()}{ph[1:]} — adds to development potential."}

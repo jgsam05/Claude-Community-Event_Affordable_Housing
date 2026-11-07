@@ -23,6 +23,7 @@
   var THIN_DATA_THRESHOLD = 0.2;                   // banner when > 20% of parcels are Insufficient
   var PAGE_SIZE = 10;
   var RISK_DAMPING = 0.7;                          // must match backend/parcel_engine/scoring.py
+  var LOW_CONF_FACTOR = 0.66;                      // Low-confidence scores are discounted; must match scoring.py
   var SIGNALS = ['Lot size', 'Building coverage', 'Year built', 'Land use code', 'Housing Element status',
     'Transit access', 'Jobs access', 'Opportunity area', 'Rent burden / income', 'Hazard layers'];
   var DATA_AS_OF = 'sample data';
@@ -108,7 +109,8 @@
       var o = {};
       for (var k in p) o[k] = p[k];
       o.id = i;
-      o.address = niceAddress(p.address) || ('APN ' + p.apn);
+      o.geometry = f.geometry;  // EPSG:4326, drawn by the live Leaflet map
+      o.address = niceAddress(p.address) || NO_ADDRESS;
       o.missing = p.missing || [];
       o.reasons = p.reasons || [];
       o.lowInputs = p.low_confidence_inputs || [];
@@ -122,6 +124,7 @@
       return o;
     });
   }
+  var NO_ADDRESS = 'ADDRESS NOT AVAILABLE';
   function loadZip(zip) {
     return fetch(API_BASE + '/zip/' + zip).then(function (r) {
       return r.json().then(function (body) {
@@ -209,6 +212,7 @@
         var scored = p.level !== 'Insufficient';
         p.dp = scored ? dp : null; p.risk = scored ? risk : null;
         p.opp = scored ? Math.round(dp * (1 - RISK_DAMPING * risk / 100)) : null;
+        if (scored && p.level === 'Low') p.opp = Math.round(p.opp * LOW_CONF_FACTOR);
         p.dev_reason = scored ? band(dp) + ': ' + ups.slice(0, 2).map(function (u) { return u.split(' — ')[0].toLowerCase(); }).join(', ') + '.' : null;
         p.risk_reason = scored ? riskBand(risk) + ': ' + (riskItems.length ? riskItems.map(function (x) { return x[1]; }).join(', ') : 'no hazard or constraint flags found') + '.' : null;
         p.opp_reason = scored ? band(p.opp) + ': development potential ' + dp + (risk ? ', reduced by feasibility risk ' + risk : ', no risk deductions') + '.' : 'Not scored: ' + nFound + ' of 10 signals found.';
@@ -387,6 +391,7 @@
     var jur = meta.jurisdictions ? Object.keys(meta.jurisdictions) : uniq(all.map(function (p) { return p.jurisdiction; }).filter(Boolean));
 
     var chips = [{ id: 'all', label: 'All sites', n: all.length }].concat(TAGS.map(function (t) { return { id: t.id, label: t.label, n: tagCounts[t.id] }; }))
+      .filter(function (c) { return c.id === 'all' || c.n > 0 || state.tag === c.id; })
       .map(function (c) {
         return '<button type="button" class="chip" data-action="tag" data-value="' + c.id + '" data-key="tag-' + c.id + '" aria-pressed="' + (state.tag === c.id) + '"' + (c.n === 0 && c.id !== 'all' ? ' disabled' : '') + '>' + esc(c.label) + ' <span class="count">' + c.n + '</span></button>';
       }).join('');
@@ -423,8 +428,8 @@
         whatOca(true) +
         '<div class="results-head"><div><h1 tabindex="-1" id="results-title">' + scoredCount + ' places to look in ' + esc(zip) + '</h1>' +
           '<p class="sub">' + all.length + ' parcels checked' + (jur.length ? ' across ' + esc(jur.join(', ')) : '') + (jur.length > 1 ? ' · this ZIP crosses city lines' : '') + '. ' +
-          'Best matches first. ' + esc(dataLabel(zip)) + (dataLabel(zip) !== 'Public records' ? ', for layout and testing only' : ', as of ' + esc(DATA_AS_OF)) + '. Always confirm zoning and ownership before acting.</p></div>' +
-          '<button type="button" class="btn-secondary" data-action="csv">Save list as CSV</button></div>' +
+          'Best matches first. <a href="#" class="csv-link" data-action="csv" title="Download this list as a CSV file" aria-label="' + esc(dataLabel(zip)) + '. Download this list as a CSV file">' + esc(dataLabel(zip)) + '</a>' + (dataLabel(zip) !== 'Public records' ? ', for layout and testing only' : ', as of ' + esc(DATA_AS_OF)) + '. Always confirm zoning and ownership before acting.</p></div>' +
+        '</div>' +
         '<div class="filters">' +
           '<div role="group" aria-label="Filter by kind of site" class="chip-row">' + chips + '</div>' +
           '<div class="filter-row">' +
@@ -449,7 +454,7 @@
 
   function ringHtml(p) {
     if (p.opp === null) return '<span class="ring ring-none" aria-hidden="true"><span>—</span></span>';
-    return '<span class="ring" aria-hidden="true" style="background:conic-gradient(' + ringColor(p.opp) + ' ' + p.opp + '%,#DDE1E8 0)"><span>' + p.opp + '</span></span>';
+    return '<span class="ring-dial" aria-hidden="true">' + dialHtml(p.opp, true) + '</span>';
   }
   function cardHtml(p, sel) {
     var why = p.opp === null ? (p.sig + ' of 10 signals found — not scored.') : (p.dev_reason || (p.reasons[0] && p.reasons[0].text) || '');
@@ -505,7 +510,7 @@
     var modeBtns = [['opportunity', 'Opportunity'], ['confidence', 'Confidence']].map(function (m) {
       return '<button type="button" data-action="mode" data-value="' + m[0] + '" data-key="mode-' + m[0] + '" aria-pressed="' + (state.mode === m[0]) + '">' + m[1] + '</button>';
     }).join('');
-    return '<section class="map-panel" aria-label="Map of sites. The list has the same information as text.">' +
+    return '<section class="map-panel' + (live ? ' has-live-map' : '') + '" aria-label="Map of sites. The list has the same information as text.">' +
       '<div class="map-canvas' + (live ? ' is-live' : '') + '">' + (live ? '<div id="oca-map" role="application" aria-label="Map of Orange County parcels. The list has the same information as text."></div>' : polys + pins) + '</div>' +
       '<div class="map-mode"><span id="mode-label" class="sr-only">Color parcels by</span><div class="segmented sm" role="group" aria-labelledby="mode-label">' + modeBtns + '</div></div>' +
       '<div class="legend" role="group" aria-label="Map legend"><span class="lg-row"><span class="pin-key"></span>Candidate site (rank)</span><span class="lg-row"><span class="pin-key sel"></span>Selected</span>' + legend + '</div>' +
@@ -624,16 +629,41 @@
       '<p class="muted-note">Laws that may help, or block, housing on this parcel. Zoning isn’t in the data, so these are screening hints, not legal advice.</p>' +
       (items ? '<ul class="path-list">' + items + '</ul>' : '<p class="muted-note">No pathway applies from the data we have.</p>') + un + '</div>';
   }
+
+  // Half-circle dial for a 0-100 score: grey track, colored arc to the value, needle.
+  // mini = compact version for list cards (number inside the dial, no end labels or ticks).
+  function dialHtml(v, mini) {
+    var cx = mini ? 60 : 100, cy = mini ? 54 : 100, r = mini ? 46 : 80, sw = mini ? 10 : 16;
+    function pt(x, rad) { var a = Math.PI * (1 - x / 100); return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)]; }
+    function arc(from, to) {
+      var a = pt(from, r), b = pt(to, r);
+      return 'M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + ' A' + r + ' ' + r + ' 0 0 1 ' + b[0].toFixed(1) + ' ' + b[1].toFixed(1);
+    }
+    var col = ringColor(v), tip = pt(v, mini ? 36 : 64);
+    var ticks = mini ? '' : [34, 67].map(function (t) {
+      var a = pt(t, r - 12), b = pt(t, r + 8);
+      return '<line x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '" stroke="#8A93A5" stroke-width="2"/>';
+    }).join('');
+    return '<svg class="dial' + (mini ? ' dial-mini' : '') + '" viewBox="0 0 ' + (mini ? '120 80' : '200 116') + '" role="img" aria-label="Opportunity ' + v + ' of 100, ' + band(v) + '">' +
+      '<path d="' + arc(0, 100) + '" fill="none" stroke="#DDE1E8" stroke-width="' + sw + '" stroke-linecap="round"/>' +
+      (v > 0 ? '<path d="' + arc(0, v) + '" fill="none" stroke="' + col + '" stroke-width="' + sw + '" stroke-linecap="round"/>' : '') +
+      ticks +
+      '<line x1="' + cx + '" y1="' + cy + '" x2="' + tip[0].toFixed(1) + '" y2="' + tip[1].toFixed(1) + '" stroke="#1B1F2A" stroke-width="' + (mini ? 3 : 4) + '" stroke-linecap="round"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (mini ? 5 : 8) + '" fill="#1B1F2A"/>' +
+      (mini ? '<text x="60" y="78" text-anchor="middle" class="dial-num">' + v + '</text>'
+            : '<text x="14" y="114" class="dial-end">0</text><text x="186" y="114" class="dial-end" text-anchor="end">100</text>') +
+    '</svg>';
+  }
   function selectedHtml(p, zip) {
     var scored = p.opp !== null;
     var meta = ['APN ' + p.apn, p.jurisdiction, acresLabel(p)].filter(Boolean).join(' · ');
     return '<section class="selected" aria-labelledby="sel-title">' +
       '<div class="sel-head"><div class="sel-id"><span class="card-tag">' + (p.rank ? '#' + p.rank + ' · ' : '') + esc(tagsOf(p).map(function (t) { return t.label; }).join(' · ') || 'Other parcel') + '</span>' +
         '<h2 id="sel-title" tabindex="-1">' + esc(p.address) + '</h2><span class="sel-meta">' + esc(meta) + '</span></div>' +
-        '<div class="sel-score">' + (scored ? '<span class="big">' + p.opp + '<span class="of"> / 100</span></span><span class="sel-sub">Opportunity · ' + band(p.opp) + '</span>'
+        '<div class="sel-score">' + (scored ? dialHtml(p.opp) + '<span class="big">' + p.opp + '<span class="of"> / 100</span></span><span class="sel-sub">Opportunity · ' + band(p.opp) + '</span>'
           : '<span class="big none">Not scored</span><span class="sel-sub">Too little data to score fairly</span>') + confChip(p.level) + '</div>' +
         '<button type="button" class="icon-btn" data-action="close" aria-label="Close selected site">' + ICON_X + '</button></div>' +
-      (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100), then pulled toward the ZIP median when signals are missing.</span></p>' :
+      (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100), multiplied by 0.66 when confidence is Low, then pulled toward the ZIP median when signals are missing.</span></p>' :
         '<p class="sel-reason">No score is shown because fewer than 5 of 10 signals are available. Check county records directly.</p>') +
       '<div class="tiles">' + (scored ? scoreTile('dp', p) + scoreTile('risk', p) : '') + confTile(p) + '</div>' +
       pathwayList(p, false) +
@@ -809,6 +839,7 @@
     if (!t || t.disabled) return;
     var route = parseRoute(), action = t.getAttribute('data-action'), v = t.getAttribute('data-value');
     var key = t.getAttribute('data-key'), base = '#/zip/' + route.zip;
+    if (action === 'csv') e.preventDefault();
     if (action === 'mode') { state.mode = v; render({ focusKey: key }); announce('Map colored by ' + v + '.'); }
     else if (action === 'view') { state.view = v; render({ focusKey: key }); }
     else if (action === 'tag') { state.tag = v; state.limit = PAGE_SIZE; render({ focusKey: key }); announce(t.textContent.replace(/\d+$/, '').trim() + ' selected.'); }

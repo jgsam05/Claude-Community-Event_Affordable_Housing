@@ -83,6 +83,12 @@ DATASETS: list[dict] = [
          license=OCGIS_TERMS, license_verified=False, refresh_date="verify at ingest", refresh_verified=False,
          notes="Used for frontage. If unavailable, frontage falls back to the short side of the "
                "parcel's minimum rotated rectangle (flagged frontage_method=mrr_estimate)."),
+    dict(id="ocgis_address_points", name="OCGIS Address Points", signals=["Address"],
+         access="arcgis_rest", url=f"{OCGIS}/Address_Point_Final_Planning_Addressing/FeatureServer/0",
+         landing_url=f"{OCGIS}/Address_Point_Final_Planning_Addressing/FeatureServer",
+         license=OCGIS_TERMS, license_verified=False, refresh_date="verify at ingest", refresh_verified=False,
+         notes="Fills parcels whose SITE_ADDRESS is blank: the address point inside the parcel, else the "
+               "nearest one within 150 ft. Parcels with no address point stay blank and the front end shows ADDRESS NOT AVAILABLE."),
     dict(id="scag_land_use", name="SCAG 2024 Existing Land Use, Orange County", signals=["Land use code"],
          access="arcgis_rest", url="https://maps.scag.ca.gov/scaggis/rest/services/LDX/Existinglanduse_poly_OR/MapServer/0",
          landing_url="https://gisdata-scag.opendata.arcgis.com/",
@@ -419,6 +425,7 @@ PROVENANCE = {
     "ocgis_building_footprints": ("County of Orange, OC Survey", "original"),
     "overture_buildings": ("Overture Maps Foundation", "consortium"),
     "ocgis_centerlines": ("County of Orange, OC Survey", "original"),
+    "ocgis_address_points": ("County of Orange, OC Survey", "original"),
     "scag_land_use": ("Southern California Association of Governments (from county assessor rolls)", "compiler"),
     "scag_he_sites": ("SCAG (compiled from HCD Housing Element sites inventory forms)", "compiler"),
     "scag_he_rezone": ("SCAG (compiled from HCD Housing Element sites inventory forms)", "compiler"),
