@@ -25,15 +25,15 @@ AREA = box(-117.80, 33.65, -117.70, 33.72)  # Irvine-ish, EPSG:4326
 
 def test_missing_file_is_not_ingested(raw):
     s = LiveSources()
-    assert s.get("calgem_wells", AREA) is None and s.status["calgem_wells"] == "not_ingested"
+    assert s.get("dtsc_envirostor", AREA) is None and s.status["dtsc_envirostor"] == "not_ingested"
 
 
 def test_latlon_csv_and_ingest_stamp(raw):
-    pd.DataFrame({"API": ["1", "2"], "Latitude": ["33.68", "40.0"], "Longitude": ["-117.75", "-120"]}) \
-        .to_csv(raw / "calgem_wells.csv", index=False)
-    g = LiveSources().get("calgem_wells", AREA)
+    pd.DataFrame({"ID": ["1", "2"], "LATITUDE": ["33.68", "40.0"], "LONGITUDE": ["-117.75", "-120"]}) \
+        .to_csv(raw / "envirostor_sites.csv", index=False)
+    g = LiveSources().get("dtsc_envirostor", AREA)
     assert len(g) == 1 and g.crs.to_epsg() == 2230
-    assert registry.records()[[r["id"] for r in registry.records()].index("calgem_wells")]["ingest_date"]
+    assert registry.records()[[r["id"] for r in registry.records()].index("dtsc_envirostor")]["ingest_date"]
 
 
 def test_gtfs_zip(raw):
@@ -88,3 +88,15 @@ def test_arcgis_query_pages_by_object_id(monkeypatch):
     assert len(g) == 3 and g.crs.to_epsg() == 2230
     assert '"rings"' in calls[0]["geometry"] and calls[0]["inSR"] == "4326"
     assert len(calls) == 3  # ids + 2 pages
+
+
+def test_publisher_zip_with_shapefile(raw, tmp_path):
+    shp_dir = tmp_path / "shp"
+    shp_dir.mkdir()
+    gpd.GeoDataFrame({"FHSZ_Description": ["Very High"]}, geometry=[box(-117.76, 33.68, -117.75, 33.69)],
+                     crs=4326).to_file(shp_dir / "fhsz.shp")
+    with zipfile.ZipFile(raw / "fhsz_lra_2025.zip", "w") as z:
+        for f in shp_dir.iterdir():
+            z.write(f, f"fhsz/{f.name}")
+    g = LiveSources().get("calfire_fhsz_lra", AREA)
+    assert len(g) == 1 and "FHSZ_Descr" in g.columns   # shapefile truncates to 10 chars

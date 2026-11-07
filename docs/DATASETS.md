@@ -6,59 +6,61 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ## Status
 
-- 43 datasets: 13 pulled live by the backend, 2 committed in `backend/data/raw/` (lodes_wac, cde_schools), 28 still need a manual download.
-- License checked against the publisher: 12 of 43.
-- Refresh date checked against the publisher: 2 of 43.
+- 43 datasets: 15 pulled live by the backend, 2 committed in `backend/data/raw/` (lodes_wac, cde_schools), 26 still need a manual download.
+- License checked against the publisher: 22 of 43.
+- Refresh date checked against the publisher: 24 of 43.
+- Source (publisher, URL, vintage) checked on 2026-11-07: 38 of 43.
+- Authority: **original** = the agency responsible for the data, serving it itself; **compiler** = a public agency compiling other governments' records (SCAG); **community** = OpenStreetMap, used only where the project plan calls for it and always low confidence; **consortium** = Overture, alternative only. No dataset is read from a third-party mirror.
 - Phase 1 requires every source documented with source, license and refresh date. Rows marked **no** under *Verified* still need someone to open the publisher's page and confirm.
 - Ingest date is recorded per run in `backend/data/registry_state.json` and served by `GET /registry`.
 
 ## Summary
 
-| Dataset | Signal(s) | Access | License | Refresh | Verified (license / refresh) |
-|---|---|---|---|---|---|
-| [OCGIS Parcels](#ocgis-parcels) | Lot size, Year built | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | Not published on layer (no editingInfo.lastEditDate) | **no** / **no** |
-| [OCGIS City Boundaries](#ocgis-city-boundaries) | Jurisdiction | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
-| [OCGIS Unincorporated Area](#ocgis-unincorporated) | Jurisdiction, Valid OC ZIP | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
-| [Census 2020 ZCTA (TIGERweb)](#census-zcta) | ZIP selection | arcgis_rest | Public domain (U.S. Government work) | 2020 Census vintage | yes / yes |
-| [Census tracts (TIGERweb)](#census-tracts) | Tract join key | arcgis_rest | Public domain (U.S. Government work) | Current TIGERweb vintage | yes / **no** |
-| [OCGIS Building Footprints](#ocgis-building-footprints) | Building coverage | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
-| [Overture Maps buildings](#overture-buildings) | Building coverage | file | ODbL 1.0 (buildings theme) | Monthly Overture release; record release id at ingest | **no** / **no** |
-| [OCGIS Street Centerlines](#ocgis-centerlines) | Frontage | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
-| [SCAG parcel land use](#scag-land-use) | Land use code | file | SCAG Open Data terms of use | 2019 annual land use (verify) | **no** / **no** |
-| [SCAG 6th Cycle Housing Element sites inventory](#scag-he-sites) | Housing Element site | file | SCAG Open Data terms of use | 6th Cycle (2021-2029); verify | **no** / **no** |
-| [SCAG 6th Cycle Housing Element rezone sites](#scag-he-rezone) | Housing Element site | file | SCAG Open Data terms of use | 6th Cycle; verify | **no** / **no** |
-| [HCD Housing Element Compliance Report](#hcd-compliance) | HE compliance | file | California public record; state open-data terms | Updated continuously; record pull date | **no** / **no** |
-| [HCD SB 35 statewide determination](#hcd-sb35) | SB 35 | file | California public record; state open-data terms | Annual determination; verify year | **no** / **no** |
-| [HCD APR Table H (locally owned surplus sites)](#apr-table-h) | Public land | file | California public record; state open-data terms | Annual APR cycle; verify | **no** / **no** |
-| [HCD Surplus Land Act notices](#hcd-sla-notices) | Public land | file | California public record; state open-data terms | verify | **no** / **no** |
-| [DGS state-owned land](#dgs-state-land) | Public land | file | California public record; state open-data terms | verify | **no** / **no** |
-| [OSM places of worship](#osm-worship) | Faith-based (SB 4) | file | ODbL 1.0 (attribution + share-alike) | Geofabrik daily extract; record extract date | yes / **no** |
-| [OC Treasurer tax-defaulted parcels (PDF)](#oc-tax-defaulted) | Tax-defaulted | pdf_dir | County public record | Per auction list; record PDF date | **no** / **no** |
-| [SCAG High Quality Transit Areas](#scag-hqta) | Transit (HQTA) | file | SCAG Open Data terms of use | Connect SoCal 2024 HQTA (verify) | **no** / **no** |
-| [OCTA GTFS stops](#octa-gtfs) | Transit stops | file | OCTA GTFS license (verify) | Per service change; read feed_info.txt | **no** / **no** |
-| [Metrolink GTFS stops](#metrolink-gtfs) | Transit stops | file | Metrolink GTFS license (verify) | Per service change; read feed_info.txt | **no** / **no** |
-| [Census LEHD LODES8 WAC (jobs by workplace)](#lodes-wac) | Jobs access | in repo | Public domain (U.S. Government work) | LODES8, 2022 job year | yes / **no** |
-| [CDE public schools](#cde-schools) | Schools | in repo | California public record; state open-data terms | Updated daily; record download date | **no** / **no** |
-| [OSM/Overture grocery stores](#osm-grocery) | Grocery | file | ODbL 1.0 (attribution + share-alike) | Record extract date | yes / **no** |
-| [TCAC/HCD Opportunity Map](#tcac-opportunity) | Opportunity area | file | California public record; state open-data terms | Annual map; record map year | **no** / **no** |
-| [ACS 5-year (rent burden, median household income)](#acs5) | Rent burden / income | census_api | Public domain (U.S. Government work) | 2019-2023 ACS 5-year (released Dec 2024) | yes / **no** |
-| [HUD income limits (Orange County AMI)](#hud-income-limits) | AMI | file | Public domain (U.S. Government work) | FY income limits; record FY | yes / **no** |
-| [CalEnviroScreen 4.0](#calenviroscreen4) | Environmental burden | file | California public record; state open-data terms | Oct 2021 (version 4.0) | **no** / **no** |
-| [CDFI Fund Opportunity Zones tract list](#cdfi-oz) | Opportunity Zone | file | Public domain (U.S. Government work) | 2018 designations | yes / **no** |
-| [FEMA National Flood Hazard Layer (flood zones)](#fema-nfhl) | Hazards | arcgis_rest | Public domain (U.S. Government work) | Continuously updated; record query date | yes / yes |
-| [CAL FIRE FHSZ (LRA, OCGIS mirror)](#calfire-fhsz-lra) | Hazards | arcgis_rest | California public record; state open-data terms | 2025 LRA maps (verify mirror vintage) | **no** / **no** |
-| [CAL FIRE FHSZ (SRA, OCGIS mirror)](#calfire-fhsz-sra) | Hazards | arcgis_rest | California public record; state open-data terms | 2023 SRA maps (verify mirror vintage) | **no** / **no** |
-| [CGS liquefaction zones (OCGIS mirror)](#cgs-liquefaction) | Hazards | arcgis_rest | California public record; state open-data terms | verify | **no** / **no** |
-| [CGS Alquist-Priolo fault zones](#cgs-fault-zones) | Hazards | file | California public record; state open-data terms | verify | **no** / **no** |
-| [Coastal Zone boundary (OCGIS mirror of CCC)](#coastal-zone) | Hazards | arcgis_rest | California public record; state open-data terms | verify | **no** / **no** |
-| [CalGEM oil and gas wells](#calgem-wells) | Hazards | file | California public record; state open-data terms | Updated weekly; record download date | **no** / **no** |
-| [DTSC EnviroStor sites](#dtsc-envirostor) | Hazards | file | California public record; state open-data terms | Record download date | **no** / **no** |
-| [Water Board GeoTracker cleanup sites](#geotracker) | Hazards | file | California public record; state open-data terms | Record download date | **no** / **no** |
-| [National Register of Historic Places](#nrhp) | Hazards | file | Public domain (U.S. Government work) | verify | yes / **no** |
-| [HCD mobilehome park list](#hcd-mobilehome-parks) | Preservation | file | California public record; state open-data terms | verify | **no** / **no** |
-| [HUD LIHTC database](#hud-lihtc) | Preservation | file | Public domain (U.S. Government work) | Annual release; record placed-in-service year | yes / **no** |
-| [HUD Multifamily Section 8 contracts](#hud-mf-s8) | Preservation | file | Public domain (U.S. Government work) | Monthly; record download date | yes / **no** |
-| [HCD APR Table A2 (building activity by APN)](#apr-table-a2) | Validation | file | California public record; state open-data terms | Annual APR cycle; record report years | **no** / **no** |
+| Dataset | Publisher (authority) | Signal(s) | Access | License | Refresh | Verified (license / refresh) |
+|---|---|---|---|---|---|---|
+| [OCGIS Parcels](#ocgis-parcels) | County of Orange, OC Survey (original) | Lot size, Year built | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | Not published on layer (no editingInfo.lastEditDate) | **no** / **no** |
+| [OCGIS City Boundaries](#ocgis-city-boundaries) | County of Orange, OC Survey (original) | Jurisdiction | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
+| [OCGIS Unincorporated Area](#ocgis-unincorporated) | County of Orange, OC Survey (original) | Jurisdiction, Valid OC ZIP | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
+| [Census 2020 ZCTA (TIGERweb)](#census-zcta) | U.S. Census Bureau (original) | ZIP selection | arcgis_rest | Public domain (U.S. Government work) | 2020 Census vintage | yes / yes |
+| [Census tracts (TIGERweb)](#census-tracts) | U.S. Census Bureau (original) | Tract join key | arcgis_rest | Public domain (U.S. Government work) | Current TIGERweb vintage | yes / **no** |
+| [OCGIS Building Footprints](#ocgis-building-footprints) | County of Orange, OC Survey (original) | Building coverage | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
+| [Overture Maps buildings](#overture-buildings) | Overture Maps Foundation (consortium) | Building coverage | file | ODbL 1.0 (buildings theme) | Monthly Overture release; record release id at ingest | **no** / **no** |
+| [OCGIS Street Centerlines](#ocgis-centerlines) | County of Orange, OC Survey (original) | Frontage | arcgis_rest | OC Survey / OCGIS public data; terms of use on ocgis.com | verify at ingest | **no** / **no** |
+| [SCAG 2024 Existing Land Use, Orange County](#scag-land-use) | Southern California Association of Governments (from county assessor rolls) (compiler) | Land use code | arcgis_rest | SCAG Open Data terms of use | 2024 Annual Land Use, released June 2025 (on 2024 parcels, March 2025) | **no** / yes |
+| [SCAG Region 6th Cycle Housing Element Sites (Table A)](#scag-he-sites) | SCAG (compiled from HCD Housing Element sites inventory forms) (compiler) | Housing Element site | arcgis_rest | SCAG Open Data terms of use | HCD sites inventory forms retrieved by SCAG October 2025 (168 jurisdictions) | **no** / yes |
+| [SCAG Region 6th Cycle Housing Element Rezone Sites (Table B)](#scag-he-rezone) | SCAG (compiled from HCD Housing Element sites inventory forms) (compiler) | Housing Element site | arcgis_rest | SCAG Open Data terms of use | HCD sites inventory forms retrieved by SCAG October 2025 | **no** / yes |
+| [HCD Housing Element Review and Compliance Report](#hcd-compliance) | CA Dept. of Housing and Community Development (original) | HE compliance | file | California public record; state open-data terms | Updated continuously; record pull date | **no** / **no** |
+| [HCD SB 423 (formerly SB 35) Streamlined Ministerial Approval statewide determination](#hcd-sb35) | CA Dept. of Housing and Community Development (original) | SB 35 / SB 423 | file | California public record; state open-data terms | Annual HCD determination; record the determination date printed on the PDF | **no** / **no** |
+| [HCD APR Table H (locally owned surplus sites)](#apr-table-h) | CA Dept. of Housing and Community Development (original) | Public land | file | California public record; state open-data terms | Annual APR cycle (reports due April 1); record report years | **no** / **no** |
+| [HCD Surplus Land Act notices](#hcd-sla-notices) | CA Dept. of Housing and Community Development (original) | Public land | file | California public record; state open-data terms | verify | **no** / **no** |
+| [DGS Statewide Property Inventory (state-owned real property)](#dgs-state-land) | CA Dept. of General Services (original) | Public land | file | No license stated by DGS (state public record) | Updated annually by agencies; RealProperty last modified 2025-10-22 | yes / yes |
+| [OSM places of worship](#osm-worship) | OpenStreetMap contributors (via Geofabrik) (community) | Faith-based (SB 4) | file | ODbL 1.0 (attribution + share-alike) | Geofabrik daily extract; record extract date | yes / **no** |
+| [OC Treasurer-Tax Collector tax-defaulted property lists (PDF)](#oc-tax-defaulted) | Orange County Treasurer-Tax Collector (original) | Tax-defaulted | pdf_dir | County public notice (published under Rev. & Tax. Code 3371 / 3702) | Delinquency list published each September (latest seen: executed Sept 2, 2025); auction Exhibit I each spring | yes / yes |
+| [SCAG High Quality Transit Areas](#scag-hqta) | Southern California Association of Governments (original) | Transit (HQTA) | file | SCAG Open Data terms of use | Use Connect SoCal 2024 base-year (2022) HQTA; SCAG updates every 4 years | **no** / **no** |
+| [OCTA GTFS stops](#octa-gtfs) | Orange County Transportation Authority (original) | Transit stops | file | OCTA open data terms: free use, OCTA retains ownership, no warranty | Quarterly service changes; read feed_info.txt / calendar.txt | yes / yes |
+| [Metrolink GTFS stops](#metrolink-gtfs) | Southern California Regional Rail Authority (Metrolink) (original) | Transit stops | file | Metrolink: provided as is, no liability | Updated with schedule changes (about 5 times a year) | yes / yes |
+| [Census LEHD LODES8 WAC (jobs by workplace)](#lodes-wac) | U.S. Census Bureau, LEHD (original) | Jobs access | in repo | Public domain (U.S. Government work) | Committed file is job year 2022; LODES 8.4 (Dec 18, 2025) adds 2023 | yes / yes |
+| [CDE public schools](#cde-schools) | CA Dept. of Education (original) | Schools | in repo | California public record; state open-data terms | Updated daily; record download date | **no** / **no** |
+| [OSM/Overture grocery stores](#osm-grocery) | OpenStreetMap contributors (via Geofabrik) (community) | Grocery | file | ODbL 1.0 (attribution + share-alike) | Record extract date | yes / **no** |
+| [CTCAC/HCD Opportunity Map (2026)](#tcac-opportunity) | CA Tax Credit Allocation Committee / HCD (original) | Opportunity area | file | California public record; state open-data terms | 2026 map, adopted December 2025 (annual) | **no** / yes |
+| [ACS 5-year 2020-2024 (rent burden, median household income)](#acs5) | U.S. Census Bureau (original) | Rent burden / income | census_api | Public domain (U.S. Government work) | 2020-2024 ACS 5-year, released January 29, 2026 | yes / yes |
+| [HUD FY2026 income limits (Orange County AMI)](#hud-income-limits) | U.S. Dept. of Housing and Urban Development (original) | AMI | file | Public domain (U.S. Government work) | FY2026, effective May 1, 2026 | yes / yes |
+| [CalEnviroScreen 5.0 (OEHHA)](#calenviroscreen4) | CA Office of Environmental Health Hazard Assessment (original) | Environmental burden | file | OEHHA conditions of use | CalEnviroScreen 5.0, final released July 2026 (replaces 4.0, Oct 2021) | **no** / yes |
+| [Treasury/CDFI Fund Qualified Opportunity Zones (2026 list)](#cdfi-oz) | U.S. Treasury, CDFI Fund (original) | Opportunity Zone | file | Public domain (U.S. Government work) | 2026 designations announced Nov 5, 2026 (2018 list superseded) | yes / yes |
+| [FEMA National Flood Hazard Layer (flood zones)](#fema-nfhl) | Federal Emergency Management Agency (original) | Hazards | arcgis_rest | Public domain (U.S. Government work) | Continuously updated; record query date | yes / yes |
+| [CAL FIRE OSFM Fire Hazard Severity Zones, LRA (2025)](#calfire-fhsz-lra) | CAL FIRE, Office of the State Fire Marshal (original) | Hazards | file | CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use | LRA maps released in 4 phases, Feb 10 - Mar 24, 2025 (combined file, Phases 1-4) | yes / yes |
+| [CAL FIRE OSFM Fire Hazard Severity Zones, SRA (effective April 1, 2024)](#calfire-fhsz-sra) | CAL FIRE, Office of the State Fire Marshal (original) | Hazards | file | CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use | Effective April 1, 2024; a 2026 SRA update was open for public comment (Nov 2026) | yes / yes |
+| [CGS Seismic Hazards Program: Liquefaction Zones](#cgs-liquefaction) | CA Dept. of Conservation, California Geological Survey (original) | Hazards | arcgis_rest | CC BY (California Department of Conservation) | Last modified 2025-11-19 (publisher metadata) | yes / yes |
+| [CGS Alquist-Priolo Earthquake Fault Zones](#cgs-fault-zones) | CA Dept. of Conservation, California Geological Survey (original) | Hazards | arcgis_rest | CC BY (California Department of Conservation) | Last modified 2025-11-19 (publisher metadata) | yes / yes |
+| [California Coastal Commission Coastal Zone Boundary](#coastal-zone) | California Coastal Commission (original) | Hazards | file | CCC disclaimer: no warranty; users indemnify the Commission; not survey accuracy | Digital CZB from CCC GIS/Mapping Unit (2014-2016 vintages); official boundary adopted 1977 and amended since | yes / yes |
+| [CalGEM WellSTAR oil and gas wells](#calgem-wells) | CA Dept. of Conservation, CalGEM (original) | Hazards | arcgis_rest | CC BY (California Department of Conservation) | Updated as needed; data.ca.gov files dated 12/24/25 | yes / yes |
+| [DTSC EnviroStor cleanup sites](#dtsc-envirostor) | CA Dept. of Toxic Substances Control (original) | Hazards | file | California public record; state open-data terms | Live database; record download date | **no** / **no** |
+| [State Water Board GeoTracker sites](#geotracker) | State Water Resources Control Board (original) | Hazards | file | California public record; state open-data terms | Periodic CSV snapshot (latest seen: 2026-01-05) | **no** / yes |
+| [National Register of Historic Places (NPS Cultural Resources GIS)](#nrhp) | National Park Service (original) | Hazards | file | Public domain (U.S. Government work) | Irregular snapshots; record download date | yes / yes |
+| [HCD mobilehome park list](#hcd-mobilehome-parks) | CA Dept. of Housing and Community Development (original) | Preservation | file | California public record; state open-data terms | No official bulk download found (Nov 2026) | **no** / **no** |
+| [HUD LIHTC database](#hud-lihtc) | U.S. Dept. of Housing and Urban Development (original) | Preservation | file | Public domain (U.S. Government work) | Annual release; record the 'placed in service through' year at download | yes / **no** |
+| [HUD Multifamily Assistance & Section 8 Contracts](#hud-mf-s8) | U.S. Dept. of Housing and Urban Development (original) | Preservation | file | Public domain (U.S. Government work) | Current as of 07/01/2026 (updated monthly) | yes / yes |
+| [HCD APR Table A2 (building activity by APN)](#apr-table-a2) | CA Dept. of Housing and Community Development (original) | Validation | file | California public record; state open-data terms | Annual APR cycle; record report years | **no** / **no** |
 
 ## Base geography
 
@@ -66,6 +68,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **OCGIS Parcels**
 
+- **Publisher:** County of Orange, OC Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Lot size, Year built
 - **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/FeatureServer/0
 - **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/FeatureServer
@@ -79,6 +83,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **OCGIS City Boundaries**
 
+- **Publisher:** County of Orange, OC Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Jurisdiction
 - **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/City_Boundaries/MapServer/0
 - **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/City_Boundaries/MapServer
@@ -92,6 +98,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **OCGIS Unincorporated Area**
 
+- **Publisher:** County of Orange, OC Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Jurisdiction, Valid OC ZIP
 - **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Unincorporated_Area/MapServer/0
 - **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Unincorporated_Area/MapServer
@@ -105,6 +113,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **Census 2020 ZCTA (TIGERweb)**
 
+- **Publisher:** U.S. Census Bureau (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** ZIP selection
 - **Source URL:** https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/PUMA_TAD_TAZ_UGA_ZCTA/MapServer/7
 - **Publisher page:** https://www.census.gov/programs-surveys/geography/guidance/geo-areas/zctas.html
@@ -118,6 +128,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **Census tracts (TIGERweb)**
 
+- **Publisher:** U.S. Census Bureau (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Tract join key
 - **Source URL:** https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/0
 - **Publisher page:** https://tigerweb.geo.census.gov/tigerwebmain/TIGERweb_main.html
@@ -131,6 +143,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **OCGIS Building Footprints**
 
+- **Publisher:** County of Orange, OC Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Building coverage
 - **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Building_Footprints/FeatureServer/0
 - **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Building_Footprints/FeatureServer
@@ -144,6 +158,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **Overture Maps buildings**
 
+- **Publisher:** Overture Maps Foundation (authority: consortium)
+- **Source checked against publisher:** **not yet**
 - **Signals:** Building coverage
 - **Source URL:** https://docs.overturemaps.org/guides/buildings/
 - **Publisher page:** https://overturemaps.org/download/
@@ -156,6 +172,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **OCGIS Street Centerlines**
 
+- **Publisher:** County of Orange, OC Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Frontage
 - **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Street_Centerlines_With_Labels/FeatureServer/0
 - **Publisher page:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Street_Centerlines_With_Labels/FeatureServer
@@ -167,50 +185,60 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### scag-land-use
 
-**SCAG parcel land use**
+**SCAG 2024 Existing Land Use, Orange County**
 
+- **Publisher:** Southern California Association of Governments (from county assessor rolls) (authority: compiler)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Land use code
-- **Source URL:** https://gisdata-scag.opendata.arcgis.com/
+- **Source URL:** https://maps.scag.ca.gov/scaggis/rest/services/LDX/Existinglanduse_poly_OR/MapServer/0
 - **Publisher page:** https://gisdata-scag.opendata.arcgis.com/
 - **License:** SCAG Open Data terms of use (verified: **no**)
-- **Refresh date:** 2019 annual land use (verify) (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/scag_land_use_oc.gpkg`.
+- **Refresh date:** 2024 Annual Land Use, released June 2025 (on 2024 parcels, March 2025) (verified: yes)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel takes `land_use_code` from the polygon containing its interior point.
-- **Notes:** Replaces the missing OCGIS use code. Code meanings in scoring.LAND_USE_UNDERUSED (verify).
+- **Notes:** Replaces the missing OCGIS use code. Served by SCAG itself. Confirm the 2024 code field name on first live run; code meanings in scoring.LAND_USE_UNDERUSED still need checking against SCAG's code book.
 
 ## Housing policy
 
 ### scag-he-sites
 
-**SCAG 6th Cycle Housing Element sites inventory**
+**SCAG Region 6th Cycle Housing Element Sites (Table A)**
 
+- **Publisher:** SCAG (compiled from HCD Housing Element sites inventory forms) (authority: compiler)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Housing Element site
-- **Source URL:** https://gisdata-scag.opendata.arcgis.com/
-- **Publisher page:** https://scag.ca.gov/housing-element-parcel-tool
+- **Source URL:** https://maps.scag.ca.gov/scaggis/rest/services/LDX/HousingElementSite_poly_scag/MapServer/0
+- **Publisher page:** https://maps.scag.ca.gov/scaggis/rest/services/LDX/HousingElementSite_poly_scag/MapServer
 - **License:** SCAG Open Data terms of use (verified: **no**)
-- **Refresh date:** 6th Cycle (2021-2029); verify (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/scag_he_sites_6th.gpkg`.
+- **Refresh date:** HCD sites inventory forms retrieved by SCAG October 2025 (168 jurisdictions) (verified: yes)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel gets `he_site` = true if it overlaps any feature.
+- **Notes:** Underlying data is HCD's Electronic Housing Element Sites Inventory Form (Table A), compiled by SCAG.
 
 ### scag-he-rezone
 
-**SCAG 6th Cycle Housing Element rezone sites**
+**SCAG Region 6th Cycle Housing Element Rezone Sites (Table B)**
 
+- **Publisher:** SCAG (compiled from HCD Housing Element sites inventory forms) (authority: compiler)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Housing Element site
-- **Source URL:** https://gisdata-scag.opendata.arcgis.com/
-- **Publisher page:** https://scag.ca.gov/housing-element-parcel-tool
+- **Source URL:** https://maps.scag.ca.gov/scaggis/rest/services/LDX/HousingElementRezone_poly_scag/MapServer/0
+- **Publisher page:** https://maps.scag.ca.gov/scaggis/rest/services/LDX/HousingElementRezone_poly_scag/MapServer
 - **License:** SCAG Open Data terms of use (verified: **no**)
-- **Refresh date:** 6th Cycle; verify (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/scag_he_rezone_6th.gpkg`.
+- **Refresh date:** HCD sites inventory forms retrieved by SCAG October 2025 (verified: yes)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel gets `he_rezone` = true if it overlaps any feature.
+- **Notes:** Underlying data is HCD's sites inventory form Table B (candidate sites to be rezoned).
 
 ### hcd-compliance
 
-**HCD Housing Element Compliance Report**
+**HCD Housing Element Review and Compliance Report**
 
+- **Publisher:** CA Dept. of Housing and Community Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** HE compliance
-- **Source URL:** https://www.hcd.ca.gov/planning-and-community-development/housing-elements
-- **Publisher page:** https://www.hcd.ca.gov/planning-and-community-development/housing-elements
+- **Source URL:** https://www.hcd.ca.gov/planning-and-community-development/housing-open-data-tools/housing-element-review-and-compliance-report
+- **Publisher page:** https://www.hcd.ca.gov/planning-and-community-development/housing-open-data-tools/housing-element-review-and-compliance-report
 - **License:** California public record; state open-data terms (verified: **no**)
 - **Refresh date:** Updated continuously; record pull date (verified: **no**)
 - **How to get it:** Manual download. Save as `backend/data/raw/hcd_he_compliance.csv`.
@@ -218,32 +246,40 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### hcd-sb35
 
-**HCD SB 35 statewide determination**
+**HCD SB 423 (formerly SB 35) Streamlined Ministerial Approval statewide determination**
 
-- **Signals:** SB 35
-- **Source URL:** https://www.hcd.ca.gov/planning-and-community-development/streamlined-ministerial-approval-process
-- **Publisher page:** https://www.hcd.ca.gov/planning-and-community-development/streamlined-ministerial-approval-process
+- **Publisher:** CA Dept. of Housing and Community Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
+- **Signals:** SB 35 / SB 423
+- **Source URL:** https://www.hcd.ca.gov/sites/default/files/docs/planning-and-community/sb423-determination-summary.pdf
+- **Publisher page:** https://www.hcd.ca.gov/planning-and-community-development/statutory-determinations
 - **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** Annual determination; verify year (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/hcd_sb35_determination.csv`.
+- **Refresh date:** Annual HCD determination; record the determination date printed on the PDF (verified: **no**)
+- **How to get it:** Manual download. Save as `backend/data/raw/hcd_sb423_determination.csv`.
 - **How it's used:** Joined by city / unincorporated to give `sb35_status`.
+- **Notes:** SB 423 (2023) replaced the SB 35 determination; HCD now publishes the SB 423 summary. It is a PDF: convert to CSV with columns Jurisdiction, Determination (Not subject / 10% / 50%).
 
 ### apr-table-h
 
 **HCD APR Table H (locally owned surplus sites)**
 
+- **Publisher:** CA Dept. of Housing and Community Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Public land
 - **Source URL:** https://data.ca.gov/dataset/housing-element-annual-progress-report-apr-data-by-jurisdiction-and-year
 - **Publisher page:** https://data.ca.gov/dataset/housing-element-annual-progress-report-apr-data-by-jurisdiction-and-year
 - **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** Annual APR cycle; verify (verified: **no**)
+- **Refresh date:** Annual APR cycle (reports due April 1); record report years (verified: **no**)
 - **How to get it:** Manual download. Save as `backend/data/raw/apr_table_h.csv`.
 - **How it's used:** Parcel gets `public_surplus` = true if its APN is on the list.
+- **Notes:** Published by HCD (contact APR@hcd.ca.gov) on the state open data portal.
 
 ### hcd-sla-notices
 
 **HCD Surplus Land Act notices**
 
+- **Publisher:** CA Dept. of Housing and Community Development (authority: original)
+- **Source checked against publisher:** **not yet**
 - **Signals:** Public land
 - **Source URL:** https://www.hcd.ca.gov/planning-and-community-development/public-lands
 - **Publisher page:** https://www.hcd.ca.gov/planning-and-community-development/public-lands
@@ -254,20 +290,25 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### dgs-state-land
 
-**DGS state-owned land**
+**DGS Statewide Property Inventory (state-owned real property)**
 
+- **Publisher:** CA Dept. of General Services (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Public land
-- **Source URL:** https://www.dgs.ca.gov/RESD
-- **Publisher page:** https://www.dgs.ca.gov/RESD
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** verify (verified: **no**)
+- **Source URL:** https://catalog.data.gov/dataset/realproperty
+- **Publisher page:** https://www.dgs.ca.gov/RESD/Resources/Page-Content/Real-Estate-Services-Division-Resources-List-Folder/Statewide-Property-Inventory
+- **License:** No license stated by DGS (state public record) (verified: yes)
+- **Refresh date:** Updated annually by agencies; RealProperty last modified 2025-10-22 (verified: yes)
 - **How to get it:** Manual download. Save as `backend/data/raw/dgs_state_owned.gpkg`.
 - **How it's used:** Parcel gets `state_owned` = true if it overlaps any feature.
+- **Notes:** Excludes Caltrans highway right of way and some security-sensitive sites (Gov Code 11011).
 
 ### osm-worship
 
 **OSM places of worship**
 
+- **Publisher:** OpenStreetMap contributors (via Geofabrik) (authority: community)
+- **Source checked against publisher:** **not yet**
 - **Signals:** Faith-based (SB 4)
 - **Source URL:** https://download.geofabrik.de/north-america/us/california/socal.html
 - **Publisher page:** https://www.openstreetmap.org/copyright
@@ -280,17 +321,19 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### oc-tax-defaulted
 
-**OC Treasurer tax-defaulted parcels (PDF)**
+**OC Treasurer-Tax Collector tax-defaulted property lists (PDF)**
 
+- **Publisher:** Orange County Treasurer-Tax Collector (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Tax-defaulted
-- **Source URL:** https://www.octreasurer.gov/
-- **Publisher page:** https://www.octreasurer.gov/
-- **License:** County public record (verified: **no**)
-- **Refresh date:** Per auction list; record PDF date (verified: **no**)
+- **Source URL:** https://www.octreasurer.gov/taxdefaultedproperty
+- **Publisher page:** https://www.octreasurer.gov/taxauction
+- **License:** County public notice (published under Rev. & Tax. Code 3371 / 3702) (verified: yes)
+- **Refresh date:** Delinquency list published each September (latest seen: executed Sept 2, 2025); auction Exhibit I each spring (verified: yes)
 - **How to get it:** Manual download. Put the PDFs in `backend/data/raw/oc_treasurer_pdfs/`, then run `python -m parcel_engine.cli parse-tax-pdfs`.
 - **How it's used:** Parcel gets `tax_defaulted` = true if its APN is on the list.
 - **Low confidence:** a parcel flagged by this source loses half a signal of confidence.
-- **Notes:** Parsed separately by parcel_engine.tax_default into data/cache/tax_defaulted_apns.csv.
+- **Notes:** Parsed separately by parcel_engine.tax_default into data/cache/tax_defaulted_apns.csv. Lists change daily as parcels are redeemed; treat as a snapshot.
 
 ## Access
 
@@ -298,23 +341,28 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **SCAG High Quality Transit Areas**
 
+- **Publisher:** Southern California Association of Governments (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Transit (HQTA)
 - **Source URL:** https://gisdata-scag.opendata.arcgis.com/
 - **Publisher page:** https://gisdata-scag.opendata.arcgis.com/
 - **License:** SCAG Open Data terms of use (verified: **no**)
-- **Refresh date:** Connect SoCal 2024 HQTA (verify) (verified: **no**)
+- **Refresh date:** Use Connect SoCal 2024 base-year (2022) HQTA; SCAG updates every 4 years (verified: **no**)
 - **How to get it:** Manual download. Save as `backend/data/raw/scag_hqta.gpkg`.
 - **How it's used:** Parcel gets `in_hqta` = true if it overlaps any feature.
+- **Notes:** SCAG serves the 2024 base-year HQTC lines live (OpenData/HQTC_Year_2022) but I could not find the matching HQTA polygon service, so this stays a download from SCAG's portal. Do not use the RTP2020 layers.
 
 ### octa-gtfs
 
 **OCTA GTFS stops**
 
+- **Publisher:** Orange County Transportation Authority (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Transit stops
-- **Source URL:** https://www.octa.net/about/about-octa/doing-business-with-octa/gtfs/
-- **Publisher page:** https://www.octa.net/
-- **License:** OCTA GTFS license (verify) (verified: **no**)
-- **Refresh date:** Per service change; read feed_info.txt (verified: **no**)
+- **Source URL:** https://www.octa.net/current/google_transit.zip
+- **Publisher page:** https://octa.net/about/about-octa/open-data
+- **License:** OCTA open data terms: free use, OCTA retains ownership, no warranty (verified: yes)
+- **Refresh date:** Quarterly service changes; read feed_info.txt / calendar.txt (verified: yes)
 - **How to get it:** Manual download. Save as `backend/data/raw/octa_gtfs.zip`.
 - **How it's used:** Parcel gets `dist_bus_stop_ft`: feet to the nearest feature (capped at 3 miles).
 
@@ -322,11 +370,13 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **Metrolink GTFS stops**
 
+- **Publisher:** Southern California Regional Rail Authority (Metrolink) (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Transit stops
-- **Source URL:** https://metrolinktrains.com/about/gtfs/
-- **Publisher page:** https://metrolinktrains.com/
-- **License:** Metrolink GTFS license (verify) (verified: **no**)
-- **Refresh date:** Per service change; read feed_info.txt (verified: **no**)
+- **Source URL:** https://metrolinktrains.com/globalassets/about/gtfs/gtfs.zip
+- **Publisher page:** https://metrolinktrains.com/about/gtfs/
+- **License:** Metrolink: provided as is, no liability (verified: yes)
+- **Refresh date:** Updated with schedule changes (about 5 times a year) (verified: yes)
 - **How to get it:** Manual download. Save as `backend/data/raw/metrolink_gtfs.zip`.
 - **How it's used:** Parcel gets `dist_rail_ft`: feet to the nearest feature (capped at 3 miles).
 
@@ -334,19 +384,23 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **Census LEHD LODES8 WAC (jobs by workplace)**
 
+- **Publisher:** U.S. Census Bureau, LEHD (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Jobs access
 - **Source URL:** https://lehd.ces.census.gov/data/lodes/LODES8/ca/wac/ca_wac_S000_JT00_2022.csv.gz
-- **Publisher page:** https://lehd.ces.census.gov/data/
+- **Publisher page:** https://lehd.ces.census.gov/data/#lodes
 - **License:** Public domain (U.S. Government work) (verified: yes)
-- **Refresh date:** LODES8, 2022 job year (verified: **no**)
+- **Refresh date:** Committed file is job year 2022; LODES 8.4 (Dec 18, 2025) adds 2023 (verified: yes)
 - **How to get it:** **In repo:** `backend/data/raw/ca_wac_S000_JT00_2022.csv.gz`.
 - **How it's used:** Block-level jobs (C000) summed to tract to give `tract_jobs`.
-- **Notes:** Block-level C000 summed to tract (first 11 digits of w_geocode).
+- **Notes:** Block-level C000 summed to tract (first 11 digits of w_geocode). To move to 2023, download ca_wac_S000_JT00_2023.csv.gz and change local_file and url.
 
 ### cde-schools
 
 **CDE public schools**
 
+- **Publisher:** CA Dept. of Education (authority: original)
+- **Source checked against publisher:** **not yet**
 - **Signals:** Schools
 - **Source URL:** https://www.cde.ca.gov/ds/si/ds/pubschls.asp
 - **Publisher page:** https://www.cde.ca.gov/ds/si/ds/pubschls.asp
@@ -359,6 +413,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **OSM/Overture grocery stores**
 
+- **Publisher:** OpenStreetMap contributors (via Geofabrik) (authority: community)
+- **Source checked against publisher:** **not yet**
 - **Signals:** Grocery
 - **Source URL:** https://download.geofabrik.de/north-america/us/california/socal.html
 - **Publisher page:** https://www.openstreetmap.org/copyright
@@ -371,64 +427,77 @@ Most data files are not stored in this repo. They are either queried live by the
 
 ### tcac-opportunity
 
-**TCAC/HCD Opportunity Map**
+**CTCAC/HCD Opportunity Map (2026)**
 
+- **Publisher:** CA Tax Credit Allocation Committee / HCD (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Opportunity area
 - **Source URL:** https://www.treasurer.ca.gov/ctcac/opportunity.asp
 - **Publisher page:** https://www.treasurer.ca.gov/ctcac/opportunity.asp
 - **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** Annual map; record map year (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/tcac_opportunity_map.gpkg`.
+- **Refresh date:** 2026 map, adopted December 2025 (annual) (verified: yes)
+- **How to get it:** Manual download. Save as `backend/data/raw/tcac_opportunity_map_2026.gpkg`.
 - **How it's used:** Parcel takes `tcac_category` from the polygon containing its interior point.
+- **Notes:** Published by the State Treasurer's CTCAC with HCD. Shapefile is linked from the page above.
 
 ### acs5
 
-**ACS 5-year (rent burden, median household income)**
+**ACS 5-year 2020-2024 (rent burden, median household income)**
 
+- **Publisher:** U.S. Census Bureau (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Rent burden / income
-- **Source URL:** https://api.census.gov/data/2023/acs/acs5
-- **Publisher page:** https://www.census.gov/programs-surveys/acs
+- **Source URL:** https://api.census.gov/data/2024/acs/acs5
+- **Publisher page:** https://www.census.gov/programs-surveys/acs/news/data-releases/2024/release.html
 - **License:** Public domain (U.S. Government work) (verified: yes)
-- **Refresh date:** 2019-2023 ACS 5-year (released Dec 2024) (verified: **no**)
+- **Refresh date:** 2020-2024 ACS 5-year, released January 29, 2026 (verified: yes)
 - **How to get it:** Pulled live from the Census Data API for Orange County tracts and cached.
 - **How it's used:** Joined by Census tract to give `median_hh_income` and `rent_burden_share`.
 
 ### hud-income-limits
 
-**HUD income limits (Orange County AMI)**
+**HUD FY2026 income limits (Orange County AMI)**
 
+- **Publisher:** U.S. Dept. of Housing and Urban Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** AMI
 - **Source URL:** https://www.huduser.gov/portal/datasets/il.html
 - **Publisher page:** https://www.huduser.gov/portal/datasets/il.html
 - **License:** Public domain (U.S. Government work) (verified: yes)
-- **Refresh date:** FY income limits; record FY (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/hud_income_limits.csv`.
+- **Refresh date:** FY2026, effective May 1, 2026 (verified: yes)
+- **How to get it:** Manual download. Save as `backend/data/raw/hud_income_limits_fy2026.csv`.
 - **How it's used:** Not joined yet. Reserved for expressing tract income as % of AMI.
 - **Notes:** County-level constant; used to express tract income as % AMI.
 
 ### calenviroscreen4
 
-**CalEnviroScreen 4.0**
+**CalEnviroScreen 5.0 (OEHHA)**
 
+- **Publisher:** CA Office of Environmental Health Hazard Assessment (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Environmental burden
-- **Source URL:** https://oehha.ca.gov/calenviroscreen/report/calenviroscreen-40
-- **Publisher page:** https://oehha.ca.gov/calenviroscreen/report/calenviroscreen-40
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** Oct 2021 (version 4.0) (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/calenviroscreen40.gpkg`.
+- **Source URL:** https://gis.data.ca.gov/datasets/OEHHA::calenviroscreen-5-0
+- **Publisher page:** https://oehha.ca.gov/calenviroscreen/report/calenviroscreen-50
+- **License:** OEHHA conditions of use (verified: **no**)
+- **Refresh date:** CalEnviroScreen 5.0, final released July 2026 (replaces 4.0, Oct 2021) (verified: yes)
+- **How to get it:** Manual download. Save as `backend/data/raw/calenviroscreen50.gpkg`.
 - **How it's used:** Parcel takes `ces_percentile` from the polygon containing its interior point.
+- **Notes:** Use the final 5.0 release, not the January 2026 draft. Confirm the percentile field name in the 5.0 data dictionary.
 
 ### cdfi-oz
 
-**CDFI Fund Opportunity Zones tract list**
+**Treasury/CDFI Fund Qualified Opportunity Zones (2026 list)**
 
+- **Publisher:** U.S. Treasury, CDFI Fund (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Opportunity Zone
-- **Source URL:** https://www.cdfifund.gov/opportunity-zones
+- **Source URL:** https://www.cdfifund.gov/media/8018881/download?inline
 - **Publisher page:** https://www.cdfifund.gov/opportunity-zones
 - **License:** Public domain (U.S. Government work) (verified: yes)
-- **Refresh date:** 2018 designations (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/opportunity_zones.csv`.
+- **Refresh date:** 2026 designations announced Nov 5, 2026 (2018 list superseded) (verified: yes)
+- **How to get it:** Manual download. Save as `backend/data/raw/opportunity_zones_2026.csv`.
 - **How it's used:** Joined by Census tract to give `in_oz`.
+- **Notes:** Check the effective date of the 2026 designations against the 2018 list before relying on it.
 
 ## Hazards and constraints
 
@@ -436,6 +505,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **FEMA National Flood Hazard Layer (flood zones)**
 
+- **Publisher:** Federal Emergency Management Agency (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
 - **Source URL:** https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer/28
 - **Publisher page:** https://www.fema.gov/flood-maps/national-flood-hazard-layer
@@ -443,114 +514,140 @@ Most data files are not stored in this repo. They are either queried live by the
 - **Refresh date:** Continuously updated; record query date (verified: yes)
 - **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel gets `flood_sfha` = true if it overlaps any feature where SFHA_TF = 'T'.
+- **Notes:** FEMA's own service. Its robots.txt blocked my automated metadata check, so confirm layer 28 is 'Flood Hazard Zones' on first live run.
 
 ### calfire-fhsz-lra
 
-**CAL FIRE FHSZ (LRA, OCGIS mirror)**
+**CAL FIRE OSFM Fire Hazard Severity Zones, LRA (2025)**
 
+- **Publisher:** CAL FIRE, Office of the State Fire Marshal (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Fire_Hazard_Severity_Zones_LRA/MapServer/0
+- **Source URL:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
 - **Publisher page:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** 2025 LRA maps (verify mirror vintage) (verified: **no**)
-- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
+- **License:** CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use (verified: yes)
+- **Refresh date:** LRA maps released in 4 phases, Feb 10 - Mar 24, 2025 (combined file, Phases 1-4) (verified: yes)
+- **How to get it:** Manual download. Save as `backend/data/raw/fhsz_lra_2025.zip`.
 - **How it's used:** Parcel takes `fhsz_lra` from the polygon containing its interior point.
+- **Notes:** Download 'LRA FHSZ Combined Data as Recommended by the Office of the State Fire Marshal - Phases 1 through 4' (file geodatabase zip) from the OSFM page. Cities adopt these by local ordinance.
 
 ### calfire-fhsz-sra
 
-**CAL FIRE FHSZ (SRA, OCGIS mirror)**
+**CAL FIRE OSFM Fire Hazard Severity Zones, SRA (effective April 1, 2024)**
 
+- **Publisher:** CAL FIRE, Office of the State Fire Marshal (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Fire_Hazard_Severity_Zones_SRA/MapServer/0
+- **Source URL:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
 - **Publisher page:** https://osfm.fire.ca.gov/what-we-do/community-wildfire-preparedness-and-mitigation/fire-hazard-severity-zones
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** 2023 SRA maps (verify mirror vintage) (verified: **no**)
-- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
+- **License:** CC BY (CAL FIRE listing on data.gov); data.ca.gov: no restrictions on public use (verified: yes)
+- **Refresh date:** Effective April 1, 2024; a 2026 SRA update was open for public comment (Nov 2026) (verified: yes)
+- **How to get it:** Manual download. Save as `backend/data/raw/fhsz_sra_2024.zip`.
 - **How it's used:** Parcel takes `fhsz_sra` from the polygon containing its interior point.
+- **Notes:** Download 'SRA FHSZ Data Effective April 1, 2024' from the OSFM page. Replace when the 2026 SRA maps are adopted.
 
 ### cgs-liquefaction
 
-**CGS liquefaction zones (OCGIS mirror)**
+**CGS Seismic Hazards Program: Liquefaction Zones**
 
+- **Publisher:** CA Dept. of Conservation, California Geological Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Liquefaction/MapServer/0
-- **Publisher page:** https://www.conservation.ca.gov/cgs/sh/program
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** verify (verified: **no**)
+- **Source URL:** https://services2.arcgis.com/zr3KAIbsRSUyARHG/arcgis/rest/services/CGS_Liquefaction_Zones/FeatureServer/0
+- **Publisher page:** https://catalog.data.gov/dataset/cgs-liquefaction-zones
+- **License:** CC BY (California Department of Conservation) (verified: yes)
+- **Refresh date:** Last modified 2025-11-19 (publisher metadata) (verified: yes)
 - **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel gets `liquefaction` = true if it overlaps any feature.
+- **Notes:** Service published by the California Department of Conservation, CGS. Zones of Required Investigation; not an official natural hazard disclosure determination.
 
 ### cgs-fault-zones
 
-**CGS Alquist-Priolo fault zones**
+**CGS Alquist-Priolo Earthquake Fault Zones**
 
+- **Publisher:** CA Dept. of Conservation, California Geological Survey (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://www.conservation.ca.gov/cgs/alquist-priolo
-- **Publisher page:** https://www.conservation.ca.gov/cgs/alquist-priolo
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** verify (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/cgs_ap_fault_zones.gpkg`.
+- **Source URL:** https://services2.arcgis.com/zr3KAIbsRSUyARHG/arcgis/rest/services/CGS_Alquist_Priolo_Fault_Zones/FeatureServer/0
+- **Publisher page:** https://catalog.data.gov/dataset/cgs-alquist-priolo-fault-zones
+- **License:** CC BY (California Department of Conservation) (verified: yes)
+- **Refresh date:** Last modified 2025-11-19 (publisher metadata) (verified: yes)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel gets `fault_zone` = true if it overlaps any feature.
 
 ### coastal-zone
 
-**Coastal Zone boundary (OCGIS mirror of CCC)**
+**California Coastal Commission Coastal Zone Boundary**
 
+- **Publisher:** California Coastal Commission (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://www.ocgis.com/arcpub/rest/services/Map_Layers/Coastal_Zone/MapServer/0
+- **Source URL:** https://experience.arcgis.com/experience/61840fda04474fab9d1b5778740ad1b5
 - **Publisher page:** https://www.coastal.ca.gov/maps/czb/
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** verify (verified: **no**)
-- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
+- **License:** CCC disclaimer: no warranty; users indemnify the Commission; not survey accuracy (verified: yes)
+- **Refresh date:** Digital CZB from CCC GIS/Mapping Unit (2014-2016 vintages); official boundary adopted 1977 and amended since (verified: yes)
+- **How to get it:** Manual download. Save as `backend/data/raw/ccc_coastal_zone_boundary.gpkg`.
 - **How it's used:** Parcel gets `coastal_zone` = true if it overlaps any feature.
+- **Notes:** Download from the Commission's own GIS Data app. The digital boundary is not adopted and does not supersede the official maps; parcels near the line need a CCC boundary determination.
 
 ### calgem-wells
 
-**CalGEM oil and gas wells**
+**CalGEM WellSTAR oil and gas wells**
 
+- **Publisher:** CA Dept. of Conservation, CalGEM (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://www.conservation.ca.gov/calgem/maps
-- **Publisher page:** https://www.conservation.ca.gov/calgem/maps
-- **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** Updated weekly; record download date (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/calgem_wells.csv`.
+- **Source URL:** https://gis.conservation.ca.gov/server/rest/services/WellSTAR/Wells/MapServer/0
+- **Publisher page:** https://catalog.data.gov/dataset/wellstar-oil-and-gas-wells
+- **License:** CC BY (California Department of Conservation) (verified: yes)
+- **Refresh date:** Updated as needed; data.ca.gov files dated 12/24/25 (verified: yes)
+- **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Parcel gets `dist_oil_well_ft`: feet to the nearest feature (capped at 3 miles).
 
 ### dtsc-envirostor
 
-**DTSC EnviroStor sites**
+**DTSC EnviroStor cleanup sites**
 
+- **Publisher:** CA Dept. of Toxic Substances Control (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
 - **Source URL:** https://www.envirostor.dtsc.ca.gov/public/data_download
 - **Publisher page:** https://www.envirostor.dtsc.ca.gov/public/
 - **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** Record download date (verified: **no**)
+- **Refresh date:** Live database; record download date (verified: **no**)
 - **How to get it:** Manual download. Save as `backend/data/raw/envirostor_sites.csv`.
 - **How it's used:** Parcel gets `dist_envirostor_ft`: feet to the nearest feature (capped at 3 miles).
+- **Notes:** Published by the Department of Toxic Substances Control.
 
 ### geotracker
 
-**Water Board GeoTracker cleanup sites**
+**State Water Board GeoTracker sites**
 
+- **Publisher:** State Water Resources Control Board (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
-- **Source URL:** https://geotracker.waterboards.ca.gov/data_download
+- **Source URL:** https://data.ca.gov/dataset/ground-water-water-quality-regulatory-information
 - **Publisher page:** https://geotracker.waterboards.ca.gov/
 - **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** Record download date (verified: **no**)
+- **Refresh date:** Periodic CSV snapshot (latest seen: 2026-01-05) (verified: yes)
 - **How to get it:** Manual download. Save as `backend/data/raw/geotracker_sites.csv`.
 - **How it's used:** Parcel gets `dist_geotracker_ft`: feet to the nearest feature (capped at 3 miles).
+- **Notes:** Published by the State Water Resources Control Board on data.ca.gov.
 
 ### nrhp
 
-**National Register of Historic Places**
+**National Register of Historic Places (NPS Cultural Resources GIS)**
 
+- **Publisher:** National Park Service (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Hazards
 - **Source URL:** https://www.nps.gov/subjects/nationalregister/data-downloads.htm
-- **Publisher page:** https://www.nps.gov/subjects/nationalregister/data-downloads.htm
+- **Publisher page:** https://home.nps.gov/orgs/1094/nrhp_spatialdata.htm
 - **License:** Public domain (U.S. Government work) (verified: yes)
-- **Refresh date:** verify (verified: **no**)
+- **Refresh date:** Irregular snapshots; record download date (verified: yes)
 - **How to get it:** Manual download. Save as `backend/data/raw/nrhp.gpkg`.
 - **How it's used:** Parcel gets `nrhp` = true if it overlaps any feature.
+- **Notes:** NPS states its public spatial data is neither complete nor current for the Register; properties under 10 acres are points. Treat a miss as unknown, not as 'not historic'.
 
 ## Preservation
 
@@ -558,37 +655,45 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **HCD mobilehome park list**
 
+- **Publisher:** CA Dept. of Housing and Community Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Preservation
 - **Source URL:** https://www.hcd.ca.gov/manufactured-and-mobilehomes/mobilehome-parks
 - **Publisher page:** https://www.hcd.ca.gov/manufactured-and-mobilehomes
 - **License:** California public record; state open-data terms (verified: **no**)
-- **Refresh date:** verify (verified: **no**)
+- **Refresh date:** No official bulk download found (Nov 2026) (verified: **no**)
 - **How to get it:** Manual download. Save as `backend/data/raw/hcd_mobilehome_parks.csv`.
 - **How it's used:** Parcel gets `dist_mhp_ft`: feet to the nearest feature (capped at 3 miles).
+- **Notes:** HCD regulates parks but I found no downloadable statewide list. Do NOT substitute commercial lead lists (MHVillage, ByteScraper, etc.). Options: request the list from HCD, or use SCAG land use code 1131 (mobile home parks) from scag_land_use instead.
 
 ### hud-lihtc
 
 **HUD LIHTC database**
 
+- **Publisher:** U.S. Dept. of Housing and Urban Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Preservation
 - **Source URL:** https://www.huduser.gov/portal/datasets/lihtc.html
-- **Publisher page:** https://www.huduser.gov/portal/datasets/lihtc.html
+- **Publisher page:** https://lihtc.huduser.gov/
 - **License:** Public domain (U.S. Government work) (verified: yes)
-- **Refresh date:** Annual release; record placed-in-service year (verified: **no**)
+- **Refresh date:** Annual release; record the 'placed in service through' year at download (verified: **no**)
 - **How to get it:** Manual download. Save as `backend/data/raw/LIHTCPUB.csv`.
 - **How it's used:** Parcel gets `dist_lihtc_ft`: feet to the nearest feature (capped at 3 miles).
 
 ### hud-mf-s8
 
-**HUD Multifamily Section 8 contracts**
+**HUD Multifamily Assistance & Section 8 Contracts**
 
+- **Publisher:** U.S. Dept. of Housing and Urban Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Preservation
-- **Source URL:** https://www.hud.gov/program_offices/housing/mfh/exp/mfhdiscl
-- **Publisher page:** https://www.hud.gov/program_offices/housing/mfh/exp/mfhdiscl
+- **Source URL:** https://www.hud.gov/hud-partners/multifamily-assist-section8-database
+- **Publisher page:** https://www.hud.gov/hud-partners/multifamily-assist-section8-database
 - **License:** Public domain (U.S. Government work) (verified: yes)
-- **Refresh date:** Monthly; record download date (verified: **no**)
+- **Refresh date:** Current as of 07/01/2026 (updated monthly) (verified: yes)
 - **How to get it:** Manual download. Save as `backend/data/raw/hud_mf_section8.csv`.
 - **How it's used:** Parcel gets `dist_s8_ft`: feet to the nearest feature (capped at 3 miles).
+- **Notes:** Excel download. If it lacks coordinates, geocode property addresses with the Census geocoder.
 
 ## Validation
 
@@ -596,6 +701,8 @@ Most data files are not stored in this repo. They are either queried live by the
 
 **HCD APR Table A2 (building activity by APN)**
 
+- **Publisher:** CA Dept. of Housing and Community Development (authority: original)
+- **Source checked against publisher:** 2026-11-07
 - **Signals:** Validation
 - **Source URL:** https://data.ca.gov/dataset/housing-element-annual-progress-report-apr-data-by-jurisdiction-and-year
 - **Publisher page:** https://data.ca.gov/dataset/housing-element-annual-progress-report-apr-data-by-jurisdiction-and-year

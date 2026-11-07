@@ -111,19 +111,26 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
         f"({', '.join(d['id'] for d in stored) or 'none'}), {n - live - len(stored)} still need a manual download.",
         f"- License checked against the publisher: {lic_ok} of {n}.",
         f"- Refresh date checked against the publisher: {ref_ok} of {n}.",
+        f"- Source (publisher, URL, vintage) checked on {registry.SOURCE_CHECKED_ON}: "
+        f"{sum(bool(d['source_checked_on']) for d in registry.DATASETS)} of {n}.",
+        "- Authority: **original** = the agency responsible for the data, serving it itself; **compiler** = a public "
+        "agency compiling other governments' records (SCAG); **community** = OpenStreetMap, used only where the "
+        "project plan calls for it and always low confidence; **consortium** = Overture, alternative only. "
+        "No dataset is read from a third-party mirror.",
         "- Phase 1 requires every source documented with source, license and refresh date. Rows marked "
         "**no** under *Verified* still need someone to open the publisher's page and confirm.",
         "- Ingest date is recorded per run in `backend/data/registry_state.json` and served by `GET /registry`.",
         "",
         "## Summary",
         "",
-        "| Dataset | Signal(s) | Access | License | Refresh | Verified (license / refresh) |",
-        "|---|---|---|---|---|---|",
+        "| Dataset | Publisher (authority) | Signal(s) | Access | License | Refresh | Verified (license / refresh) |",
+        "|---|---|---|---|---|---|---|",
     ]
     for _, ids in CATEGORIES:
         for i in ids:
             d = by_id[i]
-            lines.append(f"| [{d['name']}](#{i.replace('_', '-')}) | {', '.join(d['signals'])} | {'in repo' if _in_repo(d) else d['access']} | "
+            lines.append(f"| [{d['name']}](#{i.replace('_', '-')}) | {d['publisher']} ({d['authority']}) | "
+                         f"{', '.join(d['signals'])} | {'in repo' if _in_repo(d) else d['access']} | "
                          f"{d['license']} | {d['refresh_date']} | {_yes(d['license_verified'])} / {_yes(d['refresh_verified'])} |")
     for cat, ids in CATEGORIES:
         lines += ["", f"## {cat}"]
@@ -134,6 +141,8 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
                 access = f"**In repo:** `backend/data/raw/{d['local_file']}`."
             lines += [
                 "", f"### {i.replace('_', '-')}", "", f"**{d['name']}**", "",
+                f"- **Publisher:** {d['publisher']} (authority: {d['authority']})",
+                f"- **Source checked against publisher:** {d['source_checked_on'] or '**not yet**'}",
                 f"- **Signals:** {', '.join(d['signals'])}",
                 f"- **Source URL:** {d['url']}",
                 f"- **Publisher page:** {d['landing_url']}",
@@ -161,7 +170,7 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
     md_path.parent.mkdir(parents=True, exist_ok=True)
     md_path.write_text("\n".join(lines))
 
-    cols = ["id", "category", "name", "signals", "access", "url", "landing_url", "local_file", "license",
+    cols = ["id", "category", "name", "publisher", "authority", "source_checked_on", "signals", "access", "url", "landing_url", "local_file", "license",
             "license_verified", "refresh_date", "refresh_verified", "low_confidence", "how_used", "notes"]
     with open(csv_path, "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=cols)
@@ -169,7 +178,9 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
         for cat, ids in CATEGORIES:
             for i in ids:
                 d = by_id[i]
-                w.writerow({"id": i, "category": cat, "name": d["name"], "signals": "; ".join(d["signals"]),
+                w.writerow({"id": i, "category": cat, "name": d["name"], "publisher": d["publisher"],
+                            "authority": d["authority"], "source_checked_on": d["source_checked_on"] or "",
+                            "signals": "; ".join(d["signals"]),
                             "access": "in_repo" if _in_repo(d) else d["access"], "url": d["url"], "landing_url": d["landing_url"],
                             "local_file": d.get("local_file", ""), "license": d["license"],
                             "license_verified": d["license_verified"], "refresh_date": d["refresh_date"],

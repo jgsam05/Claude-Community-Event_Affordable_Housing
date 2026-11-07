@@ -46,7 +46,7 @@ Key Feature properties: `apn, address, jurisdiction, straddles_city_line, opp, d
 
 ## Data: what's automatic vs. manual
 
-**Queried live (ArcGIS REST / APIs):** OCGIS parcels, city boundaries, unincorporated area, building footprints, centerlines; TIGERweb ZCTAs and tracts; FEMA NFHL; OCGIS mirrors of CAL FIRE FHSZ, CGS liquefaction and the Coastal Zone; the ACS 5-year Census API.
+**Queried live from the publisher's own service:** OCGIS parcels, city boundaries, unincorporated area, building footprints, centerlines (County of Orange); TIGERweb ZCTAs and tracts and the ACS 5-year API (Census Bureau); FEMA NFHL; CGS liquefaction and Alquist-Priolo fault zones (Dept. of Conservation); CalGEM wells; SCAG Housing Element sites, rezone sites and 2024 existing land use.
 
 **Manual download into `data/raw/`** (file names are in `registry.py` → `local_file`): SCAG HE sites/rezone, HQTA and land use; HCD compliance, SB 35, SLA notices; APR Tables H and A2; DGS; OSM worship and grocery; OCTA/Metrolink GTFS; LODES WAC; CDE schools; TCAC map; CalEnviroScreen; OZ list; CGS fault zones; CalGEM; EnviroStor; GeoTracker; NRHP; HCD mobilehome parks; HUD LIHTC and Section 8.
 
@@ -57,7 +57,7 @@ A dataset that isn't present doesn't break anything. Its signals count as missin
 ## Design choices to review
 
 - **Footprints default to OCGIS `Building_Footprints`, not Overture/Microsoft.** OCGIS can be queried by bounding box. Overture is supported as a file (`FOOTPRINT_SOURCE=overture_buildings`).
-- **Hazard layers use OCGIS mirrors** of CAL FIRE, CGS and the Coastal Commission where available. Confirm each mirror's vintage against the original publisher.
+- **Every dataset comes from its original publisher** (or SCAG, which compiles HCD and assessor records), never a third-party mirror. Each registry record names the publisher and an authority tier; OpenStreetMap is used only for the two signals the project plan assigns to it and always counts as low confidence. See `docs/DATASETS.md`.
 - **Parcel belongs to the ZIP containing its interior point**, so no parcel shows up in two ZIPs. A parcel cut by a city line is tagged with the city at its interior point and flagged `straddles_city_line`.
 - **Valid OC ZIP** means at least 5% of the ZCTA's area falls inside OC city boundaries plus the unincorporated area.
 

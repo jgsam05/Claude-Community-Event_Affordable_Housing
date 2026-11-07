@@ -176,3 +176,14 @@ def test_catalog_covers_every_dataset(tmp_path):
     text = md.read_text()
     assert all(f"### {d['id'].replace('_', '-')}" in text for d in registry.DATASETS)
     assert len(pd.read_csv(csvp)) == len(registry.DATASETS)
+
+
+def test_no_third_party_mirrors():
+    """Non-county data must come from its publisher, not the OCGIS copies used in v0.1."""
+    for d in registry.DATASETS:
+        assert d["authority"] in {"original", "compiler", "community", "consortium"}, d["id"]
+        if "County of Orange" not in d["publisher"]:
+            assert "ocgis.com" not in d["url"], d["id"]
+    community = {d["id"] for d in registry.DATASETS if d["authority"] == "community"}
+    assert community == {"osm_worship", "osm_grocery"}
+    assert registry.BY_ID["osm_worship"].get("low_confidence")

@@ -80,7 +80,10 @@ class LiveSources(Sources):
             cached = CACHE / f"{spec['id']}_{cache_key}.parquet" if cache_key else None
             if cached and cached.exists():
                 return gpd.read_parquet(cached)
-            where = (spec.get("join") or {}).get("where", "1=1")
+            join = spec.get("join") or {}
+            where = join.get("where", "1=1")
+            if area is not None and join.get("type") == "nearest_distance":
+                area = area.buffer(0.05)  # ~3 mi pad so the nearest feature just outside the ZIP is found
             gdf = arcgis.query(spec["url"], where=where, geometry=area)
             if cached is not None:
                 cached.parent.mkdir(parents=True, exist_ok=True)
@@ -116,7 +119,12 @@ class LiveSources(Sources):
             if "lat" in join:
                 return _points(df, pick(df, join["lat"]), pick(df, join["lon"]), area)
             return df
-        gdf = gpd.read_parquet(path) if suffix.endswith(".parquet") else gpd.read_file(path)
+        if suffix.endswith(".parquet"):
+            gdf = gpd.read_parquet(path)
+        elif suffix.endswith(".zip"):
+            gdf = _read_zip(path)
+        else:
+            gdf = gpd.read_file(path)
         gdf = gdf.to_crs(WORK_CRS)
         if area is not None:
             clip = gpd.GeoSeries([area], crs=4326).to_crs(WORK_CRS).iloc[0].envelope
@@ -153,6 +161,19 @@ class LiveSources(Sources):
         df = df[df["w_geocode"].str.startswith(OC_STATE + OC_COUNTY)]
         df["tract_geoid"] = df["w_geocode"].str[:11]
         return df.groupby("tract_geoid", as_index=False)["C000"].sum().rename(columns={"C000": "tract_jobs"})
+
+
+def _read_zip(path: Path) -> gpd.GeoDataFrame:
+    """Read the first vector layer in a publisher's zip (file geodatabase or shapefile)."""
+    with zipfile.ZipFile(path) as z:
+        names = z.namelist()
+    gdbs = sorted({n.split(".gdb/")[0] + ".gdb" for n in names if ".gdb/" in n})
+    if gdbs:
+        return gpd.read_file(f"/vsizip/{path}/{gdbs[0]}")
+    shps = [n for n in names if n.lower().endswith(".shp")]
+    if shps:
+        return gpd.read_file(f"/vsizip/{path}/{shps[0]}")
+    raise ValueError(f"no .gdb or .shp inside {path.name}")
 
 
 def _points(df, lat_col, lon_col, area):
