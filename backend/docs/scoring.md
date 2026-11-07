@@ -38,12 +38,12 @@ Core components are each 0–1, weighted, and renormalised over the components t
 | Building coverage | 25 | vacant → 1, else 1 − coverage/50% |
 | Transit | 15 | in HQTA 1; rail ≤ ½ mi 0.8; bus stop ≤ ¼ mi 0.5 |
 | Jobs | 10 | percentile of tract jobs within the ZIP |
-| Opportunity area | 10 | High/Highest 1, Moderate 0.5 |
+| Opportunity area | 10 | Highest/High Resource 1, Moderate 0.5, Low Resource or High Segregation & Poverty 0 |
 | Land use | 8 | SCAG code in `LAND_USE_UNDERUSED` (codes need verifying) |
 | Age | 4 | built before 1980 |
 | Amenities | 3 | grocery / school within ½ mi |
 
-Bonus points are added on top, with the total capped at 100: HE site or rezone +15, public/surplus land +10, faith-based +5, SB 35 jurisdiction +3 (not when a hazard blocks the pathway), HE out of compliance (builder's remedy watch) +2, tax-defaulted +2, commercial land where AB 2011 / SB 6 may apply +3, near transit where AB 2097 limits parking minimums +2.
+Bonus points are added on top, with the total capped at 100: HE site or rezone +15, public/surplus land +10, faith-based +5, SB 35 jurisdiction +3 (not when a hazard blocks the pathway), HE out of compliance (builder's remedy watch) +2, tax-defaulted +2.
 
 ## Feasibility Risk (0–100, higher = harder)
 
@@ -70,6 +70,15 @@ Points are additive, capped at 100:
 
 A parcel with zero risk keeps its full potential. At maximum risk it keeps 30%.
 
+### Calibration (keeping scores from running high)
+
+1. **Evidence discount.** After the formula, an Opportunity score above the ZIP median is pulled toward the median by `signals found / 10`. A parcel with 9 of 10 signals keeps 90% of its distance above the median; 8 of 10 keeps 80%. Scores at or below the median are never raised. The reason text says "Discounted from N because only X of 10 signals were found", and the raw value is kept in `opp_raw`.
+2. **Risk is a minimum.** A risk layer that is not loaded adds no points. Each parcel lists them in `risk_unchecked` and the risk reason says so, so "risk 0" is never read as "risk-free". Layers checked: flood, fire, liquefaction, earthquake faults, coastal zone, oil wells, contamination, historic properties, CalEnviroScreen, existing subsidized housing.
+3. **Nothing counted twice.** Pathway bonuses that restate a core component earn no points: AB 2011 / SB 6 (commercial land use is already in the land use component) and AB 2097 (transit is already in the transit component).
+4. **Opportunity tiers.** TCAC/HCD "High Segregation & Poverty" and "Low Resource" score 0; only "Highest Resource" and "High Resource" score 1; "Moderate Resource" scores 0.5. An earlier version matched the word "high" and scored the lowest tier as the highest.
+
+Real run, ZIP 92701 (5,312 parcels): median 36, 95th percentile 59, 99th percentile 68, highest 82, three parcels at 80 or above.
+
 ## Reasons
 
 - Each score gets a summary such as `"High: Housing Element rezone site, vacant (no building footprint), inside HQTA."`.
@@ -82,7 +91,7 @@ A parcel with zero risk keeps its full potential. At maximum risk it keeps 30%.
 
 ## State-law pathways
 
-`parcel_engine/pathways.py` lists, for each parcel, the California laws that may help or block housing there. It is a screening aid: zoning is not in the data, so every entry says what it was based on and what must be confirmed. It does not change risk, only development potential through the bonuses above.
+`parcel_engine/pathways.py` lists, for each parcel, the California laws that may help or block housing there. It is a screening aid: zoning is not in the data, so every entry says what it was based on and what must be confirmed. It does not change risk. Only the pathways that add facts the core components don't already score (SB 35, SB 4, public land, Housing Element) earn bonus points above.
 
 | Status | Meaning |
 |---|---|

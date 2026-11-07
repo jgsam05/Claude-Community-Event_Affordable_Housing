@@ -124,7 +124,7 @@ sites.forEach(s=>{
 /* ---------- real map (Leaflet, county parcels, Esri tiles) ---------- */
 const map=L.map('realMap',{zoomControl:false,attributionControl:false,zoomSnap:0.5,fadeAnimation:false,zoomAnimation:false,markerZoomAnimation:false,inertia:false});
 const cLat=sites.reduce((a,s)=>a+s.ll[0],0)/sites.length, cLon=sites.reduce((a,s)=>a+s.ll[1],0)/sites.length;
-map.setView([cLat,cLon],16,{animate:false});
+map.setView([cLat,cLon],15.5,{animate:false});
 map.panBy([-380,-20],{animate:false});
 const baseTiles=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:16,crossOrigin:true});
 map.createPane('labels');map.getPane('labels').style.zIndex=450;map.getPane('labels').style.pointerEvents='none';

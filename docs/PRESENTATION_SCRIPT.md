@@ -215,15 +215,15 @@ OCA pulls every parcel in that ZIP from the county's official records: **[5,312]
 
 On the left is a ranked list of the best places to look. On the right is a real map of Santa Ana with the actual parcels drawn on it. The numbered pins are the top sites.
 
-I'll click the first one. It's a **[1.5-acre]** vacant parcel on **[N Van Ness Ave]**. OCA shows three things:
+I'll click the first one. It's a **[6-acre]** vacant parcel. OCA shows an overall opportunity score of **[82 out of 100]** and three things behind it:
 
-- **Can homes fit?** The development potential: **[100 out of 100]**.
+- **Can homes fit?** The development potential: **[87 out of 100]**.
 - **What could go wrong?** The feasibility risk: **[0]**, since no hazard flags were found.
 - **How much data is this based on?** The confidence: **[9 of 10]** data signals found, so **High** confidence.
 
 And it says in plain words why it ranked here: a large lot, vacant, no building on it. Location matters too: things like transit, jobs, schools and groceries are built into that potential score, and flood, fire, earthquake and contamination count against it as risk.
 
-Below the scores, OCA lists the **state-law pathways** that may help build here: a density bonus, no parking minimums near transit, and AB 2011 and SB 6 for commercial land. Each one says what it's based on and what still has to be confirmed. And notice what it tells us is missing: rent burden data isn't in the score yet, and OCA says so. It never hides what it doesn't know."
+Below the scores, OCA lists the **state-law pathways** that may help build here: a density bonus, no parking minimums near transit, and AB 2011 and SB 6 for commercial land. Each one says what it's based on and what still has to be confirmed. And notice what it tells us is missing: rent burden data isn't in the score yet, and OCA says so. It even discounts the score a little because one signal is missing. It never hides what it doesn't know, and it doesn't hand out high scores easily: in this ZIP the typical parcel scores about 36, and only three parcels reach 80."
 
 ## How it works (2:00 to 2:25)
 
@@ -282,7 +282,7 @@ Add these to the 3-minute script:
 | Datasets cataloged | 43 (19 pulled live, 2 stored in the repo, 22 still need manual download) |
 | Scoring lenses | 3 (development potential, location quality, feasibility risk), combined into an overall opportunity score, plus confidence |
 | Kinds of sites | 6 (vacant or lightly built, Housing Element, public or surplus land, faith-based, tax-defaulted, preservation) |
-| Our real test run | ZIP 92701 (Santa Ana): **5,312 parcels** pulled from county records and all scored. **High** confidence on 4,799 (9 of 10 signals), Medium on 513 |
+| Our real test run | ZIP 92701 (Santa Ana): **5,312 parcels** pulled from county records and all scored. **High** confidence on 4,799 (9 of 10 signals), Medium on 513. Scores: median 36, 95th percentile 59, highest 82, only 3 parcels at 80 or above |
 | Opportunity formula | Development potential x (1 - 0.7 x risk / 100) |
 
 ## What counts as location quality
@@ -347,6 +347,9 @@ On the day of the run, the county's main "FeatureServer" parcel service returned
 
 **Why isn't confidence 10 out of 10?**
 "Because we're honest about what's missing. We count 10 data signals; our real run found 9 for most parcels. Rent burden needs a free Census key we haven't added yet, and the label tells you exactly what's missing."
+
+**Aren't your scores inflated? Everything looks high.**
+"We checked, and we fixed what was inflating them. In our real Santa Ana run the typical parcel scores about 36, only 3 of 5,312 reach 80, and the top score is 82. We found and fixed a bug that scored the lowest neighborhood-opportunity tier as the highest, we stopped counting the same fact twice, and we now pull a score back toward the ZIP's median when signals are missing: 9 of 10 signals keeps 90% of the score's distance above the median. Risk is also labeled as a minimum, with the layers we didn't check listed on every parcel."
 
 **How do you know the scores are right?**
 "We don't claim they're final. They're a transparent starting formula. Every reason is shown so a person can disagree. The backend includes a validation step that compares scores to where housing was actually permitted. That's the next test we run."
