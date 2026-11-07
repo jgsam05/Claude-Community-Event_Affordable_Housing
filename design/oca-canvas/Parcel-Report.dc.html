@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Parcel score report</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1B1F2A;background:#F7F8FA}
+a.back{color:#2B5FC7}
+a.back:hover{color:#1E4399}
+:focus-visible{outline:2px solid #2B5FC7;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height:1560px;background:#F7F8FA;color:#1B1F2A;font-family:'IBM Plex Sans',system-ui,sans-serif">
+
+<header style="background:#FFFFFF;border-bottom:1px solid #DDE1E8;padding:16px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 24px">
+<a class="back" href="Main.dc.html" style="display:inline-flex;align-items:center;min-height:44px;font-size:15px;font-weight:600;text-decoration:underline">Back to results for 92701</a>
+<div style="margin-left:auto;font-size:13px;line-height:16px;color:#4B5363">OCA · sample data</div>
+</header>
+
+<main style="padding:32px;display:flex;flex-direction:column;gap:24px;max-width:1280px;margin:0 auto;box-sizing:border-box">
+
+<section style="background:#FFFFFF;border:1px solid #DDE1E8;border-radius:8px;padding:28px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px 32px">
+<div style="min-width:0;flex:1 1 360px">
+<div style="font-size:13px;line-height:16px;font-weight:600;color:#4B5363;text-transform:uppercase;letter-spacing:0.04em">Rank 1 · Vacant or lightly built</div>
+<h1 style="margin:4px 0 0;font-family:'Archivo',sans-serif;font-size:32px;line-height:38px;font-weight:700">Vacant lot near rail corridor</h1>
+<p style="margin:6px 0 0;font-size:14px;line-height:20px;color:#4B5363">APN 000-000-01 · 1.8 acres (78,400 sq ft) · 3% building coverage · Santa Ana area</p>
+</div>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:24px">
+<div style="text-align:center">
+<div style="font-family:'Archivo',sans-serif;font-size:56px;line-height:56px;font-weight:700">{{overall}}</div>
+<div style="font-size:13px;line-height:16px;color:#4B5363">overall score of 100</div>
+</div>
+<div style="max-width:260px;font-size:14px;line-height:18px;color:#33394A;border-left:1px solid #DDE1E8;padding-left:20px">
+<strong style="font-weight:600">Overall confidence: High.</strong> 13 of 17 inputs came from complete, current public records. 4 are estimates.
+</div>
+</div>
+</section>
+
+<section style="background:#FFFFFF;border:1px solid #DDE1E8;border-radius:8px;padding:20px 28px;font-size:14px;line-height:20px;color:#33394A">
+<strong style="font-weight:600;color:#1B1F2A">How the overall score works.</strong> Overall = 45% × development potential + 35% × location quality + 20% × (100 − feasibility risk). Each component is scored 0 to 100. A group score is the average of its components. Confidence is High when the value comes from a complete, current public record, Medium when it is derived or partly estimated, and Low when data is missing or stale.
+</section>
+
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="3">
+<section style="background:#FFFFFF;border:1px solid #DDE1E8;border-radius:8px;overflow:hidden">
+<div style="padding:20px 28px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px;border-bottom:1px solid #DDE1E8">
+<div>
+<h2 style="margin:0;font-family:'Archivo',sans-serif;font-size:22px;line-height:28px;font-weight:700">{{g.title}}</h2>
+<div style="font-size:14px;line-height:18px;color:#4B5363">{{g.hint}}</div>
+</div>
+<div style="display:flex;align-items:center;gap:16px">
+<div style="width:160px;height:10px;background:#E8EEFB;border-radius:5px;overflow:hidden"><div style="{{g.bar}}"></div></div>
+<div style="font-family:'Archivo',sans-serif;font-size:32px;line-height:36px;font-weight:700">{{g.score}}</div>
+</div>
+</div>
+<div style="overflow-x:auto">
+<table style="width:100%;min-width:760px;border-collapse:collapse;font-size:14px;line-height:20px">
+<thead>
+<tr style="background:#EEF2EF;text-align:left">
+<th scope="col" style="padding:10px 28px;font-weight:600;font-size:13px;color:#33394A;width:20%">Component</th>
+<th scope="col" style="padding:10px 12px;font-weight:600;font-size:13px;color:#33394A;width:32%">What we found</th>
+<th scope="col" style="padding:10px 12px;font-weight:600;font-size:13px;color:#33394A;width:9%">Score</th>
+<th scope="col" style="padding:10px 12px;font-weight:600;font-size:13px;color:#33394A;width:27%">Source</th>
+<th scope="col" style="padding:10px 28px 10px 12px;font-weight:600;font-size:13px;color:#33394A;width:12%">Confidence</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{g.rows}}" as="r" hint-placeholder-count="5">
+<tr style="border-top:1px solid #DDE1E8;vertical-align:top">
+<th scope="row" style="padding:14px 28px;text-align:left;font-weight:600">{{r.label}}</th>
+<td style="padding:14px 12px;color:#33394A">{{r.found}}</td>
+<td style="padding:14px 12px;font-weight:600">{{r.score}}</td>
+<td style="padding:14px 12px;color:#33394A">{{r.source}}</td>
+<td style="padding:14px 28px 14px 12px"><span style="{{r.chip}}">{{r.conf}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+</section>
+</sc-for>
+
+<section style="background:#FFFFFF;border:1px solid #DDE1E8;border-radius:8px;padding:20px 28px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px">
+<div style="font-size:14px;line-height:20px;color:#33394A;flex:1 1 360px;min-width:0"><strong style="font-weight:600;color:#1B1F2A">Before you act.</strong> Scores come from public data that can lag the ground truth. Verify zoning, ownership, and constraints with the city planning department and a title report.</div>
+<button type="button" style="height:44px;padding:0 20px;border:1px solid #8A958E;border-radius:6px;background:#FFFFFF;color:#1B1F2A;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer">Download report (PDF)</button>
+</section>
+
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const chipFor = (c) => {
+      const m = { High: ['#E8EEFB', '#0B3B36', '#8FB3A9'], Medium: ['#FFF4E0', '#5A3B00', '#E0BC7A'], Low: ['#F9E4DA', '#6E2C07', '#E0A98C'] }[c];
+      return 'display:inline-block;font-size:13px;line-height:16px;font-weight:600;padding:2px 10px;border-radius:999px;background:' + m[0] + ';color:' + m[1] + ';border:1px solid ' + m[2];
+    };
+    const mk = (title, hint, color, rows) => {
+      const score = Math.round(rows.reduce((a, r) => a + r[2], 0) / rows.length);
+      return {
+        title, hint, score,
+        bar: 'height:10px;width:' + score + '%;background:' + color,
+        rows: rows.map(r => ({ label: r[0], found: r[1], score: r[2], source: r[3], conf: r[4], chip: chipFor(r[4]) }))
+      };
+    };
+    const dev = mk('Development potential', 'Higher is better', '#2B5FC7', [
+      ['Lot size', '1.8 acres (78,400 sq ft)', 92, 'OC Assessor parcel records', 'High'],
+      ['Buildable area', 'About 58,000 sq ft after typical setbacks (estimate)', 84, 'Parcel shape plus city zoning setbacks', 'Medium'],
+      ['Building coverage', '3% of the lot is built', 96, 'Building footprints (county GIS, open footprint data)', 'High'],
+      ['Housing Element status', 'On the lower-income site inventory', 90, 'City Housing Element site list (state HCD)', 'High'],
+      ['State-law pathways', 'Streamlined approval may apply, pending zoning check', 68, 'Zoning code screened against state housing statutes', 'Medium']
+    ]);
+    const loc = mk('Location quality', 'Higher is better', '#2B5FC7', [
+      ['Transit', 'Bus stop 0.2 mi; frequent line 0.4 mi', 82, 'OCTA transit schedule data (GTFS)', 'High'],
+      ['Jobs', 'Many jobs reachable within a short drive', 74, 'Census job-location data (LODES)', 'Medium'],
+      ['Schools', 'Elementary school within 0.5 mi', 78, 'California Dept. of Education school list', 'High'],
+      ['Grocery', 'Full-service grocer within 0.5 mi', 85, 'OpenStreetMap places', 'Medium'],
+      ['Opportunity area', 'High-resource tract', 80, 'State fair-housing opportunity map (TCAC/HCD)', 'High'],
+      ['CalEnviroScreen', 'Moderate pollution burden', 70, 'CalEnviroScreen 4.0 (CalEPA)', 'High'],
+      ['Rent burden', 'Many renters pay over 30% of income', 76, 'Census ACS table B25070', 'High']
+    ]);
+    const risk = mk('Feasibility risk', 'Lower is better', '#C2490F', [
+      ['Flood', 'Outside mapped flood zones', 8, 'FEMA flood map', 'High'],
+      ['Fire', 'Not in a fire hazard severity zone', 5, 'CAL FIRE hazard zones', 'High'],
+      ['Seismic', 'Inside a liquefaction zone', 55, 'California Geological Survey hazard maps', 'High'],
+      ['Coastal', 'Outside the coastal zone', 5, 'California Coastal Commission boundary', 'High'],
+      ['Oil wells', 'No wells within 500 ft', 10, 'State oil and gas well records (CalGEM)', 'Medium'],
+      ['Contamination', 'Cleanup site 0.3 mi away', 40, 'DTSC EnviroStor and GeoTracker', 'Medium'],
+      ['Historic', 'No listed resource on the parcel', 15, 'State historic resource inventory', 'Low']
+    ]);
+    const overall = Math.round(dev.score * 0.45 + loc.score * 0.35 + (100 - risk.score) * 0.20);
+    return { groups: [dev, loc, risk], overall };
+  }
+}
+</script>
+</body>
+</html>

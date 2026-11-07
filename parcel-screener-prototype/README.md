@@ -1,51 +1,55 @@
-# Parcel Screener — clickable prototype
+# OCA front end
 
-Front-end prototype for screening parcels by ZIP code. Each parcel shows an **opportunity score (0–100)** and a **confidence level** (High, Medium, Low, Insufficient) that says how much data the score stands on.
-
-By default all data is generated sample data. To use the backend in `../backend`, start the API and open the page with `?api=`:
-
-```
-cd ../backend && uvicorn parcel_engine.api:app --port 8000
-# then: http://localhost:8001/?api=http://localhost:8000#/zip/92705   (serve this folder on 8001)
-```
-
-Or set `window.PARCEL_API = 'http://localhost:8000'` before `app.js` loads. With an API set, coverage, signals and the data date come from the backend, and the map draws each parcel's real bounding box.
-
-## Run it
+The OCA site screener: enter an Orange County ZIP code and get a ranked, mapped list of parcels worth a closer look for affordable housing. Look and copy follow `../design/DESIGN.md`.
 
 No build step, no dependencies.
 
-- Open `index.html` in a browser, or
-- From this folder: `python3 -m http.server 8000`, then go to http://localhost:8000, or
-- Turn on GitHub Pages for the repo and point it at this folder.
+## Run it
 
-## What to try
+With the backend (real scores):
+
+```
+cd ../backend && uvicorn parcel_engine.api:app --port 8000
+# in this folder:
+python -m http.server 8001
+# open http://localhost:8001/?api=http://localhost:8000#/zip/92705
+```
+
+Set `PARCEL_ENGINE_MODE=fixture` on the backend to run on synthetic test data without network. You can also set `window.PARCEL_API` before `app.js` loads instead of `?api=`.
+
+Without `?api=`, the page runs on generated sample data for 92618, 92620 and 92705, scored with the same formula and labeled "Sample data" everywhere.
+
+## Screens
+
+| Route | Screen |
+|---|---|
+| `#/` | Home: ZIP search, "What OCA does", the three scores |
+| `#/zip/92705` | Results: site-type filters, confidence filter, sort, cards or data table, map, selected site with Development potential, Feasibility risk and Confidence tiles, CSV export |
+| `#/zip/92705/<apn>/report` | Parcel score report: every input, its value, public source and confidence; print or save as PDF |
+| `#/how` | How to use OCA: audience, five steps, reading scores, six kinds of sites, limits, glossary |
+| `#/methods` | Sources & methods: formula, weights, confidence rules, datasets, what's excluded |
+
+## Things to try
 
 | Try | What you'll see |
 |---|---|
-| `92618` | Normal results: map + list, click any parcel for details |
-| `92620` | Thin-data ZIP: banner, lots of Insufficient parcels |
+| `92705` | Crosses city lines (Santa Ana, Tustin, unincorporated) |
+| `92620` (sample mode) | Thin data: banner, many "Not scored" parcels |
 | `10001` | ZIP outside coverage |
-| `9261` | Inline validation error |
 | Hide every confidence level | Empty-filter state |
 
-Toggle **Color map by** to switch the map between Confidence and Opportunity. `Esc` closes the detail panel.
+`Esc` closes the selected site.
 
-## Design decisions front end should keep
+## Design decisions to keep
 
-- **Confidence is a level, not a percentage.** Rules: High 9–10 of 10 signals, Medium 7–8, Low 5–6, Insufficient 0–4. These thresholds are placeholders until back end tests them on real ZIPs.
-- **Insufficient parcels show no opportunity score.** They read "Not scored."
-- **One variable per map fill.** Confidence uses a blue lightness scale; opportunity uses an orange scale. In Opportunity mode, Low-confidence parcels collapse to 2 muted colors so a weak score can't look strong.
-- **The 1px parcel stroke is required.** The light blue fill is only ~1.6:1 against the map background; the stroke carries the contrast.
-- **The list is the accessible version of the map.** Every score, level and reason exists there as text.
-- **Reason strings follow one template:** `[Signal] [value] — [comparison to ZIP].` Missing data always states the effect: `Year built unavailable — not scored.`
+- **The front end shows the backend's scores; it never recomputes them.** The sample generator uses the same formula only so sample mode looks realistic.
+- **Insufficient parcels show no score.** They read "Not scored".
+- **Status is never color alone.** Confidence is always a word ("High confidence"); pins carry a rank number.
+- **One variable per map fill.** Opportunity uses a blue lightness scale; Low-confidence parcels collapse to 2 muted greys so a weak score can't look strong. Confidence uses green / yellow / orange tint, which also differ in lightness.
+- **The list is the accessible version of the map.** Every score, level and reason exists there as text, and every map pin is a labeled button.
+- **Reason strings come from the backend** and follow `[Signal] [value] — [comparison to ZIP].` Missing data always states the effect: `Year built unavailable — not scored.`
 
-## Placeholders to fill
+## Not built yet
 
-In `app.js`, top of file: `COVERED_ZIPS`, `COVERAGE_LABEL`, `DATA_AS_OF`, `THIN_DATA_THRESHOLD`. Basemap provider is `[PROVIDER]` in the map attribution.
-
-## Not built
-
-- Real basemap and real parcel geometry (the map is a stylized grid)
-- Zoom (buttons are placeholders)
-- Full sources page
+- Real basemap and zoom (the map is a schematic drawn from parcel bounding boxes)
+- Zoning

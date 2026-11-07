@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OCA 30-second demo video</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+html,body{margin:0;background:#F7F8FA}
+#stage{position:relative;width:1920px;height:1080px;overflow:hidden;background:#F7F8FA;color:#1B1F2A;font-family:'IBM Plex Sans',system-ui,sans-serif}
+.abs{position:absolute}
+.h{font-family:'Archivo',sans-serif;font-weight:800}
+.scene{position:absolute;left:0;top:0;width:1920px;height:1080px;opacity:0}
+.paper{position:absolute;width:260px;height:340px;background:#FFFFFF;border:2px solid #C9CFDA;border-radius:10px;box-shadow:0 6px 18px rgba(27,31,42,0.08);background-image:repeating-linear-gradient(#FFFFFF 0 26px,#E3E6EC 26px 28px);background-position:0 40px;background-repeat:no-repeat}
+.group{position:absolute;width:420px;text-align:center;white-space:nowrap}
+.dot{width:150px;height:150px;border-radius:50%;margin:0 auto}
+.card{position:absolute;left:80px;width:720px;height:150px;box-sizing:border-box;background:#FFFFFF;border:2px solid #DDE1E8;border-radius:22px;display:flex;align-items:center;gap:24px;padding:0 28px}
+.ring{flex:none;width:92px;height:92px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.ring span{width:70px;height:70px;border-radius:50%;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-weight:800;font-size:36px}
+.chip{display:inline-block;border-radius:999px;font-size:22px;font-weight:600;padding:4px 16px}
+.fchip{height:52px;padding:0 24px;border-radius:999px;display:inline-flex;align-items:center;font-size:25px;font-weight:600;border:2px solid #8A93A5;background:#FFFFFF;color:#1B1F2A}
+</style>
+</head>
+<body>
+<div id="stage">
+
+<!-- Scene A: the problem -->
+<div class="scene" id="sA">
+<div class="abs h" id="aTitle" style="left:0;width:1920px;top:110px;text-align:center;font-size:88px;line-height:96px">Land for affordable homes<br>is hard to find</div>
+</div>
+
+<!-- Scene B: who it is for -->
+<div class="scene" id="sB">
+<div class="abs h" id="bTitle" style="left:0;width:1920px;top:150px;text-align:center;font-size:76px;line-height:84px">Built for the people who<br>build and protect housing</div>
+</div>
+
+<!-- Scene C: search -->
+<div class="scene" id="sC">
+<div class="abs h" style="left:0;width:1920px;top:210px;text-align:center;font-size:76px;line-height:84px">Enter an Orange County ZIP code</div>
+<div class="abs" id="cInput" style="left:420px;top:430px;width:640px;height:128px;box-sizing:border-box;border:4px solid #8A93A5;border-radius:999px;background:#FFFFFF;display:flex;align-items:center;padding:0 56px;font-size:68px;font-weight:500;letter-spacing:0.04em"><span id="cTyped"></span><span id="cCaret" style="display:inline-block;width:4px;height:70px;background:#2B5FC7;margin-left:6px"></span></div>
+<div class="abs" id="cBtn" style="left:1100px;top:430px;width:400px;height:128px;border-radius:999px;background:#2B5FC7;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:600">Find sites</div>
+<div class="abs" id="cSub" style="left:0;width:1920px;top:640px;text-align:center;font-size:36px;color:#4B5363">Free public data · Orange County, CA</div>
+<div class="abs" id="cLoad" style="left:520px;top:620px;width:880px;opacity:0">
+<div id="cLoadText" style="font-size:36px;color:#33394A;text-align:center;margin-bottom:22px">Checking parcels against public datasets</div>
+<div style="height:18px;background:#DDE1E8;border-radius:9px;overflow:hidden"><div id="cBar" style="height:18px;width:0;background:#2B5FC7;border-radius:9px"></div></div>
+</div>
+</div>
+
+<!-- Scene M: results, scores, finale -->
+<div class="scene" id="sM">
+<svg class="abs" id="mapSvg" style="left:0;top:0" width="1920" height="1080" viewBox="0 0 1920 1080">
+<defs><clipPath id="mapClip"><rect id="mapClipRect" x="840" y="230" width="1000" height="660" rx="24"/></clipPath></defs>
+<g id="mapLayer" clip-path="url(#mapClip)">
+<rect width="1920" height="1080" fill="#E6EBE5"/>
+<path d="M0 830 C300 780 560 880 900 830 S1500 760 1920 820 L1920 920 C1500 860 1200 960 900 930 S300 880 0 940 Z" fill="#C5DCE6"/>
+<rect x="1700" y="250" width="150" height="140" rx="10" fill="#CFE3C4"/>
+<rect x="260" y="60" width="200" height="150" rx="10" fill="#CFE3C4"/>
+<g id="roads" stroke="#FFFFFF" stroke-width="14" fill="none"></g>
+<path d="M0 600 C400 560 900 640 1920 570" stroke="#F4DCA0" stroke-width="26" fill="none"/>
+<g id="buildings"></g>
+<g id="stops" fill="#33394A"><circle cx="960" cy="330" r="9"/><circle cx="1400" cy="520" r="9"/><circle cx="1400" cy="720" r="9"/><circle cx="1640" cy="330" r="9"/></g>
+</g>
+</svg>
+
+<div class="abs h" id="mTitle" style="left:80px;top:62px;font-size:62px;line-height:70px">4 places to look in 92701</div>
+<div class="abs" id="mChips" style="left:80px;top:148px;display:flex;gap:12px">
+<span class="fchip" style="background:#2B5FC7;border-color:#2B5FC7;color:#FFFFFF">All sites</span><span class="fchip">Vacant</span><span class="fchip">Public</span><span class="fchip">Faith-based</span><span class="fchip">Preservation</span>
+</div>
+<div id="mList"></div>
+<div class="abs" id="mDetail" style="left:80px;top:230px;width:720px;height:660px;box-sizing:border-box;background:#FFFFFF;border:2px solid #DDE1E8;border-radius:22px;padding:30px 36px;opacity:0">
+<div style="display:flex;justify-content:space-between;align-items:flex-start">
+<div><div style="font-size:24px;font-weight:600;color:#4B5363">#1 · Vacant or lightly built</div><div class="h" style="font-size:40px;line-height:46px;margin-top:4px">Vacant lot near<br>rail corridor</div></div>
+<div style="text-align:right"><div class="h" style="font-size:96px;line-height:96px"><span id="dScore">0</span></div><div style="font-size:22px;color:#4B5363">out of 100</div></div>
+</div>
+<div id="dRows" style="margin-top:26px;display:flex;flex-direction:column;gap:20px"></div>
+<div id="dSrc" style="margin-top:24px;opacity:0;font-size:24px;color:#33394A;line-height:34px">Sources: OC Assessor · OCTA transit data · FEMA flood map <span class="chip" style="background:#E3F3EA;color:#0B5E34;margin-left:6px">High confidence</span></div>
+<div id="dWarn" style="margin-top:16px;opacity:0;background:#FFF3CC;border-radius:14px;padding:12px 18px;font-size:24px;color:#33394A"><strong style="font-weight:600">Check first:</strong> liquefaction zone. Confirm with a soil report.</div>
+</div>
+
+<svg class="abs" id="pieceSvg" style="left:0;top:0" width="1920" height="1080" viewBox="0 0 1920 1080"></svg>
+
+<div class="abs" id="wordmark" style="left:705px;top:540px;font-family:'Archivo',sans-serif;font-weight:800;font-size:330px;line-height:1;letter-spacing:0.1em;white-space:nowrap;transform:translateY(-52%)">
+<span class="wl" style="display:inline-block;opacity:0">O</span><span class="wl" style="display:inline-block;opacity:0">C</span><span class="wl" style="display:inline-block;opacity:0">A</span>
+</div>
+<div class="abs" id="tagline" style="left:711px;top:752px;font-size:58px;font-weight:500;color:#33394A;opacity:0">Find where affordable homes can go.</div>
+</div>
+
+<!-- Captions -->
+<div class="abs" id="capWrap" style="left:0;width:1920px;bottom:64px;display:flex;justify-content:center;opacity:0">
+<div id="cap" style="max-width:1560px;text-align:center;background:#FFFFFF;border:2px solid #DDE1E8;border-radius:999px;padding:20px 48px;font-size:42px;font-weight:500;line-height:52px;box-shadow:0 8px 24px rgba(27,31,42,0.08)"></div>
+</div>
+
+</div>
+
+<script>
+const clamp=(x,a=0,b=1)=>Math.min(b,Math.max(a,x));
+const prog=(t,a,b)=>clamp((t-a)/(b-a));
+const easeOut=x=>1-Math.pow(1-x,3);
+const easeInOut=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const easeBack=x=>{const c1=1.70158,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)};
+const lerp=(a,b,x)=>a+(b-a)*x;
+const win=(t,a,b,f=.4)=>clamp((t-a)/f)*clamp((b-t)/f);
+const $=id=>document.getElementById(id);
+const NS='http://www.w3.org/2000/svg';
+
+/* ---------- data ---------- */
+const COL={blue:'#2B5FC7',yellow:'#E8A800',green:'#12844A',orange:'#C2490F'};
+const sites=[
+ {name:'Vacant lot near rail corridor',tag:'Vacant or lightly built',meta:'1.8 acres',score:82,col:'blue',txt:'#FFFFFF',conf:'High',poly:[[3,5],[22,3],[23,21],[4,23]],ringCol:'#2B5FC7'},
+ {name:'City-owned surplus parking lot',tag:'Public or surplus land',meta:'2.4 acres',score:80,col:'yellow',txt:'#1B1F2A',conf:'Medium',poly:[[26,4],[45,6],[44,24],[25,22]],ringCol:'#E8A800'},
+ {name:'Congregation parking lot',tag:'Faith-based',meta:'1.1 acres',score:74,col:'green',txt:'#FFFFFF',conf:'Medium',poly:[[4,27],[23,26],[21,45],[5,43]],ringCol:'#12844A'},
+ {name:'Subsidized building, affordability ending',tag:'Preservation',meta:'64 homes',score:72,col:'orange',txt:'#FFFFFF',conf:'Medium',poly:[[27,25],[44,28],[43,44],[24,46]],ringCol:'#C2490F'}
+];
+sites.forEach(s=>{
+  s.c=[s.poly.reduce((a,p)=>a+p[0],0)/4,s.poly.reduce((a,p)=>a+p[1],0)/4];
+  s.local=s.poly.map(p=>[p[0]-s.c[0],p[1]-s.c[1]]);
+});
+const mapPose=[{x:1020,y:420,r:-6,s:6.4},{x:1470,y:380,r:7,s:5.8},{x:1150,y:700,r:4,s:6.2},{x:1590,y:690,r:-7,s:5.8}];
+const LS=9, LCX=960, LCY=540, SHIFT=540;
+const logoPose=sites.map(s=>({x:LCX+(s.c[0]-24)*LS,y:LCY+(s.c[1]-24)*LS,r:0,s:LS}));
+
+/* ---------- build: scene A papers ---------- */
+const papers=[
+ {x:150,y:420,r:-9,fx:-400,fy:300},{x:520,y:520,r:6,fx:-300,fy:1200},{x:880,y:440,r:-4,fx:960,fy:-500},
+ {x:1240,y:540,r:8,fx:2300,fy:300},{x:1560,y:430,r:-7,fx:2300,fy:1200},{x:360,y:640,r:3,fx:-400,fy:900},{x:1030,y:640,r:-6,fx:1900,fy:1300}
+];
+papers.forEach((p,i)=>{const d=document.createElement('div');d.className='paper';d.id='paper'+i;$('sA').appendChild(d);});
+
+/* ---------- scene B groups ---------- */
+const groups=[
+ {x:120,col:'blue',label:'Nonprofit developers',sub:'Shortlist sites to research'},
+ {x:540,col:'green',label:'City planners',sub:'See which land is workable'},
+ {x:960,col:'yellow',label:'Congregations',sub:'Check spare land and parking'},
+ {x:1380,col:'orange',label:'Community groups',sub:'Spot homes at risk'}
+];
+groups.forEach((g,i)=>{
+  const d=document.createElement('div');d.className='group';d.id='group'+i;d.style.left=g.x+'px';d.style.top='470px';
+  d.innerHTML='<div class="dot" style="background:'+COL[g.col]+'"></div><div style="margin-top:28px;font-size:40px;font-weight:600">'+g.label+'</div><div style="margin-top:8px;font-size:30px;color:#4B5363">'+g.sub+'</div>';
+  $('sB').appendChild(d);
+});
+
+/* ---------- map: roads and buildings ---------- */
+const hy=[90,330,520,720,960,1040], vx=[300,560,960,1200,1400,1640,1800];
+hy.forEach(y=>{const l=document.createElementNS(NS,'path');l.setAttribute('d','M0 '+y+' H1920');$('roads').appendChild(l);});
+vx.forEach(x=>{const l=document.createElementNS(NS,'path');l.setAttribute('d','M'+x+' 0 V1080');$('roads').appendChild(l);});
+let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
+const xs=[0,...vx,1920], ys=[0,...hy,1080];
+for(let a=0;a<xs.length-1;a++)for(let b=0;b<ys.length-1;b++){
+  const bx0=xs[a]+26,bx1=xs[a+1]-26,by0=ys[b]+26,by1=ys[b+1]-26;
+  if(bx1-bx0<70||by1-by0<70)continue;
+  const n=2+Math.floor(rnd()*3);
+  for(let k=0;k<n;k++){
+    const w=40+rnd()*70,h=34+rnd()*60;
+    const x=bx0+rnd()*Math.max(1,bx1-bx0-w),y=by0+rnd()*Math.max(1,by1-by0-h);
+    if(y>760&&y<960)continue; // keep water clear
+    const cx=x+w/2,cy=y+h/2;
+    let near=false;mapPose.forEach(p=>{if(Math.hypot(cx-p.x,cy-p.y)<150)near=true;});
+    if(near)continue;
+    const r=document.createElementNS(NS,'rect');
+    r.setAttribute('x',x);r.setAttribute('y',y);r.setAttribute('width',w);r.setAttribute('height',h);r.setAttribute('rx',4);
+    r.setAttribute('fill','#D3D8DF');r.setAttribute('stroke','#BFC5CE');r.setAttribute('stroke-width',2);
+    $('buildings').appendChild(r);
+  }
+}
+
+/* ---------- map: pieces ---------- */
+const pieceEls=sites.map((s,i)=>{
+  const g=document.createElementNS(NS,'g');
+  const poly=document.createElementNS(NS,'polygon');
+  poly.setAttribute('points',s.local.map(p=>p.join(',')).join(' '));
+  poly.setAttribute('fill',COL[s.col]);poly.setAttribute('fill-opacity','0.45');
+  poly.setAttribute('stroke',COL[s.col]);poly.setAttribute('stroke-width','0.55');poly.setAttribute('stroke-linejoin','round');
+  const c=document.createElementNS(NS,'circle');
+  c.setAttribute('cx',0);c.setAttribute('cy',0);c.setAttribute('r',4.5);
+  c.setAttribute('fill',COL[s.col]);c.setAttribute('stroke','#FFFFFF');c.setAttribute('stroke-width','0.55');
+  const t=document.createElementNS(NS,'text');
+  t.setAttribute('x',0);t.setAttribute('y',1.7);t.setAttribute('text-anchor','middle');
+  t.setAttribute('font-family','Archivo, sans-serif');t.setAttribute('font-weight','800');t.setAttribute('font-size','4.6');
+  t.setAttribute('fill',s.txt);t.textContent=s.score;
+  g.appendChild(poly);g.appendChild(c);g.appendChild(t);
+  $('pieceSvg').appendChild(g);
+  return {g,poly,c,t};
+});
+
+/* ---------- list cards ---------- */
+sites.forEach((s,i)=>{
+  const d=document.createElement('div');d.className='card';d.id='card'+i;d.style.top=(230+i*170)+'px';
+  const cc=s.conf==='High'?['#E3F3EA','#0B5E34']:['#FFF3CC','#5A4000'];
+  d.innerHTML='<div class="ring" style="background:conic-gradient('+s.ringCol+' '+s.score+'%, #DDE1E8 0)"><span>'+s.score+'</span></div>'+
+   '<div style="min-width:0"><div style="font-size:22px;font-weight:600;color:#4B5363">#'+(i+1)+' · '+s.tag+'</div>'+
+   '<div style="font-size:29px;line-height:36px;font-weight:600;margin-top:2px">'+s.name+'</div>'+
+   '<div style="margin-top:8px"><span class="chip" style="background:#E8EEFB;color:#1E4399;margin-right:8px">'+s.meta+'</span><span class="chip" style="background:'+cc[0]+';color:'+cc[1]+'">'+s.conf+' confidence</span></div></div>';
+  $('mList').appendChild(d);
+});
+
+/* ---------- detail rows ---------- */
+const rowsData=[['Can homes fit?',86,'#12844A'],['Is it a good location?',78,'#2B5FC7'],['What could go wrong?',22,'#C2490F']];
+rowsData.forEach((r,i)=>{
+  const d=document.createElement('div');
+  d.innerHTML='<div style="display:flex;justify-content:space-between;font-size:30px;font-weight:600"><span>'+r[0]+'</span><span class="h" id="dv'+i+'">0</span></div><div style="height:18px;background:#DDE1E8;border-radius:9px;margin-top:8px;overflow:hidden"><div id="db'+i+'" style="height:18px;width:0;background:'+r[2]+';border-radius:9px"></div></div>';
+  $('dRows').appendChild(d);
+});
+
+/* ---------- captions ---------- */
+const caps=[
+ [0.4,3.8,'Finding land for affordable homes means digging through scattered records.'],
+ [4.5,8.7,'Built for the people who build and protect affordable housing.'],
+ [9.4,14.4,'Enter a ZIP code and see sites worth a closer look.'],
+ [15.4,19.6,'A ranked list and a map. Filter by the kind of site.'],
+ [20.4,24.6,'Three scores per site, with sources and confidence.']
+];
+
+/* ---------- main render ---------- */
+function render(t){
+  // scene opacities
+  $('sA').style.opacity=win(t,0,4.0,.35)*(t<0.35?clamp(t/0.35):1);
+  $('sB').style.opacity=win(t,4.0,9.0,.4);
+  $('sC').style.opacity=win(t,9.0,15.4,.4);
+  $('sM').style.opacity=clamp((t-15.0)/.5);
+
+  // A
+  papers.forEach((p,i)=>{
+    const k=easeOut(prog(t,0.2+i*0.2,1.5+i*0.2));
+    const x=lerp(p.fx,p.x,k),y=lerp(p.fy,p.y,k)+Math.sin(t*1.6+i*1.3)*6;
+    $('paper'+i).style.transform='translate('+x+'px,'+y+'px) rotate('+(p.r+Math.sin(t+i)*1.2)+'deg)';
+  });
+  $('aTitle').style.opacity=prog(t,0.3,1.0);
+
+  // B
+  $('bTitle').style.opacity=prog(t,4.1,4.7);
+  groups.forEach((g,i)=>{
+    const k=prog(t,4.7+i*0.8,5.4+i*0.8);
+    const el=$('group'+i);
+    el.style.opacity=clamp(k*2);
+    el.style.transform='scale('+(0.4+0.6*easeBack(k))+')';
+  });
+
+  // C
+  const typed='92701'.slice(0,Math.floor(prog(t,9.9,11.1)*5.0001));
+  $('cTyped').textContent=typed;
+  $('cCaret').style.opacity=(t<11.5&&Math.floor(t*2.5)%2===0)||(t<11.1)?1:0;
+  $('cInput').style.borderColor=t>9.8?'#2B5FC7':'#8A93A5';
+  const press=prog(t,11.7,11.85)*(1-prog(t,11.85,12.05));
+  $('cBtn').style.transform='scale('+(1-0.06*press)+')';
+  const sub=1-prog(t,12.2,12.5);
+  $('cSub').style.opacity=sub;
+  $('cLoad').style.opacity=prog(t,12.4,12.8);
+  $('cBar').style.width=(easeInOut(prog(t,12.6,14.5))*100)+'%';
+  $('cLoadText').textContent=prog(t,12.6,14.5)>0.75?'Ranking the best matches':'Checking parcels against public datasets';
+
+  // M: layout fades
+  const mFade=1-prog(t,25.0,25.5);
+  $('mTitle').style.opacity=prog(t,15.2,15.8)*mFade;
+  $('mChips').style.opacity=prog(t,15.4,16.0)*mFade;
+  $('mTitle').style.transform='translateY('+(1-easeOut(prog(t,15.2,15.8)))*20+'px)';
+  // list
+  const listFade=(1-prog(t,19.7,20.1));
+  sites.forEach((s,i)=>{
+    const k=easeOut(prog(t,15.5+i*0.3,16.3+i*0.3));
+    const el=$('card'+i);
+    el.style.opacity=k*listFade*mFade;
+    el.style.transform='translateX('+(-70*(1-k))+'px)';
+    const sel=(t>=19.2&&t<25&&i===0);
+    el.style.borderColor=(t>=19.2&&t<19.9&&i===0)?'#2B5FC7':'#DDE1E8';
+  });
+  // detail
+  const dk=easeOut(prog(t,20.1,20.7));
+  $('mDetail').style.opacity=dk*(1-prog(t,25.0,25.5));
+  $('mDetail').style.transform='translateX('+(-40*(1-dk))+'px)';
+  $('dScore').textContent=Math.round(82*easeOut(prog(t,20.6,21.6)));
+  rowsData.forEach((r,i)=>{
+    const k=easeOut(prog(t,21.2+i*0.6,22.0+i*0.6));
+    $('db'+i).style.width=(r[1]*k)+'%';
+    $('dv'+i).textContent=Math.round(r[1]*k);
+  });
+  $('dSrc').style.opacity=prog(t,23.2,23.7);
+  $('dWarn').style.opacity=prog(t,23.9,24.4);
+
+  // map clip rect (window -> full screen)
+  const q=easeInOut(prog(t,25.2,26.1));
+  const cr=$('mapClipRect');
+  cr.setAttribute('x',lerp(840,0,q));cr.setAttribute('y',lerp(230,0,q));
+  cr.setAttribute('width',lerp(1000,1920,q));cr.setAttribute('height',lerp(660,1080,q));
+  cr.setAttribute('rx',lerp(24,0,q));
+  $('mapLayer').style.opacity=prog(t,15.7,16.3)*(1-prog(t,26.7,27.7));
+  $('buildings').style.opacity=1-prog(t,26.2,26.9);
+  $('stops').style.opacity=1-prog(t,26.2,26.9);
+
+  // pieces
+  const cp=easeInOut(prog(t,26.2,27.7));
+  const mv=easeInOut(prog(t,27.9,28.7));
+  sites.forEach((s,i)=>{
+    const m=mapPose[i],l=logoPose[i];
+    const pop=prog(t,16.5+i*0.3,17.3+i*0.3);
+    const popS=easeBack(pop);
+    let sel=1,dim=1;
+    if(t>=19.6&&t<25.2){
+      const sk=easeOut(prog(t,19.6,20.2));
+      if(i===0){sel=1+0.22*sk;}else{dim=1-0.45*sk;}
+    }
+    if(t>=24.6&&t<25.2){const rk=prog(t,24.6,25.2);if(i===0)sel=1+0.22*(1-rk);else dim=1-0.45*(1-rk);}
+    const x=lerp(m.x,l.x,cp)-SHIFT*mv, y=lerp(m.y,l.y,cp);
+    const r=lerp(m.r,l.r,cp);
+    const sc=lerp(m.s*sel,l.s,cp)*(pop<1?Math.max(0.01,popS):1);
+    const pe=pieceEls[i];
+    pe.g.setAttribute('transform','translate('+x+','+y+') rotate('+r+') scale('+sc+')');
+    pe.g.setAttribute('opacity',(clamp(pop*2)*dim));
+    pe.t.setAttribute('opacity',1-prog(t,26.3,26.9));
+    const sw=(i===0&&t>=19.6&&t<25.2)?0.9:0.55;
+    pe.poly.setAttribute('stroke-width',sw);
+  });
+
+  // wordmark
+  Array.from(document.querySelectorAll('.wl')).forEach((el,i)=>{
+    const k=easeOut(prog(t,28.3+i*0.18,29.1+i*0.18));
+    el.style.opacity=k;
+    el.style.transform='translateX('+(260*(1-k))+'px)';
+  });
+  $('tagline').style.opacity=prog(t,29.2,29.8);
+  $('tagline').style.transform='translateY('+(14*(1-easeOut(prog(t,29.2,29.8))))+'px)';
+
+  // captions
+  let ct='',co=0;
+  for(const c of caps){const o=win(t,c[0],c[1],.35);if(o>0){ct=c[2];co=o;}}
+  if(ct)$('cap').textContent=ct;
+  $('capWrap').style.opacity=co;
+}
+window.render=render;
+document.fonts.ready.then(()=>{window.__ready=true;
+  if(!location.hash.includes('manual')){const t0=performance.now();(function loop(){const t=(performance.now()-t0)/1000;render(Math.min(t,30));if(t<30)requestAnimationFrame(loop);})();}
+});
+render(0);
+</script>
+</body>
+</html>
