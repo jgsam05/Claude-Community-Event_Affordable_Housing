@@ -97,6 +97,7 @@
         dp: p.development_potential, risk: p.feasibility_risk,
         oppReason: p.opp_reason, devReason: p.dev_reason, riskReason: p.risk_reason,
         jurisdiction: p.jurisdiction, cap: p.confidence_cap,
+        geometry: f.geometry, bbox: b,
         left: pad + (b[0] - ext[0]) * kx * scale, top: pad + (ext[3] - b[3]) * scale,
         w: Math.max((b[2] - b[0]) * kx * scale, 0.4), h: Math.max((b[3] - b[1]) * scale, 0.4)
       };
@@ -312,18 +313,21 @@
       (sorted.length > shown.length ? '<div class="list-more"><button type="button" data-action="more" data-key="more">Show ' + Math.min(PAGE_SIZE, sorted.length - shown.length) + ' more parcels</button></div>' : '');
     }
 
-    // Map
-    var mapHtml = all.map(function (p) {
-      var hidden = !!off[p.level];
-      var isSel = sel && sel.id === p.id;
-      var fill = mode === 'confidence' ? confFill(p) : oppFill(p);
-      var label = p.address + ', confidence ' + p.level + ', ' + (p.opp === null ? 'not scored' : 'opportunity ' + p.opp);
-      return '<button type="button" class="parcel' + (hidden ? ' is-hidden' : '') + (isSel ? ' is-selected' : '') + '"' +
-        ' data-action="select" data-value="' + esc(p.apn) + '" data-key="parcel-' + esc(p.apn) + '"' +
-        (hidden ? ' tabindex="-1" aria-hidden="true"' : '') +
-        ' aria-label="' + esc(label) + '" title="' + esc(label) + '"' +
-        ' style="left:' + p.left + '%;top:' + p.top + '%;width:' + p.w + '%;height:' + p.h + '%;background:' + fill + '"></button>';
-    }).join('');
+    // Map — Leaflet when we have real polygons, otherwise the stylized grid.
+    var hasGeom = all.length > 0 && all[0].geometry;
+    var mapHtml = hasGeom
+      ? '<div id="leaflet-map" role="application" aria-label="Orange County parcel map"></div>'
+      : all.map(function (p) {
+          var hidden = !!off[p.level];
+          var isSel = sel && sel.id === p.id;
+          var fill = mode === 'confidence' ? confFill(p) : oppFill(p);
+          var label = p.address + ', confidence ' + p.level + ', ' + (p.opp === null ? 'not scored' : 'opportunity ' + p.opp);
+          return '<button type="button" class="parcel' + (hidden ? ' is-hidden' : '') + (isSel ? ' is-selected' : '') + '"' +
+            ' data-action="select" data-value="' + esc(p.apn) + '" data-key="parcel-' + esc(p.apn) + '"' +
+            (hidden ? ' tabindex="-1" aria-hidden="true"' : '') +
+            ' aria-label="' + esc(label) + '" title="' + esc(label) + '"' +
+            ' style="left:' + p.left + '%;top:' + p.top + '%;width:' + p.w + '%;height:' + p.h + '%;background:' + fill + '"></button>';
+        }).join('');
 
     var legendHtml;
     if (mode === 'confidence') {
@@ -358,7 +362,7 @@
           '<span class="meta">' + Math.min(shown.length, visible.length) + ' of ' + visible.length + ' parcels</span></div>' +
           listHtml +
         '</section>' +
-        '<section class="map-panel" aria-label="Parcel map. The list has the same information as text.">' +
+        '<section class="map-panel' + (hasGeom ? ' has-live-map' : '') + '" aria-label="Parcel map. The list has the same information as text.">' +
           mapHtml +
           (API_BASE ? '' : '<span class="street-label" style="top:33.2%" aria-hidden="true">' + STREETS[1] + '</span>' +
           '<span class="street-label" style="top:65.2%" aria-hidden="true">' + STREETS[5] + '</span>') +
@@ -370,6 +374,8 @@
         (sel ? detailHtml(sel) : '') +
       '</div>';
 
+    if (hasGeom) mountLeafletMap(zip, all, sel, mode, off);
+
     // Focus management
     if (opts.focusKey) {
       var el = app.querySelector('[data-key="' + opts.focusKey + '"]');
@@ -379,6 +385,82 @@
       var h = app.querySelector('#detail-title');
       if (h) h.focus();
     }
+  }
+
+  // ---------- Leaflet map ----------
+  var leafletMap = null;
+  var leafletLayer = null;
+  var leafletZip = null;
+  var leafletFittedZip = null;
+
+  function mountLeafletMap(zip, parcels, sel, mode, off) {
+    if (typeof L === 'undefined') { setTimeout(function () { mountLeafletMap(zip, parcels, sel, mode, off); }, 50); return; }
+    var mapEl = document.getElementById('leaflet-map');
+    if (!mapEl) return;
+
+    // Re-create map instance every render (innerHTML wipes the DOM).
+    if (leafletMap) { try { leafletMap.remove(); } catch (_) {} leafletMap = null; }
+
+    leafletMap = L.map(mapEl, { zoomControl: true, attributionControl: true, preferCanvas: true })
+      .setView([33.7175, -117.8311], 11); // Orange County, CA
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(leafletMap);
+
+    var fc = {
+      type: 'FeatureCollection',
+      features: parcels.filter(function (p) { return p.geometry && !off[p.level]; }).map(function (p) {
+        return { type: 'Feature', id: p.apn, geometry: p.geometry, properties: { apn: p.apn, _ref: p } };
+      })
+    };
+
+    function styleFor(p) {
+      var isSel = sel && sel.id === p.id;
+      var fillValue = mode === 'confidence' ? confFill(p) : oppFill(p);
+      var isHatch = typeof fillValue === 'string' && fillValue.indexOf('gradient') >= 0;
+      return {
+        color: isSel ? '#16181D' : '#1F5FAE',
+        weight: isSel ? 3 : 1,
+        opacity: 0.9,
+        fillColor: isHatch ? '#D9D9D3' : fillValue,
+        fillOpacity: isHatch ? 0.55 : 0.75
+      };
+    }
+
+    leafletLayer = L.geoJSON(fc, {
+      style: function (feat) { return styleFor(feat.properties._ref); },
+      onEachFeature: function (feat, layer) {
+        var p = feat.properties._ref;
+        var oppText = p.opp === null ? 'Not scored' : (p.opp + ' / 100');
+        var popup =
+          '<div class="parcel-popup">' +
+          '<span class="addr">' + esc(p.address) + '</span>' +
+          '<span class="meta">APN ' + esc(p.apn) + '</span>' +
+          '<span class="meta">Confidence: <b>' + esc(p.level) + '</b> &middot; Opportunity: <b>' + esc(oppText) + '</b></span>' +
+          (p.jurisdiction ? '<span class="meta">' + esc(p.jurisdiction) + '</span>' : '') +
+          '<span class="meta" style="margin-top:6px;display:block"><a href="#/zip/' + encodeURIComponent(zip) + '/' + encodeURIComponent(p.apn) + '">Open details &rarr;</a></span>' +
+          '</div>';
+        layer.bindPopup(popup);
+        layer.on('click', function () {
+          pendingFocus = { focusDetail: true };
+          go('#/zip/' + encodeURIComponent(zip) + '/' + encodeURIComponent(p.apn));
+        });
+        layer.on('mouseover', function () { layer.setStyle({ weight: 2, color: '#16181D' }); });
+        layer.on('mouseout', function () { layer.setStyle(styleFor(p)); });
+      }
+    }).addTo(leafletMap);
+
+    // Fit bounds once per ZIP; keep user's pan/zoom on subsequent renders of the same ZIP.
+    if (leafletFittedZip !== zip && leafletLayer.getBounds().isValid()) {
+      leafletMap.fitBounds(leafletLayer.getBounds(), { padding: [20, 20] });
+      leafletFittedZip = zip;
+    }
+    leafletZip = zip;
+
+    // Leaflet needs a size recalc after mounting inside a flex container.
+    setTimeout(function () { if (leafletMap) leafletMap.invalidateSize(); }, 0);
   }
 
   function detailHtml(p) {
