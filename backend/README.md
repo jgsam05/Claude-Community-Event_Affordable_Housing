@@ -70,3 +70,9 @@ A dataset that isn't present doesn't break anything. Its signals count as missin
 | Real output for 92618 / 92620 / 92705 | **Not yet run.** The build environment couldn't reach county/state hosts. |
 | Registry fully documented | URLs and licenses filled in. Most `license_verified` / `refresh_verified` are False until checked. `GET /registry` → `phase1_gaps` lists them. |
 | Validation vs. APR A2 | Code done. Needs `apr_table_a2.csv`. |
+
+## Notes from the first live run (92701, 2026-11-07)
+
+- The county's `Parcels/FeatureServer` and `Building_Footprints/FeatureServer` endpoints returned HTTP 500 for every query that day, while the `MapServer` versions answered in about a second. The registry now points both at `MapServer/0`.
+- Result: 5,312 real parcels, 5,311 scored, all **Low** confidence (6 of 10 signals). Missing: Transit access, Opportunity area, Rent burden (the Census API now requires a key), and hazard layers that returned nothing.
+- `OCGIS Street Centerlines` returns "Layer not found" at the registered URL; frontage falls back to the parcel's rotated-rectangle estimate.

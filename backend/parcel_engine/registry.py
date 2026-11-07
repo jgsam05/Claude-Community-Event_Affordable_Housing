@@ -35,8 +35,8 @@ TIGERWEB = "https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb"
 DATASETS: list[dict] = [
     # ---------------- Base geography ----------------
     dict(id="ocgis_parcels", name="OCGIS Parcels", signals=["Lot size", "Year built"],
-         access="arcgis_rest", url=f"{OCGIS}/Parcels/FeatureServer/0",
-         landing_url="https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/FeatureServer",
+         access="arcgis_rest", url=f"{OCGIS}/Parcels/MapServer/0",
+         landing_url="https://www.ocgis.com/arcpub/rest/services/Map_Layers/Parcels/MapServer",
          license=OCGIS_TERMS, license_verified=False,
          refresh_date="Not published on layer (no editingInfo.lastEditDate)", refresh_verified=False,
          notes="Fields: OBJECTID, SITE_ADDRESS, ASSESSMENT_NO (APN), YEAR_BUILT, NBR_BEDROOMS. "
@@ -65,8 +65,8 @@ DATASETS: list[dict] = [
          refresh_date="Current TIGERweb vintage", refresh_verified=False,
          notes="Tract GEOID used to join ACS, LODES, Opportunity Zones. Confirm layer 0 is tracts."),
     dict(id="ocgis_building_footprints", name="OCGIS Building Footprints", signals=["Building coverage"],
-         access="arcgis_rest", url=f"{OCGIS}/Building_Footprints/FeatureServer/0",
-         landing_url=f"{OCGIS}/Building_Footprints/FeatureServer",
+         access="arcgis_rest", url=f"{OCGIS}/Building_Footprints/MapServer/0",
+         landing_url=f"{OCGIS}/Building_Footprints/MapServer",
          license=OCGIS_TERMS, license_verified=False,
          refresh_date="verify at ingest", refresh_verified=False,
          notes="Default footprint source because it is bbox-queryable. Overture/Microsoft are file "
