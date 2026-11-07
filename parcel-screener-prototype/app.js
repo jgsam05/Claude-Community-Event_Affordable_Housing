@@ -570,7 +570,7 @@
     else if (selLayer && sel && ocaMap.zip === zip) map.fitBounds(selLayer.getBounds(), { maxZoom: 17, padding: [40, 40] });
     else if (group.getLayers().length && group.getBounds().isValid()) map.fitBounds(group.getBounds(), { padding: [24, 24] });
     ocaMap.map = map; ocaMap.zip = zip;
-    setTimeout(function () { map.invalidateSize(); }, 0);
+    setTimeout(function () { if (ocaMap.map === map) { try { map.invalidateSize(); } catch (e) { /* map was replaced */ } } }, 0);
   }
   function selectPrompt() {
     return '<section class="selected empty" aria-label="Selected site"><p>Choose a site from the list or the map to see its three scores, the reasons behind them and where the data comes from.</p></section>';
