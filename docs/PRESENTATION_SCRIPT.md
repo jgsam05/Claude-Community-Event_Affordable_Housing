@@ -13,16 +13,40 @@ Fill in anything in **[brackets]** before you present.
 
 ---
 
+# The goal (our north star)
+
+Everything in this guide, the app and the video comes back to this goal:
+
+> **Build a web tool where a user enters an Orange County, CA ZIP code and gets a ranked, mapped list of parcels that are strong screening candidates for affordable housing development or preservation, using only free, public datasets.**
+>
+> **Candidates come from:** vacant or lightly built parcels (building footprint coverage), Housing Element sites and rezone sites, publicly owned and surplus land, faith-based parcels, tax-defaulted parcels, and existing subsidized housing with expiring affordability (preservation).
+>
+> **Each parcel is scored on:** development potential (lot size, buildable area, coverage, Housing Element status, state-law pathways), location quality (transit, jobs, schools, grocery, opportunity area, CalEnviroScreen, ACS rent burden), and feasibility risk (flood, fire, seismic, coastal, oil wells, contamination, historic). **Every score shows its components, sources and a confidence level.**
+
+## How OCA meets the goal today
+
+| Goal | Status |
+|---|---|
+| ZIP in, ranked and mapped list out | **Built.** Real map, ranked list, filters, selected-site panel. |
+| Free, public datasets only | **Built.** 43 datasets cataloged with publisher, license and refresh date. |
+| Six kinds of candidates | **Built** as filters: vacant or lightly built, Housing Element and rezone sites, public or surplus land, faith-based, tax-defaulted, preservation. Some need datasets that still have to be downloaded. |
+| Development potential: lot size, buildable area, coverage, Housing Element status, state-law pathways | **Built.** Lot size, buildable area, coverage, HE status; state-law pathways as bonus points (SB 35 / SB 423, SB 4 faith-based). |
+| Location quality: transit, jobs, schools, grocery, opportunity area, CalEnviroScreen, rent burden | **Partly.** Transit, jobs, opportunity area, schools and grocery are scored inside development potential. CalEnviroScreen adds risk points. Rent burden is counted as a confidence signal but not yet in the score. A separate location-quality score is the next step. |
+| Feasibility risk: flood, fire, seismic, coastal, oil wells, contamination, historic | **Built.** Each one adds risk points. |
+| Every score shows components, sources and confidence | **Built.** Reasons on every score, a full score report per parcel, and a confidence level (High, Medium, Low or not scored). |
+
+---
+
 # 1. The big picture (read this first)
 
 ## The 30-second pitch
 
-> Finding land for affordable housing means digging through scattered county records, one dataset at a time. OCA does that work in seconds. Type any Orange County ZIP code and OCA checks every parcel against free public data, ranks the sites worth a closer look, and shows them on a real map. Every score shows its parts, its sources and how confident we are. It's built for the nonprofit developers, city staff and congregations who build and protect affordable housing and don't have a research team.
+> Finding land for affordable housing means digging through scattered county records, one dataset at a time. OCA does that work in seconds. Type any Orange County ZIP code and OCA checks every parcel against free public data, finds the strong candidates for new affordable housing or for preserving existing affordable homes, ranks them, and shows them on a real map. Each parcel is scored on development potential, location and feasibility risk, and every score shows its components, its sources and how confident we are. It's built for the nonprofit developers, city staff and congregations who build and protect affordable housing and don't have a research team.
 
 ## One sentence for each audience
 
 - **For a judge who isn't technical:** "It's a search engine for land that could become affordable housing."
-- **For a technical judge:** "A data pipeline joins about 40 public datasets onto every parcel in a ZIP, computes three explainable scores plus a confidence level, and serves the result as GeoJSON to a map front end."
+- **For a technical judge:** "A data pipeline joins about 40 public datasets onto every parcel in a ZIP, scores development potential, location quality and feasibility risk with a confidence level, and serves the result as GeoJSON to a map front end."
 - **For a housing expert:** "It's a first-pass site screen: Housing Element sites, public and surplus land, faith-based land, tax-defaulted parcels and expiring subsidies, ranked and flagged for risk."
 
 ## Why it matters
@@ -30,6 +54,17 @@ Fill in anything in **[brackets]** before you present.
 - Land is the first hurdle for affordable housing, and finding it is slow and expensive for small organizations.
 - The data exists (counties, cities, state and federal agencies publish it for free), but it lives in dozens of separate places and formats.
 - OCA puts it in one place, scores it, and shows its work, so a person can defend the result to a board, a funder or a city council.
+
+## Where the candidates come from (the six kinds of sites)
+
+OCA doesn't just score every parcel the same way. It also flags **why** a parcel is a candidate:
+
+1. **Vacant or lightly built:** little or no building on the lot, measured from county building footprints.
+2. **Housing Element and rezone sites:** land a city has already listed, or plans to rezone, for new housing.
+3. **Publicly owned and surplus land:** land owned by a public agency that may be available for housing.
+4. **Faith-based parcels:** land owned by religious organizations, often with unused parking or space. State law (SB 4) makes housing on it easier.
+5. **Tax-defaulted parcels:** property with long-unpaid taxes that may go to sale.
+6. **Preservation:** existing subsidized housing whose affordability restrictions are about to expire, so it can be kept affordable.
 
 ## Who uses it
 
@@ -67,14 +102,16 @@ Think of OCA as an assembly line with four stations.
 
 ## Station 4: Score it and explain it
 
-Every parcel gets three numbers out of 100, plus a confidence label:
+Every parcel is scored on the three lenses from our goal, plus a confidence label:
 
-| Number | Plain-language question | Direction |
+| Lens | Plain-language question | What goes into it |
 |---|---|---|
-| **Development potential** | Can homes fit here? | Higher is better |
-| **Feasibility risk** | What could go wrong? | Lower is better |
-| **Opportunity** | Overall, is this worth a closer look? | Higher is better |
-| **Confidence** | How much data do these scores stand on? | High, Medium, Low, or "not scored" |
+| **Development potential** | Can homes fit here? | Lot size, buildable area, building coverage, Housing Element status, state-law pathways (SB 35, SB 4), public and tax-defaulted bonuses |
+| **Location quality** | Is it a good place for homes? | Transit, jobs, schools, grocery, opportunity area. Today these are built into the development potential score. CalEnviroScreen adds to risk. Rent burden is counted toward confidence. |
+| **Feasibility risk** | What could go wrong? (lower is better) | Flood, fire, earthquake (liquefaction and faults), coastal zone, oil wells, contamination, historic status, tiny lots, preservation conflicts |
+| **Confidence** | How much data stands behind this? | High, Medium, Low, or "not scored" |
+
+On top of those, the engine combines potential and risk into one **Opportunity** score, which is what the ranking uses.
 
 **The formula, simply:** Opportunity = development potential, reduced by risk. A site with no risk flags keeps all of its potential. A site with maximum risk keeps 30% of it.
 
@@ -174,7 +211,7 @@ A big developer can pay for that. A small nonprofit, a city planner or a congreg
 
 "Here's how it works. You type in a ZIP code. I'll use **92701**, downtown Santa Ana.
 
-OCA pulls every parcel in that ZIP from the county's official records: **[5,312]** of them. It measures each one and checks it against public datasets: housing plans, public land, flood and earthquake zones, and more.
+OCA pulls every parcel in that ZIP from the county's official records: **[5,312]** of them. It measures each one and checks it against public datasets: Housing Element sites, public and faith-based land, tax-defaulted parcels, subsidized housing, transit and jobs, and flood, fire and earthquake zones.
 
 On the left is a ranked list of the best places to look. On the right is a real map of Santa Ana with the actual parcels drawn on it. The numbered pins are the top sites.
 
@@ -184,13 +221,13 @@ I'll click the first one. It's a **[6-acre]** vacant parcel. OCA shows three thi
 - **What could go wrong?** The feasibility risk: **[0]**, since no hazard flags were found.
 - **How much data is this based on?** The confidence: **[6 of 10]** data signals found.
 
-And it says in plain words why it ranked here: a large lot, vacant, no building on it.
+And it says in plain words why it ranked here: a large lot, vacant, no building on it. Location matters too: things like transit, jobs, schools and groceries are built into that potential score, and flood, fire, earthquake and contamination count against it as risk.
 
 Notice the confidence is **Low** for this ZIP. That's on purpose. Some of our datasets, like transit and neighborhood opportunity data, aren't loaded yet, so OCA tells you so instead of pretending to be sure. It never hides what it doesn't know."
 
 ## How it works (2:00 to 2:25)
 
-"Behind the screen, there's a data pipeline. It starts with the ZIP boundary from the Census, collects every county parcel inside it, measures each lot, and joins in public datasets. Then it computes three scores: **development potential**, **feasibility risk** and an overall **opportunity** score, which is potential reduced by risk. Every score comes with reasons and sources. The front end just shows what the engine produces. It never changes the numbers."
+"Behind the screen, there's a data pipeline. It starts with the ZIP boundary from the Census, collects every county parcel inside it, measures each lot, and joins in public datasets. Then it scores each parcel on **development potential**, **location quality** and **feasibility risk**, and combines them into an overall **opportunity** score, which is potential reduced by risk. Every score comes with its components, its sources and a confidence level. The front end just shows what the engine produces. It never changes the numbers."
 
 ## Close (2:25 to 3:00)
 
@@ -229,8 +266,9 @@ Add these to the 3-minute script:
 
 ## The product, in five bullets
 
-- OCA = ZIP code in, ranked and mapped list of promising parcels out.
-- It scores each parcel on three things: can homes fit, what could go wrong, and overall opportunity.
+- OCA = ZIP code in, ranked and mapped list of strong screening candidates for affordable housing development or preservation out.
+- It finds candidates from six sources: vacant or lightly built land, Housing Element and rezone sites, public and surplus land, faith-based parcels, tax-defaulted parcels, and subsidized housing with expiring affordability.
+- It scores each parcel on development potential, location quality and feasibility risk, then ranks by an overall opportunity score.
 - Every score comes with plain-English reasons, public sources and a confidence level.
 - It uses only free public data, directly from the agencies that publish it.
 - It is a **screening tool**: it says where to look first, not what to build.
@@ -242,10 +280,14 @@ Add these to the 3-minute script:
 | Data signals per parcel | 10 |
 | Confidence levels | High (9 to 10 signals), Medium (7 to 8.5), Low (5 to 6.5), Not scored (under 5) |
 | Datasets cataloged | 43 (15 pulled live, 2 stored in the repo, 26 still need manual download) |
-| Scores per parcel | 3 (development potential, feasibility risk, opportunity), plus confidence |
+| Scoring lenses | 3 (development potential, location quality, feasibility risk), combined into an overall opportunity score, plus confidence |
 | Kinds of sites | 6 (vacant or lightly built, Housing Element, public or surplus land, faith-based, tax-defaulted, preservation) |
 | Our real test run | ZIP 92701 (Santa Ana): **5,312 parcels** pulled from county records, 5,311 scored |
 | Opportunity formula | Development potential x (1 - 0.7 x risk / 100) |
+
+## What counts as location quality
+
+Transit access (high-quality transit areas, rail and bus stops), jobs nearby, a high-opportunity neighborhood, and schools and grocery within about half a mile. Pollution burden (CalEnviroScreen) adds risk. Rent burden (how many renters pay over 30% of income) is counted as a data signal for confidence.
 
 ## What development potential rewards
 
@@ -286,6 +328,7 @@ Judges respect clear limits. Say these plainly.
 
 - **Confidence is Low in our real run.** Only 6 of 10 signals loaded. Missing: transit access, opportunity area, rent burden and hazard layers. The census rent data now needs an API key. The scores are real, and OCA labels the gaps instead of hiding them.
 - **26 datasets still need a manual download.** Examples: transit schedules, the state opportunity map, CalEnviroScreen, and the tax-defaulted property lists.
+- **Location quality isn't its own score yet.** Transit, jobs, opportunity area, schools and grocery are scored inside development potential. Rent burden counts toward confidence, not the score. Splitting out a separate location score is a next step.
 - **Zoning is not included yet.** OCA says so in the footer of every page.
 - **Scores aren't validated yet.** The backend has code to compare scores against where housing actually got built (state APR Table A2), but we haven't run it. The weights are starting assumptions to test.
 - **Data freshness varies.** Parcel records are current as of the pull date. Some publishers don't list a refresh date.
@@ -313,6 +356,15 @@ On the day of the run, the county's main "FeatureServer" parcel service returned
 
 **Who owns the land? Can you contact the owner?**
 "OCA doesn't show owner names. It points to promising parcels. The next step, confirming ownership and zoning, is done with the city and a title report."
+
+**Your goal says three scores, including location quality. Where is it?**
+"Location quality is in the engine: transit, jobs, opportunity area, schools and grocery all feed the potential score, CalEnviroScreen adds risk points, and rent burden counts toward confidence. We haven't split it into its own number yet, and we'd rather say so than pretend."
+
+**How do you handle preservation, not just new buildings?**
+"Preservation is one of our six site types: existing subsidized housing, like mobile home parks and tax-credit or Section 8 properties, is flagged. Those parcels also get risk points, because redeveloping them could mean losing affordable homes."
+
+**What state laws does it consider?**
+"Streamlining under SB 35 (now SB 423) and faith-based housing under SB 4. They add bonus points to development potential, and the reason is shown on the card."
 
 **What about zoning?**
 "Not included yet, and we say so on every screen. It's the first thing we'd add. Housing Element status is included as a proxy, since those sites are already identified for housing."
