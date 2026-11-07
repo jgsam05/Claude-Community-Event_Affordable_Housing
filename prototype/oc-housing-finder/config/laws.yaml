@@ -1,0 +1,34 @@
+# State-law unit-estimation parameters (SCREENING LEVEL ONLY).
+#
+# !! verified: false !!
+# These defaults were written from general knowledge and have NOT been checked
+# against current statute text. Have housing counsel or the city planning
+# department confirm each number and each eligibility rule before anyone relies
+# on an estimate. Change `verified` to true only after that review.
+
+verified: false
+reviewed_by: null
+reviewed_on: null
+
+density_bonus:
+  # State Density Bonus Law. Applied when the base project is >= min_base_units.
+  max_bonus_pct: 50
+  min_base_units: 5
+
+sb9:
+  # Duplex / lot split on single-family-zoned lots.
+  min_lot_sqft_duplex: 2400
+  min_lot_sqft_split: 4800
+  units_duplex: 2
+  units_after_split: 4
+
+ab2011:
+  # Housing on commercially zoned corridors. Real eligibility also needs a
+  # corridor-adjacency and width check that this tool does NOT perform.
+  eligible_categories: [commercial]
+  min_density_du_ac: 30
+  min_lot_sqft: 10000
+
+adu:
+  # Added units on a single-family lot.
+  added_units: 2

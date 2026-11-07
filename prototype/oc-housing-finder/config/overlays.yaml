@@ -1,0 +1,24 @@
+# Declare real data layers here. Files live in data/overlays/ and must be
+# GeoJSON polygons in EPSG:4326. Nothing below is enabled until you download the
+# layer and uncomment the entry. Layers are NOT bundled: verify each source's
+# URL, license, and refresh date before use (see README "Data checklist").
+#
+# overlays:
+#   - file: zoning_anaheim.geojson        # city zoning polygons
+#     field: zoning_code
+#     mode: value
+#     attribute: ZONE                     # property holding the zone code
+#
+#   - file: fire_hazard_vhfhsz.geojson    # CAL FIRE very high fire hazard zones
+#     field: fire_hazard
+#     mode: flag                          # layer must cover the whole county
+#
+#   - file: coastal_zone.geojson          # Coastal Commission coastal zone
+#     field: coastal_zone
+#     mode: flag
+#
+#   - file: housing_element_sites.geojson # city sites inventories
+#     field: housing_element_site
+#     mode: flag_inside_only              # absence = unknown, not "no"
+
+overlays: []

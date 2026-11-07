@@ -1,0 +1,40 @@
+# Maps YOUR parcel export's column names onto this tool's fields.
+# The right-hand names below are PLACEHOLDERS: replace them with the actual column
+# names in your ParcelQuest / Regrid / records-request export. Leave a field
+# blank (null) if your data does not have it; it will be treated as unknown.
+
+columns:
+  apn: APN
+  address: SITE_ADDRESS
+  zip_code: SITE_ZIP
+  lot_sqft: LOT_SQFT
+  use_code: USE_CODE
+  year_built: YEAR_BUILT
+  building_sqft: BLDG_SQFT
+  land_value: LAND_VALUE
+  improvement_value: IMPR_VALUE
+  last_sale_price: SALE_PRICE
+  last_sale_year: SALE_YEAR
+  owner_type: OWNER_TYPE
+  zoning_code: null          # usually comes from a zoning overlay instead
+  tax_default: null          # from the OC Treasurer-Tax Collector defaulted list
+  code_violations: null
+
+# Translate your source's use codes into this tool's land-use categories.
+# Valid targets: vacant, surface_parking, commercial_1story, commercial_other,
+# single_family, multifamily, mobile_home_park, industrial, public,
+# institutional_faith, other.  The examples are placeholders: confirm against
+# the code table that ships with your data. Codes missing here are reported
+# by the build, never guessed.
+use_codes:
+  "0100": vacant
+  "1100": single_family
+  "1200": multifamily
+  "2100": commercial_1story
+
+owner_types:
+  PUBLIC: public
+  CORP: corporate
+  INDIVIDUAL: individual
+  CHURCH: faith
+  NONPROFIT: nonprofit

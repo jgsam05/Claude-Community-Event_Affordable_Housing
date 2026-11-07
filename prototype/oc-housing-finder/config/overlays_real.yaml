@@ -1,0 +1,8 @@
+# Overlays for the REAL-data profile. Order matters: True layer first, then clear_inside.
+overlays:
+  - file: flood_sfha.geojson
+    field: flood_zone
+    mode: flag_inside_only      # inside a 1%-annual-chance flood zone = constraint
+  - file: flood_clear.geojson
+    field: flood_zone
+    mode: clear_inside          # inside a FEMA-mapped minimal-hazard zone = checked and clear

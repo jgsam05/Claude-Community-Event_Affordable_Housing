@@ -1,0 +1,28 @@
+# Mapping for data/parcels_in/real_sites.geojson (tools/build_real_sites.py). Sources in config/datasets.yaml.
+# land_use is translated from SCAG LU24 inside build_real_sites.py (LU_MAP), so codes here are identity.
+columns:
+  apn: apn
+  address: address
+  zip_code: zip
+  lot_sqft: lot_sqft
+  use_code: land_use
+  year_built: null
+  building_sqft: null
+  land_value: land_value
+  improvement_value: improvement_value
+  last_sale_price: null
+  last_sale_year: null
+  owner_type: null
+  zoning_code: zoning_code
+  stack_units: stack_units
+  housing_element_site: housing_element_site
+  tax_default: null
+  code_violations: null
+use_codes:
+  industrial: industrial
+  mobile_home_park: mobile_home_park
+  commercial_other: commercial_other
+  multifamily: multifamily
+  single_family: single_family
+  vacant: vacant
+owner_types: {}

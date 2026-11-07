@@ -1,0 +1,202 @@
+# Dataset registry. Phase 1 requirement: every input dataset documents source, license, refresh date.
+# status: verified = endpoint queried this session and returned Orange County rows
+#         candidate = found but NOT yet queried/verified; do not rely on it
+# license: "not stated" means the publisher's metadata lists none. Confirm before redistribution.
+# refresh: last_edit is what the service reports; "not reported" = service exposes no date.
+# checked: 2026-11-07
+datasets:
+  - id: oc_city_boundaries
+    name: OC city + unincorporated boundaries
+    publisher: OC Public Works (OC GIS)
+    url: OCCityBoundaries FeatureServer layer 8 (see etl/boundaries.py)
+    status: verified
+    used_for: jurisdiction join (parcel -> city)
+    license: not stated
+    refresh: not reported
+    notes: 40 "City" rows = 34 cities + 6 census communities; 5 Supervisory District rows. Assumption documented in README.
+  - id: oc_parcels_attributes
+    name: OC Legal Lots w/ attributes
+    publisher: OC Public Works / OC Assessor-derived
+    url: https://ocgis.com/arcpub/rest/services/LegalLotsAttributeOpenData/FeatureServer/0
+    status: verified
+    rows: 987526
+    used_for: parcel polygons, APN (AssessmentNo), SiteZip5 (direct ZIP filter), LandVal, ImprovedVal, site address
+    fields: [AssessmentNo, SiteAddress, SiteZip5, LandVal, ImprovedVal, AssdAmt, GPLU_CODE, ZC_DETAIL, Shape__Area]
+    license: not stated
+    refresh: not reported
+    caveats:
+      - "Measured on 4 ZIPs (2026-11-07): LandVal present on 84-96% of rows, ImprovedVal on 82-95%. Values are strings; blank = unknown."
+      - "~22-30% of rows are condo units / shared-lot stacks that repeat ONE polygon. tools/build_real_sites.py collapses them into sites (stack_units) so they are not ranked as separate parcels."
+      - "SiteZip5 is the postal ZIP of the site address, not a ZCTA polygon test. A ZIP maps almost entirely to one city here; 92780 is the real cross-jurisdiction sample (Tustin + unincorporated)."
+      - "Includes MailAddress (owner mailing address): never ingested."
+      - "Includes freeway/right-of-way lots with real-looking attributes (address like 'NA SANTA ANA FWY'); filtered by address."
+      - "No use code, building sqft, year built, sale data. Land use comes from SCAG LU24."
+  - id: scag_zoning
+    name: SCAG parcel-level zoning (ZN24)
+    publisher: SCAG
+    url: https://maps.scag.ca.gov/scaggis/rest/services/LDX/Zoning_poly_OR/MapServer/0
+    status: verified
+    rows: 707542
+    used_for: zoning code per parcel for ALL OC cities (join on APN24/PID24); Santa Ana alone returned 42,896 rows
+    license: not stated
+    refresh: not reported (2024 vintage per field names; confirm)
+    caveats: [Zoning CODE only; max density/height/parking still must come from each city's code (config zoning CSV). Need the SCAG zone-category field to bridge.]
+  - id: scag_landuse
+    name: SCAG existing land use (LU24)
+    publisher: SCAG
+    url: https://maps.scag.ca.gov/scaggis/rest/services/LDX/Existinglanduse_poly_OR/MapServer/0
+    status: verified
+    rows: 707542
+    used_for: vacant / parking / commercial / mobile-home classification (dictionary in data/raw/scag_landuse_description.txt)
+    license: not stated (SCAG disclaimer saved in data/raw)
+    refresh: not reported
+  - id: scag_general_plan
+    name: SCAG general plan land use
+    publisher: SCAG
+    url: https://maps.scag.ca.gov/scaggis/rest/services/LDX/GeneralPlan_poly_OR/MapServer/0
+    status: verified
+    rows: 707542
+    used_for: planned density; zoning-vs-GP mismatch signal (rezone potential)
+    license: not stated
+    refresh: not reported
+  - id: scag_he_sites
+    name: Housing Element sites inventory
+    publisher: SCAG (from city adopted Housing Elements)
+    url: https://maps.scag.ca.gov/scaggis/rest/services/LDX/HousingElementSite_poly_scag/MapServer/0
+    status: verified
+    rows_total: 189627
+    rows_orange: 2126
+    used_for: parcels the city itself identified for RHNA lower-income capacity (strong positive signal)
+    license: not stated
+    refresh: not reported
+    caveats: [Field names for capacity were not confirmed (sample query returned no rows with guessed field names); inspect fields before mapping.]
+  - id: scag_he_rezone
+    name: Housing Element rezone sites
+    publisher: SCAG
+    url: https://maps.scag.ca.gov/scaggis/rest/services/LDX/HousingElementRezone_poly_scag/MapServer/0
+    status: verified
+    rows_total: 216471
+    rows_orange: 1414
+    used_for: parcels cities committed to rezone
+    license: not stated
+    refresh: not reported
+  - id: oc_unincorp_zoning
+    name: OC unincorporated zoning
+    publisher: OC Public Works
+    url: https://services.arcgis.com/UXmFoWC7yDHcDN5Q/arcgis/rest/services/OCZoning_P/FeatureServer/0
+    status: verified
+    rows: 450
+    refresh: last edit 2026-03-03
+    license: not stated
+  - id: oc_flood
+    ingested: "yes - data/overlays/flood_sfha.geojson (inside=constraint) + flood_clear.geojson (mapped X zone=clear); 'AREA NOT INCLUDED' stays unknown"
+    name: OC flood hazard areas (from FEMA NFHL)
+    publisher: OC Public Works
+    url: https://services.arcgis.com/UXmFoWC7yDHcDN5Q/arcgis/rest/services/OC_Flood_Hazard_Areas_Polygons/FeatureServer/7
+    status: verified
+    rows: 6033
+    refresh: last edit 2026-03-10
+    license: not stated (derived from FEMA public data)
+    used_for: flood risk (overlay mode flag; county-wide)
+    caveats: [Simplified polygons; not a flood determination.]
+  - id: geotracker
+    name: GeoTracker cleanup sites
+    publisher: State Water Resources Control Board
+    url: https://gispublic.waterboards.ca.gov/portalserver/rest/services/Hosted/geotracker_sites_download/FeatureServer/371
+    status: verified
+    rows_total: 73115
+    rows_orange: 4788
+    used_for: contamination risk (point buffer, e.g. 100 m; open cases only - check status field)
+    license: not stated
+    refresh: not reported
+  - id: ces4
+    name: CalEnviroScreen 4.0 tracts
+    publisher: OEHHA / Water Board hosted copy
+    url: https://gispublic.waterboards.ca.gov/portalserver/rest/services/Hosted/CES4_Final_Shapefile/FeatureServer/0
+    status: verified
+    rows_orange: 582
+    used_for: neighborhood burden (location context, not a risk penalty)
+    license: not stated
+    refresh: not reported
+  - id: tcac_opportunity
+    name: TCAC/HCD Opportunity Areas
+    publisher: CA HCD / TCAC; SCAG hosts 2021 service
+    url: https://maps.scag.ca.gov/scaggis/rest/services/HousingElements/TCAC_2021_Opportunity_Areas/MapServer
+    status: candidate
+    notes: 2025 shapefile/xlsx exist on HCD site (no license stated). Layer index not queried. Prefer newest.
+  - id: scag_transit
+    name: Major transit stops + HQTC (2050 plan year)
+    publisher: SCAG
+    url: https://maps.scag.ca.gov/scaggis/rest/services/OpenData/Major_Transit_Stops_Plan_Year_2050/MapServer/0
+    status: verified
+    rows: 1330 (all SCAG region)
+    used_for: transit_distance_m (AB 2097 parking exemption / AB 2011 style tests)
+    license: not stated
+    refresh: not reported
+    caveats: [Plan-year 2050 includes planned stops, not only existing. Filter by status field.]
+  - id: fire_hazard
+    name: CAL FIRE Fire Hazard Severity Zones
+    publisher: CAL FIRE / OSFM
+    url: https://services.gis.ca.gov/arcgis/rest/services/Environment/Fire_Severity_Zones/MapServer
+    status: candidate
+    license: "no restrictions on distribution; cite CAL FIRE (per service description)"
+    caveats: [Service is the older map; newer LRA/2025 zones should replace it. Layer index and OC coverage not yet queried. Irvine redirect not followed.]
+  - id: fema_nfhl
+    name: FEMA National Flood Hazard Layer
+    publisher: FEMA
+    url: https://hazards.fema.gov/arcgis/rest/services/public/NFHL/MapServer
+    status: candidate
+    notes: Alternative to oc_flood; not queried.
+  - id: coastal_zone
+    name: California Coastal Zone boundary (Caltrans copy of CCC data)
+    publisher: Caltrans DEA
+    url: https://gisdata.dot.ca.gov/arcgis/rest/services/CHhqenvi/DEA_Coastal_Zone_Boundary/FeatureServer/0
+    status: verified_with_gaps
+    license: not stated
+    refresh: not reported
+    caveats:
+      - Point tests: Seal Beach, Newport Pier, Corona del Mar, Laguna Beach, Dana Point = inside. Huntington Beach (PCH at Main and Beach) and San Clemente pier = NOT inside, though both are on the coast. Coarse/incomplete for OC.
+      - USE ONLY as flag_inside_only. Outside the layer must stay UNKNOWN, never "not coastal".
+  - id: hud_lihtc
+    name: HUD LIHTC properties
+    publisher: HUD
+    status: verified
+    license: public domain (US federal; confirm on HUD page)
+    refresh: not reported (per-property data; PIS year often 8888 = unknown)
+    rows_orange: 190
+    used_for: existing affordable housing nearby / preservation (expiring-use) signal
+    caveats: [Many YR_PIS = '8888' (unknown placed-in-service).]
+  - id: census_zcta
+    name: Census 2020 ZCTA (TIGERweb)
+    publisher: US Census Bureau
+    url: https://tigerweb.geo.census.gov/arcgis/rest/services/Census2020/tigerWMS_Census2020/MapServer/84
+    status: verified
+    license: public domain (US federal)
+    refresh: Census 2020 vintage
+    used_for: authoritative ZIP list. 86 ZCTAs have internal point inside OC (data/raw/oc_zctas_candidate.json).
+    caveats: [ZCTAs approximate ZIPs; PO-box/unique ZIPs missing. Parcel's own SiteZip5 is the ZIP of record.]
+  - id: ms_building_footprints
+    name: Microsoft US Building Footprints
+    url: https://minedbuildings.z5.web.core.windows.net/legacy/usbuildings-v2/California.geojson.zip
+    status: candidate
+    license: ODbL (README)
+    size: 3.35 GiB
+    used_for: derive building footprint area / coverage ratio per parcel (proxy for underbuilt). No year built.
+  - id: oc_ttc_defaults
+    name: OC Treasurer-Tax Collector tax-defaulted list
+    status: candidate
+    notes: PDF only; parse test not done. Distress signal.
+  - id: parcel_vendor
+    name: ParcelQuest / Regrid
+    status: candidate
+    notes: Only source for use code, sqft, year built, sales, owner type. Paid. Needed for Phase 2 accuracy.
+  - id: laws
+    name: State housing law parameters
+    status: unverified
+    notes: config/laws.yaml, written from general knowledge, needs counsel/planner review.
+rejected:
+  - {what: "OrangeCounty_Parcels (ArcGIS search hit)", why: "Orange County, North Carolina"}
+  - {what: "Parcel_Information_Public_Map_View", why: "Mariposa County, CA"}
+  - {what: "Coastal_Zone_Boundary_DRAFT", why: "Sonoma County, 2017"}
+  - {what: "CGS liquefaction MS58", why: "Token required"}
+  - {what: "OEHHA download page / maps.coastal.ca.gov:6443", why: "Blocked (403 / connection reset) from this environment; not bypassed"}

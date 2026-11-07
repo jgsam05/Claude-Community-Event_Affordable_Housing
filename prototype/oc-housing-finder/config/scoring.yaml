@@ -1,0 +1,47 @@
+# Opportunity scoring weights. Edit and restart: parcels are re-scored on load,
+# no ETL re-run needed.
+#
+# Development Potential = weighted average of the components below, computed over
+# the components whose data is KNOWN. Missing data never lowers the score; it
+# lowers the parcel's confidence (known weight / total weight).
+
+potential_weights:
+  land_use_fit: 20      # vacant, parking, 1-story commercial rank highest
+  underbuilt: 15        # low building coverage / low improvement-to-land ratio
+  lot_size: 10          # workable size for multifamily
+  legal_upside: 20      # units unlockable under zoning + state-law pathways
+  distress: 10          # tax default, code violations, vacancy registry
+  ownership: 10         # public / surplus, faith-based, Housing Element site
+  location: 15          # transit proximity, TCAC opportunity area
+
+# Feasibility Risk: 0-100, HIGHER = WORSE. Each flag that is True adds its weight.
+# Unknown flags add nothing but reduce risk_confidence.
+risk_weights:
+  coastal_zone: 15
+  fire_hazard: 20
+  flood_zone: 15
+  airport_zone: 10
+  contamination: 20
+  historic: 10
+  mobile_home: 10
+  fragmented_ownership: 25   # condo stacks: many owners, assembly is rarely feasible
+
+overall:
+  # overall = potential * (1 - risk_penalty * risk / 100)
+  risk_penalty: 0.5
+
+lot_size_sqft:
+  too_small: 4000
+  workable: 10000
+  sweet_spot_max: 150000
+
+transit_distance_m:
+  - [400, 1.0]
+  - [800, 0.8]
+  - [1600, 0.5]
+  - [999999, 0.2]
+
+# Price basis: a sale newer than this many years is trusted over assessed land
+# value (Prop 13 keeps assessed values artificially low for long-held parcels).
+recent_sale_years: 7
+current_year: 2026

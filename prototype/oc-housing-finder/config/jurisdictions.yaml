@@ -1,0 +1,24 @@
+# How to read the OC boundary layer (OCCityBoundaries, layer 8).
+#
+# Findings from inspecting the live layer (re-check if the service changes):
+#   * 859 rows, but only 45 have a name/geometry; the rest are empty and ignored.
+#   * PlaceType 'City' has 40 rows = 34 incorporated cities + 6 census communities
+#     that are UNINCORPORATED and follow county rules (listed below).
+#   * PlaceType 'Unincorporated' has 5 rows named 'Supervisory District N'. They do
+#     not overlap any city polygon, so they are read as the unincorporated land of
+#     each supervisorial district. ASSUMPTION: confirm with OC Public Works.
+#
+# The community list below was identified from general knowledge, and the count
+# is a consistency check (40 - 6 = 34 incorporated OC cities). Please verify it.
+
+unincorporated_label: "Unincorporated Orange County"
+
+unincorporated_communities:
+  - Coto de Caza
+  - Ladera Ranch
+  - Las Flores
+  - Midway City
+  - North Tustin
+  - Rossmoor
+
+expected_incorporated_cities: 34

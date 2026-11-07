@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OC Housing Opportunity Finder</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root { --bg:#f6f7f9; --card:#fff; --ink:#1c2430; --mute:#6b7685; --line:#e1e5ea;
+          --accent:#0b6e4f; --warn:#b45309; --bad:#b42318; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+         color:var(--ink); background:var(--bg); display:flex; flex-direction:column; height:100vh; }
+  header { background:var(--card); border-bottom:1px solid var(--line); padding:10px 16px;
+           display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+  header h1 { font-size:16px; margin:0; }
+  #banner { padding:6px 16px; font-size:12.5px; display:none; }
+  #banner.synth { display:block; background:#fff4e5; color:var(--warn); border-bottom:1px solid #f5d9ad; }
+  form { display:flex; gap:8px; align-items:center; }
+  input, select, button { font:inherit; padding:6px 9px; border:1px solid var(--line);
+                          border-radius:6px; background:#fff; }
+  button { cursor:pointer; background:var(--accent); color:#fff; border-color:var(--accent); }
+  button.ghost { background:#fff; color:var(--accent); }
+  .chips button { padding:3px 8px; font-size:12px; }
+  main { flex:1; display:grid; grid-template-columns: 1.3fr 1fr; min-height:0; }
+  #map { height:100%; }
+  aside { display:flex; flex-direction:column; min-height:0; border-left:1px solid var(--line); background:var(--card); }
+  #filters { padding:8px 12px; display:flex; gap:8px; flex-wrap:wrap; border-bottom:1px solid var(--line); font-size:12.5px; }
+  #filters label { display:flex; flex-direction:column; gap:2px; color:var(--mute); }
+  #summary { padding:6px 12px; color:var(--mute); font-size:12.5px; border-bottom:1px solid var(--line); }
+  #tablewrap { flex:1; overflow:auto; min-height:120px; }
+  table { border-collapse:collapse; width:100%; font-size:12.5px; }
+  th { position:sticky; top:0; background:#f0f2f5; text-align:left; padding:6px 8px; cursor:pointer; white-space:nowrap; }
+  td { padding:5px 8px; border-top:1px solid var(--line); white-space:nowrap; }
+  tr.row:hover, tr.sel { background:#eef6f2; cursor:pointer; }
+  #detail { max-height:42%; overflow:auto; border-top:2px solid var(--line); padding:10px 12px; font-size:12.5px; }
+  .bar { height:7px; background:#e6e9ee; border-radius:4px; overflow:hidden; margin:2px 0 6px; }
+  .bar > i { display:block; height:100%; background:var(--accent); }
+  .bar.risk > i { background:var(--bad); }
+  .bar.unknown > i { background:repeating-linear-gradient(45deg,#cbd2da,#cbd2da 4px,#e6e9ee 4px,#e6e9ee 8px); }
+  .tag { display:inline-block; padding:1px 7px; border-radius:10px; font-size:11px; background:#eef0f3; color:var(--mute); margin-right:4px; }
+  .tag.warn { background:#fff4e5; color:var(--warn); }
+  .tag.bad { background:#fdecea; color:var(--bad); }
+  .muted { color:var(--mute); }
+  #err { color:var(--bad); padding:8px 12px; display:none; }
+  .legend { background:#fff; padding:6px 9px; border-radius:6px; font-size:11.5px; box-shadow:0 1px 4px rgba(0,0,0,.25); line-height:1.5; }
+  .legend i { display:inline-block; width:12px; height:12px; margin-right:6px; vertical-align:-1px; border-radius:2px; }
+  @media (max-width: 900px) { main { grid-template-columns:1fr; grid-template-rows:45vh 1fr; } aside{ border-left:0; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>OC Housing Opportunity Finder</h1>
+  <form id="zipform">
+    <input id="zip" inputmode="numeric" maxlength="5" placeholder="OC ZIP e.g. 92701" size="14" autocomplete="off">
+    <button type="submit">Search</button>
+  </form>
+  <span class="chips" id="chips"></span>
+  <span style="flex:1"></span>
+  <button class="ghost" id="dlcsv" disabled>Export CSV</button>
+  <button class="ghost" id="dlgeo" disabled>Export GeoJSON</button>
+</header>
+<div id="banner"></div>
+<div id="err"></div>
+<main>
+  <div id="map"></div>
+  <aside>
+    <div id="filters">
+      <label>Min score <input id="f_score" type="number" min="0" max="100" value="0" style="width:70px"></label>
+      <label>Max risk <input id="f_risk" type="number" min="0" max="100" value="100" style="width:70px"></label>
+      <label>Min confidence % <input id="f_conf" type="number" min="0" max="100" value="0" style="width:80px"></label>
+      <label>Min lot sq ft <input id="f_lot" type="number" min="0" value="0" style="width:90px"></label>
+      <label>City <select id="f_city"><option value="">All</option></select></label>
+      <label>Land use <select id="f_use"><option value="">All</option></select></label>
+    </div>
+    <div id="summary">Enter an Orange County ZIP code to begin.</div>
+    <div id="tablewrap"><table><thead><tr id="thead"></tr></thead><tbody id="tbody"></tbody></table></div>
+    <div id="detail"><span class="muted">Click a parcel on the map or in the table to see why it scored the way it did.</span></div>
+  </aside>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const COLS = [
+  ['overall','Score'],['risk','Risk'],['confidence','Conf.'],['address','Address'],['city','City'],
+  ['land_use','Use'],['lot_sqft','Lot sq ft'],['best_units','Est. units'],['zoning_status','Zoning']
+];
+let map, layer, legend, state = { zip:null, features:[], sort:'overall', dir:-1, selected:null, byId:{} };
+
+function esc(s){ return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function colorFor(score){
+  return score >= 60 ? '#0b6e4f' : score >= 45 ? '#4f9d69' : score >= 30 ? '#e0a526' : '#b9bfc8';
+}
+function fmt(v, k){
+  if (v === null || v === undefined) return '<span class="muted">unknown</span>';
+  if (k === 'lot_sqft') return Math.round(v).toLocaleString();
+  if (k === 'confidence') return Math.round(v*100) + '%';
+  if (typeof v === 'number') return v;
+  return esc(v);
+}
+function showError(msg){ const e=$('err'); e.textContent=msg; e.style.display=msg?'block':'none'; }
+
+function initMap(){
+  map = L.map('map').setView([33.72,-117.88], 10);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    { maxZoom:19, attribution:'&copy; OpenStreetMap contributors' }).addTo(map);
+  legend = L.control({position:'bottomleft'});
+  legend.onAdd = () => { const d=L.DomUtil.create('div','legend');
+    d.innerHTML = '<b>Opportunity score</b><br>' +
+      [[60,'60+'],[45,'45-59'],[30,'30-44'],[0,'under 30']].map(([v,t]) =>
+        `<i style="background:${colorFor(v)}"></i>${t}`).join('<br>'); return d; };
+  legend.addTo(map);
+}
+
+function currentQuery(){
+  const p = new URLSearchParams();
+  const set = (k,v) => { if (v !== '' && v !== null) p.set(k, v); };
+  set('min_score', $('f_score').value); set('max_risk', $('f_risk').value);
+  set('min_lot', $('f_lot').value); set('city', $('f_city').value); set('land_use', $('f_use').value);
+  set('min_confidence', ($('f_conf').value || 0) / 100);
+  return p.toString();
+}
+
+async function search(zip){
+  showError('');
+  zip = (zip || $('zip').value).trim();
+  const res = await fetch(`/api/zip/${encodeURIComponent(zip)}?${currentQuery()}`);
+  const data = await res.json();
+  if (!res.ok){
+    const loaded = data.loaded_zips ? ` Loaded ZIPs: ${data.loaded_zips.join(', ')}.` : '';
+    showError((data.message || 'Request failed.') + loaded);
+    return;
+  }
+  const firstLoad = state.zip !== zip;
+  state.zip = zip; state.features = data.features;
+  state.byId = Object.fromEntries(data.features.map(f => [f.id, f]));
+  $('dlcsv').disabled = $('dlgeo').disabled = false;
+  const s = data.summary;
+  $('summary').innerHTML = `ZIP <b>${esc(zip)}</b>: showing <b>${s.matched}</b> of ${s.total_in_zip} parcels` +
+    ` across ${s.cities.map(esc).join(', ')}. Ranked by overall score.`;
+  if (firstLoad) populateFilters(s.cities);
+  drawMap(firstLoad); drawTable();
+}
+
+function populateFilters(cities){
+  const c = $('f_city'); c.innerHTML = '<option value="">All</option>' +
+    cities.map(x => `<option>${esc(x)}</option>`).join('');
+  const uses = [...new Set(state.features.map(f => f.properties.land_use).filter(Boolean))].sort();
+  $('f_use').innerHTML = '<option value="">All</option>' + uses.map(x => `<option>${esc(x)}</option>`).join('');
+}
+
+function drawMap(fit){
+  if (layer) layer.remove();
+  layer = L.geoJSON({type:'FeatureCollection', features: state.features}, {
+    style: f => ({ color:'#1c2430', weight: f.id === state.selected ? 3 : 0.8,
+                   fillColor: colorFor(f.properties.overall), fillOpacity: 0.8 }),
+    onEachFeature: (f, l) => {
+      l.bindTooltip(`${esc(f.properties.address)}<br>Score ${f.properties.overall}`);
+      l.on('click', () => select(f.id));
+    }
+  }).addTo(map);
+  if (fit && state.features.length) map.fitBounds(layer.getBounds(), { padding:[30,30] });
+}
+
+function drawTable(){
+  $('thead').innerHTML = COLS.map(([k,l]) =>
+    `<th data-k="${k}">${l}${state.sort===k ? (state.dir<0?' ▼':' ▲') : ''}</th>`).join('');
+  document.querySelectorAll('#thead th').forEach(th => th.onclick = () => {
+    const k = th.dataset.k; state.dir = state.sort === k ? -state.dir : -1; state.sort = k; drawTable(); });
+  const rows = [...state.features].sort((a,b) => {
+    const x = a.properties[state.sort], y = b.properties[state.sort];
+    if (x == null) return 1; if (y == null) return -1;
+    return (x > y ? 1 : x < y ? -1 : 0) * state.dir;
+  });
+  $('tbody').innerHTML = rows.map(f => {
+    const p = f.properties;
+    return `<tr class="row ${f.id===state.selected?'sel':''}" data-id="${esc(f.id)}">` +
+      COLS.map(([k]) => `<td>${fmt(p[k], k)}</td>`).join('') + '</tr>';
+  }).join('');
+  document.querySelectorAll('#tbody tr').forEach(tr => tr.onclick = () => select(tr.dataset.id));
+}
+
+async function select(id){
+  state.selected = id;
+  if (layer) layer.setStyle(f => ({ color:'#1c2430', weight: f.id===id ? 3 : 0.8,
+                                    fillColor: colorFor(f.properties.overall), fillOpacity:0.8 }));
+  document.querySelectorAll('#tbody tr').forEach(tr => tr.classList.toggle('sel', tr.dataset.id === id));
+  const res = await fetch(`/api/parcel/${encodeURIComponent(id)}`);
+  const d = await res.json(); if (!res.ok) { showError(d.message); return; }
+  renderDetail(d);
+}
+
+function bar(score, cls=''){
+  if (score === null) return `<div class="bar unknown"><i style="width:100%"></i></div>`;
+  return `<div class="bar ${cls}"><i style="width:${Math.round(score*100)}%"></i></div>`;
+}
+
+function renderDetail({parcel:p, score:s, disclaimer}){
+  const comp = c => `<div><b>${esc(c.name.replace(/_/g,' '))}</b>
+    <span class="muted"> weight ${c.weight}${c.score===null?' · unknown (excluded, lowers confidence)':' · '+Math.round(c.score*100)+'/100'}</span>
+    ${bar(c.score)}<div class="muted">${esc(c.explanation)}</div></div>`;
+  const rcomp = c => `<div>${c.score===null ? '<span class="tag">unknown</span>' : c.score ? '<span class="tag bad">yes</span>' : '<span class="tag">no</span>'}
+    ${esc(c.explanation)}</div>`;
+  const paths = s.units.pathways.map(x =>
+    `<tr><td>${esc(x.name)}</td><td>${x.units ?? '—'}</td><td>${esc(x.status.replace(/_/g,' '))}</td><td class="muted">${esc(x.note)}</td></tr>`).join('');
+  $('detail').innerHTML = `
+    <div><b>${esc(p.address)}</b> <span class="muted">${esc(p.city)}${p.community?' ('+esc(p.community)+')':''} · ZIP ${esc(p.zip_code)} · ${esc(p.parcel_id)}</span></div>
+    <div style="margin:6px 0;padding:6px 8px;background:#f4f6f8;border-left:3px solid #2a6f97"><b>Why:</b> ${esc(s.reason)}</div>
+    <div style="margin:6px 0">
+      <span class="tag">Overall ${s.overall}</span><span class="tag">Potential ${s.potential}</span>
+      <span class="tag ${s.risk>=30?'bad':''}">Risk ${s.risk}</span>
+      <span class="tag ${s.confidence<0.7?'warn':''}">Confidence ${Math.round(s.confidence*100)}%</span>
+      ${s.result_type==='preservation_watch'?'<span class="tag warn">Preservation watch</span>':''}
+      ${p.is_synthetic?'<span class="tag bad">SYNTHETIC DEMO PARCEL</span>':''}
+    </div>
+    <h4 style="margin:8px 0 4px">Development potential</h4>${s.components.map(comp).join('')}
+    <h4 style="margin:8px 0 4px">Feasibility risk <span class="muted">(higher is worse)</span></h4>${s.risk_components.map(rcomp).join('')}
+    <h4 style="margin:8px 0 4px">Unit estimate <span class="muted">(screening only)</span></h4>
+    <table><tr><th>Pathway</th><th>Units</th><th>Status</th><th>Note</th></tr>${paths}</table>
+    <div style="margin-top:6px">Land cost per unit: ${s.land_cost_per_unit ? '$'+s.land_cost_per_unit.toLocaleString()+' <span class="muted">('+esc(s.price_basis)+')</span>' : '<span class="muted">unavailable</span>'}</div>
+    ${s.caveats.length ? '<h4 style="margin:8px 0 4px">Caveats</h4><ul style="margin:0;padding-left:18px">'+s.caveats.map(c=>`<li>${esc(c)}</li>`).join('')+'</ul>' : ''}
+    <p class="muted" style="margin-top:8px">${esc(disclaimer)}</p>`;
+}
+
+async function boot(){
+  initMap();
+  const h = await (await fetch('/api/health')).json();
+  const b = $('banner');
+  const notes = [];
+  if (h.synthetic_data) notes.push('<b>SYNTHETIC DEMO DATA:</b> parcels are fictional. Zoning rules for demo cities are samples, not municipal code.');
+  if (!h.laws_verified) notes.push('State-law parameters (config/laws.yaml) are <b>unverified</b>; unit estimates are screening-level.');
+  if (notes.length){ b.innerHTML = notes.join(' '); b.className = 'synth'; }
+  const zips = await (await fetch('/api/zips')).json();
+  $('chips').innerHTML = zips.map(z => `<button class="ghost" data-z="${z.zip}" type="button">${z.zip}</button>`).join(' ');
+  document.querySelectorAll('#chips button').forEach(btn => btn.onclick = () => { $('zip').value = btn.dataset.z; search(btn.dataset.z); });
+  $('zipform').onsubmit = e => { e.preventDefault(); search(); };
+  ['f_score','f_risk','f_conf','f_lot','f_city','f_use'].forEach(id => $(id).onchange = () => state.zip && search(state.zip));
+  const dl = ext => () => { if (state.zip) location.href = `/api/zip/${state.zip}/export.${ext}?${currentQuery()}`; };
+  $('dlcsv').onclick = dl('csv'); $('dlgeo').onclick = dl('geojson');
+}
+boot();
+</script>
+</body>
+</html>
