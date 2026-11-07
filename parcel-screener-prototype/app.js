@@ -26,6 +26,12 @@
   var SIGNALS = ['Lot size', 'Building coverage', 'Year built', 'Land use code', 'Housing Element status',
     'Transit access', 'Jobs access', 'Opportunity area', 'Rent burden / income', 'Hazard layers'];
   var DATA_AS_OF = 'sample data';
+  // Real basemap: Esri Light Gray canvas (free with attribution), so the brand-colored parcels carry the color.
+  // Leaflet itself is vendored in ./vendor/leaflet, so the page has no CDN dependency for the map code.
+  var TILE_BASE = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+  var TILE_LABELS = 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Reference/MapServer/tile/{z}/{y}/{x}';
+  var TILE_ATTRIB = 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors';
+  var OC_CENTER = [33.7175, -117.8311];            // Orange County, CA
 
   var LEVELS = ['High', 'Medium', 'Low', 'Insufficient'];
   var CONF = {
@@ -81,6 +87,13 @@
     }); });
     return b;
   }
+  // County records are upper case ("1660 E 1ST ST SANTA ANA") and sometimes "ADDRESS NOT AVAILABLE".
+  function niceAddress(a) {
+    if (!a || /^address not available$/i.test(a.trim())) return '';
+    return a.trim().toLowerCase().replace(/\b([a-z])([a-z]*)/g, function (m, f, rest) {
+      return (rest.length === 0 && /^[nsew]$/.test(f)) ? f.toUpperCase() : f.toUpperCase() + rest;
+    }).replace(/\b(\d+)(St|Nd|Rd|Th)\b/g, function (m, n, suf) { return n + suf.toLowerCase(); });
+  }
   // GeoJSON FeatureCollection from the backend -> parcel objects with map placement in %.
   function adaptFeatures(fc) {
     var feats = fc.features.filter(function (f) { return f.geometry; });
@@ -95,12 +108,13 @@
       var o = {};
       for (var k in p) o[k] = p[k];
       o.id = i;
-      o.address = p.address || ('APN ' + p.apn);
+      o.address = niceAddress(p.address) || ('APN ' + p.apn);
       o.missing = p.missing || [];
       o.reasons = p.reasons || [];
       o.lowInputs = p.low_confidence_inputs || [];
       o.dp = p.development_potential; o.risk = p.feasibility_risk;
       o.opp = isNum(p.opp) ? p.opp : null;
+      o.geometry = f.geometry; o.bbox = b;           // real lon/lat polygon, drawn on the Leaflet map
       o.left = pad + (b[0] - ext[0]) * kx / spanX * (100 - 2 * pad);
       o.top = pad + (ext[3] - b[3]) / spanY * (100 - 2 * pad);
       o.w = Math.max((b[2] - b[0]) * kx / spanX * (100 - 2 * pad), 0.5);
@@ -114,15 +128,25 @@
         if (!r.ok) { var e = new Error(body.detail || ('HTTP ' + r.status)); e.status = r.status; throw e; }
         return body;
       });
-    }).then(function (fc) {
-      apiMeta[zip] = fc.metadata || {};
-      if (apiMeta[zip].signals) SIGNALS = apiMeta[zip].signals;
-      if (apiMeta[zip].data_as_of) DATA_AS_OF = apiMeta[zip].data_as_of;
-      var ps = adaptFeatures(fc);
-      rank(ps);
-      cache[zip] = ps;
-      return ps;
-    });
+    }).then(function (fc) { return ingest(zip, fc); });
+  }
+  function ingest(zip, fc) {
+    apiMeta[zip] = fc.metadata || {};
+    if (apiMeta[zip].signals) SIGNALS = apiMeta[zip].signals;
+    if (apiMeta[zip].data_as_of) DATA_AS_OF = apiMeta[zip].data_as_of;
+    var ps = adaptFeatures(fc);
+    rank(ps);
+    cache[zip] = ps;
+    return ps;
+  }
+  // Without a backend, a ZIP can still be real: data/<zip>.geojson is a saved copy of the backend's /zip/<zip> output.
+  var snapshots = {}, snapshotTried = {};
+  function loadSnapshot(zip) {
+    snapshotTried[zip] = true;
+    return fetch('data/' + zip + '.geojson').then(function (r) {
+      if (!r.ok) throw new Error('no snapshot');
+      return r.json();
+    }).then(function (fc) { snapshots[zip] = true; return ingest(zip, fc); });
   }
   function rank(ps) {
     ps.slice().filter(function (p) { return p.opp !== null; })
@@ -214,7 +238,7 @@
     });
   }
   function dataLabel(zip) {
-    if (!API_BASE) return 'Sample data';
+    if (!API_BASE && !snapshots[zip]) return 'Sample data';
     return apiMeta[zip] && apiMeta[zip].mode === 'fixture' ? 'Synthetic test data' : 'Public records';
   }
 
@@ -262,7 +286,11 @@
       });
       return;
     }
-    if (!API_BASE && SAMPLE_ZIPS.indexOf(zip) < 0) { renderOutside(zip); return; }
+    if (!API_BASE && !cache[zip] && !snapshotTried[zip] && location.protocol !== 'file:') {
+      loadSnapshot(zip).then(function () { if (parseRoute().zip === zip) render(opts); }, function () { if (parseRoute().zip === zip) render(opts); });
+      return;
+    }
+    if (!API_BASE && !snapshots[zip] && SAMPLE_ZIPS.indexOf(zip) < 0) { renderOutside(zip); return; }
     headerCtx.innerHTML = '<span class="pill-data">' + esc(dataLabel(zip)) + '</span>';
     if (route.name === 'report') renderReport(route); else renderResults(route, opts);
   }
@@ -409,6 +437,8 @@
         '</div>' +
       '</div>';
 
+    var mapEl = document.getElementById('oca-map');
+    if (mapEl) mountMap(mapEl, zip, all, shown, sel);
     if (opts.focusKey) { var el = app.querySelector('[data-key="' + opts.focusKey + '"]'); if (el) el.focus(); }
     if (opts.focusDetail) { var h = app.querySelector('#sel-title'); if (h) { h.focus(); if (window.innerWidth < 900) h.scrollIntoView({ block: 'start' }); } }
   }
@@ -440,14 +470,17 @@
       }).join('') + '</tbody></table></div>';
   }
 
+  // Opportunity fill uses the four logo colors, low to high: orange tint, yellow, blue, green.
+  var OPP_STEPS = [['Under 25', '#F2BFA5'], ['25 to 49', '#E8A800'], ['50 to 74', '#2B5FC7'], ['75 and up', '#12844A']];
   function parcelFill(p) {
     if (p.level === 'Insufficient') return HATCH;
     if (state.mode === 'confidence') return CONF[p.level].map;
     if (p.level === 'Low') return p.opp < 50 ? '#E4E7EE' : '#C9CED8';
     var o = p.opp;
-    return o < 20 ? '#E8EEFB' : o < 40 ? '#BCCDF1' : o < 60 ? '#86A5E4' : o < 80 ? '#2B5FC7' : '#1E4399';
+    return o < 25 ? OPP_STEPS[0][1] : o < 50 ? OPP_STEPS[1][1] : o < 75 ? OPP_STEPS[2][1] : OPP_STEPS[3][1];
   }
   function mapHtml(all, shown, sel) {
+    var live = all.length > 0 && !!all[0].geometry;
     var pinSet = {};
     shown.forEach(function (p) { if (p.opp !== null) pinSet[p.id] = true; });
     if (sel) pinSet[sel.id] = true;
@@ -464,17 +497,72 @@
       ? '<span class="lg-title">Parcels by confidence</span>' + LEVELS.map(function (l) {
           return '<span class="lg-row"><span class="swatch" style="background:' + (CONF[l].map || HATCH) + '"></span>' + l + '</span>';
         }).join('')
-      : '<span class="lg-title">Parcels by opportunity</span><span class="lg-row"><span class="swatch wide" style="background:linear-gradient(90deg,#E8EEFB 0 20%,#BCCDF1 20% 40%,#86A5E4 40% 60%,#2B5FC7 60% 80%,#1E4399 80%)"></span>Low → high</span>' +
+      : '<span class="lg-title">Parcels by opportunity</span><span class="lg-row"><span class="swatch wide" style="background:linear-gradient(90deg,' + OPP_STEPS.map(function (st, i) { return st[1] + ' ' + (i * 25) + '% ' + ((i + 1) * 25) + '%'; }).join(',') + ')"></span>Low → high</span>' +
         '<span class="lg-row"><span class="swatch" style="background:linear-gradient(90deg,#E4E7EE 0 50%,#C9CED8 50%)"></span>Low confidence (muted)</span><span class="lg-row"><span class="swatch" style="background:' + HATCH + '"></span>Not scored</span>';
     var modeBtns = [['opportunity', 'Opportunity'], ['confidence', 'Confidence']].map(function (m) {
       return '<button type="button" data-action="mode" data-value="' + m[0] + '" data-key="mode-' + m[0] + '" aria-pressed="' + (state.mode === m[0]) + '">' + m[1] + '</button>';
     }).join('');
     return '<section class="map-panel" aria-label="Map of sites. The list has the same information as text.">' +
-      '<div class="map-canvas">' + polys + pins + '</div>' +
+      '<div class="map-canvas' + (live ? ' is-live' : '') + '">' + (live ? '<div id="oca-map" role="application" aria-label="Map of Orange County parcels. The list has the same information as text."></div>' : polys + pins) + '</div>' +
       '<div class="map-mode"><span id="mode-label" class="sr-only">Color parcels by</span><div class="segmented sm" role="group" aria-labelledby="mode-label">' + modeBtns + '</div></div>' +
       '<div class="legend" role="group" aria-label="Map legend"><span class="lg-row"><span class="pin-key"></span>Candidate site (rank)</span><span class="lg-row"><span class="pin-key sel"></span>Selected</span>' + legend + '</div>' +
-      '<span class="attribution">Schematic map from parcel boundaries · Records as of ' + esc(DATA_AS_OF) + '</span>' +
+      '<span class="attribution">' + (live ? 'Parcels from county records as of ' : 'Schematic map from parcel boundaries · Records as of ') + esc(DATA_AS_OF) + '</span>' +
     '</section>';
+  }
+  // ---------- Live map (Leaflet over real parcel polygons) ----------
+  var ocaMap = { map: null, zip: null, view: null };
+  function parcelStyle(p, dim, isSel) {
+    var f = parcelFill(p), hatch = typeof f === 'string' && f.indexOf('gradient') >= 0;
+    return {
+      color: isSel ? '#C2490F' : '#6B7385', weight: isSel ? 3 : 0.6, opacity: dim ? 0.12 : (isSel ? 1 : 0.6),
+      fillColor: hatch ? '#B4BAC6' : f, fillOpacity: dim ? 0.07 : (hatch ? 0.45 : 0.72)
+    };
+  }
+  function mountMap(el, zip, all, shown, sel) {
+    if (typeof L === 'undefined') { el.innerHTML = '<p class="map-fallback">The map library did not load. The list has the same information as text.</p>'; return; }
+    if (ocaMap.map) {
+      ocaMap.view = { zip: ocaMap.zip, center: ocaMap.map.getCenter(), zoom: ocaMap.map.getZoom() };
+      try { ocaMap.map.remove(); } catch (e) { /* container already gone */ }
+    }
+    var map = L.map(el, { zoomControl: true, preferCanvas: true, scrollWheelZoom: true, zoomSnap: 0.5 }).setView(OC_CENTER, 11);
+    L.tileLayer(TILE_BASE, { maxZoom: 19, maxNativeZoom: 16, attribution: TILE_ATTRIB }).addTo(map);
+    map.createPane('labels'); map.getPane('labels').style.zIndex = 650; map.getPane('labels').style.pointerEvents = 'none';
+    L.tileLayer(TILE_LABELS, { maxZoom: 19, maxNativeZoom: 16, pane: 'labels' }).addTo(map);
+
+    var group = L.featureGroup().addTo(map);
+    var pinSet = {};
+    shown.forEach(function (p) { if (p.opp !== null) pinSet[p.id] = true; });
+    if (sel) pinSet[sel.id] = true;
+    var selLayer = null;
+    all.forEach(function (p) {
+      if (!p.geometry) return;
+      var dim = !!state.off[p.level] || (state.tag !== 'all' && !tagsOf(p).some(function (t) { return t.id === state.tag; }));
+      var isSel = !!(sel && sel.id === p.id);
+      var layer = L.geoJSON({ type: 'Feature', geometry: p.geometry, properties: {} }, { style: function () { return parcelStyle(p, dim, isSel); } });
+      layer.on('click', function () { pendingFocus = { focusDetail: true }; go('#/zip/' + encodeURIComponent(zip) + '/' + encodeURIComponent(p.apn)); });
+      layer.on('mouseover', function () { layer.setStyle({ weight: 2.5, color: '#1B1F2A' }); });
+      layer.on('mouseout', function () { layer.setStyle(parcelStyle(p, dim, isSel)); });
+      layer.bindTooltip(esc(p.address) + (p.opp === null ? ' · not scored' : ' · opportunity ' + p.opp), { sticky: true, direction: 'top' });
+      layer.addTo(group);
+      if (isSel) selLayer = layer;
+    });
+    all.filter(function (p) { return pinSet[p.id] && p.geometry; }).forEach(function (p) {
+      var isSel = !!(sel && sel.id === p.id);
+      var c = [(p.bbox[1] + p.bbox[3]) / 2, (p.bbox[0] + p.bbox[2]) / 2];
+      var label = (p.rank ? 'Rank ' + p.rank + ', ' : '') + p.address + ', opportunity ' + (p.opp === null ? 'not scored' : p.opp) + ', ' + p.level + ' confidence';
+      var icon = L.divIcon({
+        className: 'pin-wrap', iconSize: [44, 44], iconAnchor: [22, 22],
+        html: '<button type="button" class="pin' + (isSel ? ' is-selected' : '') + '" data-action="select" data-value="' + esc(p.apn) + '" data-key="pin-' + esc(p.apn) + '" aria-label="' + esc(label) + '" aria-pressed="' + isSel + '" title="' + esc(label) + '"><span>' + (p.rank || '•') + '</span></button>'
+      });
+      L.marker(c, { icon: icon, keyboard: false, zIndexOffset: isSel ? 1000 : (p.rank ? 500 - p.rank : 0) }).addTo(map);
+    });
+
+    var v = ocaMap.view;
+    if (v && v.zip === zip) map.setView(v.center, v.zoom, { animate: false });       // keep the user's pan and zoom
+    else if (selLayer && sel && ocaMap.zip === zip) map.fitBounds(selLayer.getBounds(), { maxZoom: 17, padding: [40, 40] });
+    else if (group.getLayers().length && group.getBounds().isValid()) map.fitBounds(group.getBounds(), { padding: [24, 24] });
+    ocaMap.map = map; ocaMap.zip = zip;
+    setTimeout(function () { map.invalidateSize(); }, 0);
   }
   function selectPrompt() {
     return '<section class="selected empty" aria-label="Selected site"><p>Choose a site from the list or the map to see its three scores, the reasons behind them and where the data comes from.</p></section>';
