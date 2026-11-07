@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OCA results for ZIP 92701</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Archivo:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1B1F2A;background:#F7F8FA}
+button{font-family:inherit}
+.card:hover{border-color:#2B5FC7 !important}
+.chip:hover{background:#E8EEFB !important}
+a.cta:hover,button.go:hover{background:#1E4399 !important}
+:focus-visible{outline:3px solid #2B5FC7;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height:1000px;display:flex;flex-direction:column;background:#F7F8FA;color:#1B1F2A;font-family:'IBM Plex Sans',system-ui,sans-serif">
+
+<header style="background:#FFFFFF;border-bottom:1px solid #DDE1E8;padding:14px 32px;display:flex;flex-wrap:wrap;align-items:center;gap:12px 32px">
+<div style="display:flex;align-items:center;gap:10px">
+<svg width="40" height="40" viewBox="0 0 48 48" role="img" aria-label="OCA logo"><polygon points="3,5 22,3 23,21 4,23" fill="#2B5FC7" fill-opacity="0.45" stroke="#2B5FC7" stroke-width="1.6" stroke-linejoin="round"/><polygon points="26,4 45,6 44,24 25,22" fill="#E8A800" fill-opacity="0.45" stroke="#E8A800" stroke-width="1.6" stroke-linejoin="round"/><polygon points="4,27 23,26 21,45 5,43" fill="#12844A" fill-opacity="0.45" stroke="#12844A" stroke-width="1.6" stroke-linejoin="round"/><polygon points="27,25 44,28 43,44 24,46" fill="#C2490F" fill-opacity="0.45" stroke="#C2490F" stroke-width="1.6" stroke-linejoin="round"/><circle cx="13" cy="13" r="4.5" fill="#2B5FC7" stroke="#FFFFFF" stroke-width="1.6"/><circle cx="35" cy="14" r="4.5" fill="#E8A800" stroke="#FFFFFF" stroke-width="1.6"/><circle cx="13" cy="35" r="4.5" fill="#12844A" stroke="#FFFFFF" stroke-width="1.6"/><circle cx="34" cy="36" r="4.5" fill="#C2490F" stroke="#FFFFFF" stroke-width="1.6"/></svg>
+<span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:30px;line-height:32px;letter-spacing:0.1em">OCA</span>
+</div>
+<a href="How-to-use.dc.html" style="margin-left:auto;display:inline-flex;align-items:center;min-height:44px;font-size:16px;font-weight:600;color:#1E4399;text-decoration:underline">How to use OCA</a>
+<form style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px">
+<div style="display:flex;flex-direction:column;gap:4px">
+<label for="zip" style="font-size:13px;font-weight:600;color:#4B5363">Orange County ZIP code</label>
+<input id="zip" type="text" inputmode="numeric" maxlength="5" value="{{zip}}" onChange="{{setZip}}" style="box-sizing:border-box;height:48px;width:180px;padding:0 18px;font-size:17px;font-family:inherit;border:1.5px solid #8A93A5;border-radius:999px;background:#FFFFFF;color:#1B1F2A">
+</div>
+<button type="button" class="go" style="height:48px;padding:0 24px;border:0;border-radius:999px;background:#2B5FC7;color:#FFFFFF;font-size:16px;font-weight:600;cursor:pointer">Find sites</button>
+</form>
+</header>
+
+<main style="flex:1;padding:24px 32px 40px;display:flex;flex-direction:column;gap:20px">
+
+<section aria-label="What OCA does" style="background:#FFFFFF;border:1px solid #DDE1E8;border-radius:16px;padding:20px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:16px 32px">
+<div style="flex:1 1 360px;min-width:0">
+<h2 style="margin:0;font-family:'Archivo',sans-serif;font-size:20px;line-height:26px;font-weight:800">What OCA does</h2>
+<p style="margin:4px 0 0;font-size:16px;line-height:24px;color:#33394A">OCA checks every parcel in a ZIP code and ranks the ones that could work for new affordable housing, or for keeping existing affordable homes. Use it to decide where to look first.</p>
+</div>
+<ol style="flex:1 1 420px;margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:12px 24px;font-size:15px;line-height:20px">
+<li style="display:flex;align-items:center;gap:10px"><span style="flex:none;width:28px;height:28px;border-radius:50%;background:#2B5FC7;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:700">1</span>Enter a ZIP code</li>
+<li style="display:flex;align-items:center;gap:10px"><span style="flex:none;width:28px;height:28px;border-radius:50%;background:#12844A;color:#FFFFFF;display:flex;align-items:center;justify-content:center;font-weight:700">2</span>Compare ranked sites</li>
+<li style="display:flex;align-items:center;gap:10px"><span style="flex:none;width:28px;height:28px;border-radius:50%;background:#E8A800;color:#1B1F2A;display:flex;align-items:center;justify-content:center;font-weight:700">3</span>Open the score report</li>
+</ol>
+<a href="How-to-use.dc.html" style="display:inline-flex;align-items:center;height:44px;padding:0 20px;border-radius:999px;border:1.5px solid #2B5FC7;color:#1E4399;font-size:15px;font-weight:600;text-decoration:none">See how it works</a>
+</section>
+
+<div style="display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px 24px">
+<div>
+<h1 style="margin:0;font-family:'Archivo',sans-serif;font-size:30px;line-height:36px;font-weight:700">{{count}} places to look in {{zip}}</h1>
+<p style="margin:4px 0 0;font-size:15px;line-height:22px;color:#4B5363">Best matches first. Sample data, for layout only. Always confirm zoning and ownership before acting.</p>
+</div>
+<button type="button" class="chip" style="height:44px;padding:0 18px;border:1.5px solid #8A93A5;border-radius:999px;background:#FFFFFF;color:#1B1F2A;font-size:14px;font-weight:600;cursor:pointer">Save list as CSV</button>
+</div>
+
+<div role="group" aria-label="Filter by what kind of site" style="display:flex;flex-wrap:wrap;gap:8px">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="7">
+<button type="button" class="chip" aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}</button>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+
+<section aria-label="Ranked sites" style="flex:1 1 400px;max-width:480px;min-width:0;display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<button type="button" class="card" aria-pressed="{{r.on}}" onClick="{{r.pick}}" style="{{r.style}}">
+<span style="{{r.ring}}"><span style="width:56px;height:56px;border-radius:50%;background:#FFFFFF;display:flex;align-items:center;justify-content:center;font-family:'Archivo',sans-serif;font-size:24px;font-weight:700;color:#1B1F2A">{{r.total}}</span></span>
+<span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;text-align:left">
+<span style="font-size:13px;line-height:16px;font-weight:600;color:#4B5363">#{{r.rank}} · {{r.tag}}</span>
+<span style="font-size:17px;line-height:22px;font-weight:600">{{r.name}}</span>
+<span style="font-size:14px;line-height:20px;color:#4B5363">{{r.why}}</span>
+<span style="display:flex;flex-wrap:wrap;gap:6px;margin-top:2px">
+<span style="font-size:13px;line-height:16px;padding:3px 10px;border-radius:999px;background:#E8EEFB;color:#1E4399;font-weight:600">{{r.acres}}</span>
+<span style="{{r.confStyle}}">{{r.conf}} confidence</span>
+</span>
+</span>
+</button>
+</sc-for>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<div style="padding:28px 20px;background:#FFFFFF;border:1px solid #DDE1E8;border-radius:16px;font-size:15px;line-height:22px;color:#4B5363">Nothing of that kind showed up in {{zip}}. Choose All sites to see every match.</div>
+</sc-if>
+</section>
+
+<div style="flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:20px">
+
+<section aria-label="Map of sites" style="position:relative;background:#E6EBE5;border:1px solid #DDE1E8;border-radius:16px;overflow:hidden;aspect-ratio:700/380;min-height:260px">
+<svg viewBox="0 0 700 380" preserveAspectRatio="xMidYMid slice" style="position:absolute;left:0;top:0;width:100%;height:100%" aria-hidden="true">
+<rect width="700" height="380" fill="#E9EEE8"/>
+<path d="M0 300 C120 270 220 330 360 300 S600 260 700 290 L700 330 C600 305 480 345 360 340 S120 310 0 345 Z" fill="#C5DCE6"/>
+<rect x="430" y="30" width="120" height="70" rx="6" fill="#CFE3C4"/>
+<g stroke="#FFFFFF" stroke-width="7" fill="none"><path d="M0 70 H700"/><path d="M0 170 H700"/><path d="M0 255 H700"/><path d="M90 0 V380"/><path d="M270 0 V380"/><path d="M420 0 V380"/><path d="M610 0 V380"/></g>
+<path d="M0 205 C200 190 400 225 700 195" stroke="#F4DCA0" stroke-width="14" fill="none"/>
+<g fill="#33394A"><circle cx="270" cy="170" r="4"/><circle cx="420" cy="255" r="4"/><circle cx="90" cy="255" r="4"/><circle cx="610" cy="70" r="4"/></g>
+<sc-for list="{{polys}}" as="p" hint-placeholder-count="6">
+<polygon points="{{p.points}}" fill="{{p.fill}}" fill-opacity="0.55" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"/>
+</sc-for>
+</svg>
+<sc-for list="{{pins}}" as="p" hint-placeholder-count="6">
+<button type="button" aria-label="{{p.label}}" aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="{{p.style}}">{{p.rank}}</button>
+</sc-for>
+<div style="position:absolute;left:12px;bottom:12px;background:#FFFFFF;border:1px solid #DDE1E8;border-radius:10px;padding:8px 12px;font-size:13px;line-height:16px;color:#33394A;display:flex;flex-direction:column;gap:4px">
+<span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#2B5FC7;border-radius:50%"></span>Candidate site</span>
+<span style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#C2490F;border-radius:50%"></span>Selected</span>
+<span style="display:flex;align-items:center;gap:8px"><span style="width:8px;height:8px;background:#33394A;border-radius:50%"></span>Transit stop</span>
+</div>
+<div style="position:absolute;right:12px;bottom:12px;font-size:11px;line-height:14px;color:#33394A;background:rgba(255,255,255,0.88);padding:2px 8px;border-radius:6px">Schematic map</div>
+</section>
+
+<section aria-label="Selected site" style="background:#FFFFFF;border:1px solid #DDE1E8;border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:20px">
+<sc-if value="{{sel}}" hint-placeholder-val="{{ true }}">
+<div style="display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px 24px">
+<div style="min-width:0">
+<div style="font-size:13px;line-height:16px;font-weight:600;color:#4B5363">#{{sel.rank}} · {{sel.tag}}</div>
+<h2 style="margin:4px 0 0;font-family:'Archivo',sans-serif;font-size:24px;line-height:30px;font-weight:700">{{sel.name}}</h2>
+<div style="margin-top:2px;font-size:14px;line-height:20px;color:#4B5363">{{sel.meta}}</div>
+</div>
+<div style="text-align:right">
+<div style="font-family:'Archivo',sans-serif;font-size:48px;line-height:48px;font-weight:700">{{sel.total}}<span style="font-size:18px;color:#4B5363;font-weight:500"> / 100</span></div>
+<div style="font-size:13px;line-height:16px;color:#4B5363">{{sel.conf}} confidence</div>
+</div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">
+<sc-for list="{{sel.scores}}" as="s" hint-placeholder-count="3">
+<div style="background:#F7F8FA;border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:8px">
+<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">
+<span style="font-size:14px;line-height:20px;font-weight:600">{{s.label}}</span>
+<span style="font-family:'Archivo',sans-serif;font-size:24px;line-height:28px;font-weight:700">{{s.value}}</span>
+</div>
+<div style="height:8px;background:#DDE1E8;border-radius:4px;overflow:hidden"><div style="{{s.bar}}"></div></div>
+<div style="font-size:13px;line-height:16px;color:#4B5363">{{s.note}}</div>
+<ul style="margin:4px 0 0;padding-left:18px;font-size:14px;line-height:18px;color:#33394A;display:flex;flex-direction:column;gap:2px">
+<sc-for list="{{s.drivers}}" as="d" hint-placeholder-count="3"><li>{{d}}</li></sc-for>
+</ul>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px 24px">
+<div style="font-size:14px;line-height:20px;color:#33394A;min-width:0;flex:1 1 280px;background:#FFF3CC;border-radius:10px;padding:10px 14px"><strong style="font-weight:600">Check first:</strong> {{sel.flags}}</div>
+<a class="cta" href="Parcel-Report.dc.html" style="display:inline-flex;align-items:center;height:48px;padding:0 24px;border-radius:999px;background:#2B5FC7;color:#FFFFFF;font-size:16px;font-weight:600;text-decoration:none">See how it was scored</a>
+</div>
+</sc-if>
+</section>
+
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const selId = s.sel ?? 1;
+    const filter = s.filter ?? 'all';
+    const zip = s.zip ?? '92701';
+
+    const data = [
+      { id: 1, tag: 'Vacant or light', name: 'Vacant lot near rail corridor', meta: 'APN 000-000-01 · 1.8 ac · 3% built', acres: '1.8 acres', dev: 86, loc: 78, risk: 22, conf: 'High',
+        why: 'Big, nearly empty lot near a bus line, already on the city\'s housing site list.',
+        cx: 150, cy: 105, poly: '110,80 190,76 195,130 115,134',
+        drivers: { dev: ['Large, nearly empty lot', 'Listed on Housing Element inventory', 'Streamlining pathway likely'], loc: ['Bus stop within 0.2 mi', 'High-opportunity tract', 'Grocery within 0.5 mi'], risk: ['Outside flood zone', 'Moderate liquefaction zone'] },
+        flags: 'Liquefaction zone; confirm with a soil report.' },
+      { id: 2, tag: 'Public or surplus', name: 'City-owned surplus parking lot', meta: 'APN 000-000-02 · 2.4 ac · 6% built', acres: '2.4 acres', dev: 82, loc: 84, risk: 31, conf: 'Medium',
+        why: 'Publicly owned lot with frequent transit nearby. No private seller to negotiate with.',
+        cx: 330, cy: 175, poly: '292,150 372,146 376,208 296,212',
+        drivers: { dev: ['Publicly owned, no private seller', 'Surplus land law may apply', 'Low building coverage'], loc: ['Frequent transit within 0.3 mi', 'Jobs and schools nearby', 'High rent burden in tract'], risk: ['Near known contamination site', 'Outside fire zone'] },
+        flags: 'Nearby cleanup site; check the state EnviroStor record.' },
+      { id: 3, tag: 'Faith-based', name: 'Congregation parking lot', meta: 'APN 000-000-03 · 1.1 ac · 22% built', acres: '1.1 acres', dev: 71, loc: 74, risk: 18, conf: 'Medium',
+        why: 'Mostly parking at a place of worship. State law lets congregations build housing here.',
+        cx: 520, cy: 98, poly: '490,76 555,73 559,122 494,126',
+        drivers: { dev: ['Religious-use parcel with excess parking', 'State faith-based housing law may apply', 'Mid-size lot'], loc: ['Bus stop within 0.4 mi', 'School within 0.5 mi', 'Moderate job access'], risk: ['Low hazard exposure', 'Not on a historic list'] },
+        flags: 'Owner interest unknown; parking use not verified.' },
+      { id: 4, tag: 'Tax-defaulted', name: 'Tax-defaulted small lot', meta: 'APN 000-000-04 · 0.4 ac · 0% built', acres: '0.4 acres', dev: 52, loc: 68, risk: 40, conf: 'Low',
+        why: 'Small empty lot with unpaid taxes. Limited room for homes and a few hazard flags.',
+        cx: 218, cy: 290, poly: '198,270 242,268 245,312 201,314',
+        drivers: { dev: ['Small lot limits unit count', 'Not on Housing Element inventory', 'Vacant'], loc: ['Bus stop within 0.5 mi', 'Average opportunity score'], risk: ['Partly in 100-year flood area', 'Oil well record nearby'] },
+        flags: 'Flood area and oil well record; ownership may change at auction.' },
+      { id: 5, tag: 'Preservation', name: 'Subsidized building, affordability ending', meta: 'APN 000-000-05 · 64 units · restriction ends soon', acres: '64 homes', dev: 64, loc: 80, risk: 26, conf: 'Medium',
+        why: 'Existing affordable homes whose rent limits are about to expire. Worth acting early.',
+        cx: 560, cy: 262, poly: '526,240 598,238 601,298 529,300',
+        drivers: { dev: ['Existing affordable units at risk', 'End date from state and HUD lists', 'Owner type unknown'], loc: ['Transit and grocery within 0.4 mi', 'High CalEnviroScreen burden'], risk: ['Outside flood and fire zones', 'Building over 40 years old'] },
+        flags: 'Confirm the restriction end date with the funder.' },
+      { id: 6, tag: 'Housing Element', name: 'Rezone site: strip retail', meta: 'APN 000-000-06 · 3.1 ac · 14% built', acres: '3.1 acres', dev: 78, loc: 66, risk: 35, conf: 'Medium',
+        why: 'Large, lightly built retail site the city has marked for rezoning to housing.',
+        cx: 400, cy: 340, poly: '352,318 448,316 452,368 356,370',
+        drivers: { dev: ['Listed as a rezone site', 'Large lot, low coverage', 'Needs rezoning before building'], loc: ['Bus stop within 0.6 mi', 'Grocery on site', 'Fewer jobs nearby'], risk: ['In coastal-zone buffer', 'Creek setback may apply'] },
+        flags: 'Rezoning not yet adopted; creek setback may shrink the buildable area.' }
+    ];
+    data.forEach(d => { d.total = Math.round(d.dev * 0.45 + d.loc * 0.35 + (100 - d.risk) * 0.20); });
+    data.sort((a, b) => b.total - a.total);
+    data.forEach((d, i) => { d.rank = i + 1; });
+
+    const filters = [
+      ['all', 'All sites'], ['Vacant or light', 'Vacant or lightly built'], ['Housing Element', 'Housing Element'],
+      ['Public or surplus', 'Public or surplus'], ['Faith-based', 'Faith-based'], ['Tax-defaulted', 'Tax-defaulted'], ['Preservation', 'Preservation']
+    ];
+    const chips = filters.map(([k, label]) => {
+      const on = filter === k;
+      return {
+        label, on,
+        style: 'height:40px;padding:0 16px;border-radius:999px;font-size:14px;font-weight:600;cursor:pointer;border:1.5px solid ' + (on ? '#2B5FC7' : '#8A93A5') + ';background:' + (on ? '#2B5FC7' : '#FFFFFF') + ';color:' + (on ? '#FFFFFF' : '#1B1F2A'),
+        pick: () => this.setState({ filter: k })
+      };
+    });
+
+    const confColors = { High: ['#E3F3EA', '#0B5E34'], Medium: ['#FFF3CC', '#5A4000'], Low: ['#FBE7DD', '#8A3208'] };
+    const ringColor = (t) => t >= 80 ? '#12844A' : (t >= 70 ? '#2B5FC7' : '#E8A800');
+
+    const visible = data.filter(d => filter === 'all' || d.tag === filter);
+    const selected = data.find(d => d.id === selId && visible.includes(d)) || visible[0] || null;
+
+    const rows = visible.map(d => {
+      const on = selected && d.id === selected.id;
+      const cc = confColors[d.conf];
+      return {
+        rank: d.rank, name: d.name, why: d.why, tag: d.tag, acres: d.acres, conf: d.conf, total: d.total, on,
+        style: 'display:flex;gap:16px;align-items:flex-start;width:100%;box-sizing:border-box;padding:18px;border-radius:16px;cursor:pointer;color:#1B1F2A;font-size:inherit;background:#FFFFFF;border:2px solid ' + (on ? '#2B5FC7' : '#DDE1E8') + ';box-shadow:' + (on ? '0 2px 10px rgba(43,95,199,0.18)' : 'none'),
+        ring: 'flex:none;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:conic-gradient(' + ringColor(d.total) + ' ' + d.total + '%, #DDE1E8 0)',
+        confStyle: 'font-size:13px;line-height:16px;padding:3px 10px;border-radius:999px;font-weight:600;background:' + cc[0] + ';color:' + cc[1],
+        pick: () => this.setState({ sel: d.id })
+      };
+    });
+
+    const polys = visible.map(d => {
+      const on = selected && d.id === selected.id;
+      return { points: d.poly, fill: on ? '#C2490F' : '#2B5FC7', stroke: on ? '#8A3208' : '#1E4399', sw: on ? 3 : 1.5 };
+    });
+    const pins = visible.map(d => {
+      const on = selected && d.id === selected.id;
+      const size = on ? 42 : 34;
+      return {
+        rank: d.rank, on,
+        label: 'Number ' + d.rank + ': ' + d.name + ', score ' + d.total,
+        style: 'position:absolute;left:' + (d.cx / 700 * 100) + '%;top:' + (d.cy / 380 * 100) + '%;width:' + size + 'px;height:' + size + 'px;margin:-' + (size / 2) + 'px 0 0 -' + (size / 2) + 'px;border-radius:50%;border:3px solid #FFFFFF;box-shadow:0 2px 6px rgba(0,0,0,0.3);font-size:14px;font-weight:700;cursor:pointer;color:#FFFFFF;background:' + (on ? '#C2490F' : '#2B5FC7') + ';z-index:' + (on ? 2 : 1),
+        pick: () => this.setState({ sel: d.id })
+      };
+    });
+
+    let sel = null;
+    if (selected) {
+      const d = selected;
+      sel = {
+        rank: d.rank, tag: d.tag, name: d.name, meta: d.meta, total: d.total, conf: d.conf, flags: d.flags,
+        scores: [
+          { label: 'Can homes fit?', value: d.dev, note: 'Development potential · higher is better', bar: 'height:8px;width:' + d.dev + '%;background:#12844A', drivers: d.drivers.dev },
+          { label: 'Is it a good location?', value: d.loc, note: 'Location quality · higher is better', bar: 'height:8px;width:' + d.loc + '%;background:#2B5FC7', drivers: d.drivers.loc },
+          { label: 'What could go wrong?', value: d.risk, note: 'Feasibility risk · lower is better', bar: 'height:8px;width:' + d.risk + '%;background:#C2490F', drivers: d.drivers.risk }
+        ]
+      };
+    }
+
+    return {
+      zip, count: visible.length, chips, rows, polys, pins, sel,
+      empty: visible.length === 0,
+      setZip: (e) => this.setState({ zip: e.target.value })
+    };
+  }
+}
+</script>
+</body>
+</html>

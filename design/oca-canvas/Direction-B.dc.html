@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>OCA data view for ZIP 92701</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Archivo:wght@700;800&display=swap" rel="stylesheet">
+<style>
+body{margin:0;font-family:'IBM Plex Sans',system-ui,sans-serif;color:#1B1F2A;background:#FFFFFF}
+button{font-family:inherit}
+.tr:hover{background:#F2F4F8 !important}
+.seg:hover{background:#F2F4F8 !important}
+a.btn:hover,button.btn:hover{background:#F2F4F8 !important}
+:focus-visible{outline:2px solid #2B5FC7;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height:1000px;display:flex;flex-direction:column;background:#FFFFFF;color:#1B1F2A;font-family:'IBM Plex Sans',system-ui,sans-serif;font-size:14px">
+
+<header style="border-bottom:1px solid #DDE1E8;padding:10px 24px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 20px;background:#FFFFFF">
+<div style="display:flex;align-items:center;gap:8px">
+<svg width="30" height="30" viewBox="0 0 48 48" role="img" aria-label="OCA logo"><polygon points="3,5 22,3 23,21 4,23" fill="#2B5FC7" fill-opacity="0.45" stroke="#2B5FC7" stroke-width="1.6" stroke-linejoin="round"/><polygon points="26,4 45,6 44,24 25,22" fill="#E8A800" fill-opacity="0.45" stroke="#E8A800" stroke-width="1.6" stroke-linejoin="round"/><polygon points="4,27 23,26 21,45 5,43" fill="#12844A" fill-opacity="0.45" stroke="#12844A" stroke-width="1.6" stroke-linejoin="round"/><polygon points="27,25 44,28 43,44 24,46" fill="#C2490F" fill-opacity="0.45" stroke="#C2490F" stroke-width="1.6" stroke-linejoin="round"/><circle cx="13" cy="13" r="4.5" fill="#2B5FC7" stroke="#FFFFFF" stroke-width="1.6"/><circle cx="35" cy="14" r="4.5" fill="#E8A800" stroke="#FFFFFF" stroke-width="1.6"/><circle cx="13" cy="35" r="4.5" fill="#12844A" stroke="#FFFFFF" stroke-width="1.6"/><circle cx="34" cy="36" r="4.5" fill="#C2490F" stroke="#FFFFFF" stroke-width="1.6"/></svg>
+<span style="font-family:'Archivo',sans-serif;font-weight:800;font-size:20px;letter-spacing:0.1em">OCA</span>
+</div>
+<span style="color:#8A93A5">/</span>
+<span style="font-family:'JetBrains Mono',monospace;font-size:14px;color:#33394A">orange-county</span>
+<span style="color:#8A93A5">/</span>
+<form style="display:flex;align-items:center;gap:8px">
+<label for="zip" style="font-size:13px;font-weight:600;color:#4B5363">ZIP</label>
+<input id="zip" type="text" inputmode="numeric" maxlength="5" value="{{zip}}" onChange="{{setZip}}" style="box-sizing:border-box;height:36px;width:96px;padding:0 10px;font-family:'JetBrains Mono',monospace;font-size:14px;border:1px solid #8A93A5;border-radius:6px;background:#FFFFFF;color:#1B1F2A">
+<button type="button" style="height:36px;padding:0 14px;border:0;border-radius:6px;background:#1B1F2A;color:#FFFFFF;font-size:14px;font-weight:600;cursor:pointer">Run screen</button>
+</form>
+<div style="margin-left:auto;display:flex;align-items:center;gap:8px;font-size:13px;color:#4B5363">
+<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#12844A"></span>
+<span>9 datasets loaded · sample data</span>
+<a href="How-to-use.dc.html" style="display:inline-flex;align-items:center;min-height:36px;margin-left:8px;font-weight:600;color:#1E4399;text-decoration:underline">How to use</a>
+</div>
+</header>
+
+<main style="flex:1;padding:20px 24px 32px;display:flex;flex-direction:column;gap:16px">
+
+<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 20px">
+<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap">
+<h1 style="margin:0;font-size:20px;line-height:26px;font-weight:600;letter-spacing:-0.01em">{{count}} candidates</h1>
+<span style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#4B5363">overall = 0.45·dev + 0.35·loc + 0.20·(100−risk)</span>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:0;border:1px solid #DDE1E8;border-radius:8px;overflow:hidden" role="group" aria-label="Filter by source">
+<sc-for list="{{chips}}" as="c" hint-placeholder-count="7">
+<button type="button" class="seg" aria-pressed="{{c.on}}" onClick="{{c.pick}}" style="{{c.style}}">{{c.label}}<span style="font-family:'JetBrains Mono',monospace;font-size:12px;margin-left:6px;opacity:0.8">{{c.n}}</span></button>
+</sc-for>
+</div>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start">
+
+<section aria-label="Candidates table" style="flex:999 1 640px;min-width:0;border:1px solid #DDE1E8;border-radius:8px;overflow:hidden">
+<div style="overflow-x:auto">
+<table style="width:100%;min-width:700px;border-collapse:collapse;font-size:14px;line-height:18px">
+<thead>
+<tr style="background:#F7F8FA;text-align:left;color:#4B5363">
+<th scope="col" style="padding:10px 16px;font-weight:600;width:36px">#</th>
+<th scope="col" style="padding:10px 8px;font-weight:600">Parcel</th>
+<th scope="col" style="padding:10px 8px;font-weight:600">Source</th>
+<th scope="col" style="padding:10px 8px;font-weight:600;text-align:right">Dev</th>
+<th scope="col" style="padding:10px 8px;font-weight:600;text-align:right">Loc</th>
+<th scope="col" style="padding:10px 8px;font-weight:600;text-align:right">Risk</th>
+<th scope="col" style="padding:10px 8px;font-weight:600;text-align:right">Overall</th>
+<th scope="col" style="padding:10px 16px 10px 8px;font-weight:600">Conf.</th>
+</tr>
+</thead>
+<tbody>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+<tr class="tr" style="{{r.style}}">
+<td style="padding:0;border-top:1px solid #DDE1E8;font-family:'JetBrains Mono',monospace;color:#4B5363">
+<button type="button" aria-pressed="{{r.on}}" aria-label="{{r.label}}" onClick="{{r.pick}}" style="{{r.btn}}">{{r.rank}}</button>
+</td>
+<td style="padding:12px 8px;border-top:1px solid #DDE1E8"><div style="font-weight:600">{{r.name}}</div><div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#4B5363">{{r.apn}} · {{r.acres}} ac · {{r.built}}% built</div></td>
+<td style="padding:12px 8px;border-top:1px solid #DDE1E8;color:#33394A">{{r.tag}}</td>
+<td style="padding:12px 8px;border-top:1px solid #DDE1E8;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">{{r.dev}}</td>
+<td style="padding:12px 8px;border-top:1px solid #DDE1E8;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums">{{r.loc}}</td>
+<td style="padding:12px 8px;border-top:1px solid #DDE1E8;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;color:#8A3208">{{r.risk}}</td>
+<td style="padding:12px 8px;border-top:1px solid #DDE1E8;text-align:right;font-family:'JetBrains Mono',monospace;font-variant-numeric:tabular-nums;font-weight:600;font-size:15px">{{r.total}}</td>
+<td style="padding:12px 16px 12px 8px;border-top:1px solid #DDE1E8"><span style="{{r.confStyle}}">{{r.conf}}</span></td>
+</tr>
+</sc-for>
+</tbody>
+</table>
+</div>
+<sc-if value="{{empty}}" hint-placeholder-val="{{ false }}">
+<div style="padding:24px 16px;border-top:1px solid #DDE1E8;color:#4B5363">No rows match this source filter in {{zip}}. Select All to clear it.</div>
+</sc-if>
+</section>
+
+<div style="flex:1 1 420px;max-width:520px;min-width:0;display:flex;flex-direction:column;gap:16px">
+
+<section aria-label="Map" style="position:relative;border:1px solid #DDE1E8;border-radius:8px;overflow:hidden;aspect-ratio:700/380;background:#F2F4F8">
+<svg viewBox="0 0 700 380" preserveAspectRatio="xMidYMid slice" style="position:absolute;left:0;top:0;width:100%;height:100%" aria-hidden="true">
+<rect width="700" height="380" fill="#F2F4F8"/>
+<path d="M0 300 C120 270 220 330 360 300 S600 260 700 290 L700 330 C600 305 480 345 360 340 S120 310 0 345 Z" fill="#DCE6EE"/>
+<rect x="430" y="30" width="120" height="70" rx="4" fill="#E2EBDD"/>
+<g stroke="#FFFFFF" stroke-width="6" fill="none"><path d="M0 70 H700"/><path d="M0 170 H700"/><path d="M0 255 H700"/><path d="M90 0 V380"/><path d="M270 0 V380"/><path d="M420 0 V380"/><path d="M610 0 V380"/></g>
+<path d="M0 205 C200 190 400 225 700 195" stroke="#E4E7ED" stroke-width="12" fill="none"/>
+<sc-for list="{{polys}}" as="p" hint-placeholder-count="6">
+<polygon points="{{p.points}}" fill="{{p.fill}}" fill-opacity="0.5" stroke="{{p.stroke}}" stroke-width="{{p.sw}}"/>
+</sc-for>
+</svg>
+<sc-for list="{{pins}}" as="p" hint-placeholder-count="6">
+<button type="button" aria-label="{{p.label}}" aria-pressed="{{p.on}}" onClick="{{p.pick}}" style="{{p.style}}">{{p.rank}}</button>
+</sc-for>
+<div style="position:absolute;left:8px;bottom:8px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:14px;color:#33394A;background:rgba(255,255,255,0.92);border:1px solid #DDE1E8;padding:3px 8px;border-radius:4px">schematic · EPSG:3857</div>
+</section>
+
+<section aria-label="Selected parcel" style="border:1px solid #DDE1E8;border-radius:8px;overflow:hidden">
+<sc-if value="{{sel}}" hint-placeholder-val="{{ true }}">
+<div style="padding:16px;display:flex;flex-direction:column;gap:12px">
+<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px">
+<div style="min-width:0">
+<div style="font-family:'JetBrains Mono',monospace;font-size:13px;color:#4B5363">{{sel.apn}}</div>
+<h2 style="margin:2px 0 0;font-size:16px;line-height:22px;font-weight:600">{{sel.name}}</h2>
+</div>
+<div style="text-align:right">
+<div style="font-family:'JetBrains Mono',monospace;font-size:28px;line-height:30px;font-weight:600">{{sel.total}}</div>
+<div style="font-size:12px;line-height:14px;color:#4B5363">overall</div>
+</div>
+</div>
+
+<div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:#DDE1E8" role="img" aria-label="{{sel.barLabel}}">
+<div style="{{sel.segDev}}"></div><div style="{{sel.segLoc}}"></div><div style="{{sel.segSafe}}"></div>
+</div>
+<div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:13px;line-height:16px;color:#33394A">
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#12844A;margin-right:5px"></span>Dev ×0.45</span>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#2B5FC7;margin-right:5px"></span>Location ×0.35</span>
+<span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#E8A800;margin-right:5px"></span>Low risk ×0.20</span>
+</div>
+
+<div style="border-top:1px solid #DDE1E8;display:flex;flex-direction:column">
+<sc-for list="{{sel.groups}}" as="g" hint-placeholder-count="3">
+<div style="padding:10px 0;border-bottom:1px solid #DDE1E8">
+<div style="display:flex;justify-content:space-between;gap:8px"><span style="font-weight:600">{{g.label}}</span><span style="font-family:'JetBrains Mono',monospace;font-weight:600">{{g.value}}</span></div>
+<ul style="margin:4px 0 0;padding-left:16px;font-size:13px;line-height:17px;color:#33394A">
+<sc-for list="{{g.drivers}}" as="d" hint-placeholder-count="3"><li>{{d}}</li></sc-for>
+</ul>
+<div style="margin-top:4px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:15px;color:#4B5363">src: {{g.src}}</div>
+</div>
+</sc-for>
+</div>
+
+<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between">
+<span style="{{sel.confStyle}}">{{sel.conf}} confidence</span>
+<a class="btn" href="Parcel-Report.dc.html" style="display:inline-flex;align-items:center;height:36px;padding:0 14px;border:1px solid #8A93A5;border-radius:6px;background:#FFFFFF;color:#1B1F2A;font-size:14px;font-weight:600;text-decoration:none">Open full breakdown</a>
+</div>
+</div>
+</sc-if>
+</section>
+
+</div>
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1360,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const s = this.state || {};
+    const selId = s.sel ?? 1;
+    const filter = s.filter ?? 'all';
+    const zip = s.zip ?? '92701';
+
+    const data = [
+      { id: 1, tag: 'Vacant or light', name: 'Vacant lot near rail corridor', apn: '000-000-01', ac: 1.8, built: 3, dev: 86, loc: 78, risk: 22, conf: 'High',
+        cx: 150, cy: 105, poly: '110,80 190,76 195,130 115,134',
+        drivers: { dev: ['Large lot, 3% coverage', 'On Housing Element inventory', 'Streamlining pathway likely'], loc: ['Bus stop 0.2 mi', 'High-opportunity tract', 'Grocery 0.5 mi'], risk: ['Outside flood zone', 'Liquefaction zone'] },
+        src: { dev: 'OC Assessor · building footprints · HCD site list', loc: 'OCTA GTFS · TCAC/HCD · OSM', risk: 'FEMA NFHL · CAL FIRE · CGS' } },
+      { id: 2, tag: 'Public or surplus', name: 'City-owned surplus parking lot', apn: '000-000-02', ac: 2.4, built: 6, dev: 82, loc: 84, risk: 31, conf: 'Medium',
+        cx: 330, cy: 175, poly: '292,150 372,146 376,208 296,212',
+        drivers: { dev: ['Public owner', 'Surplus land law may apply', 'Low coverage'], loc: ['Frequent transit 0.3 mi', 'Jobs and schools nearby', 'High rent burden'], risk: ['Cleanup site nearby', 'Outside fire zone'] },
+        src: { dev: 'OC Assessor · state surplus list', loc: 'OCTA GTFS · LODES · ACS B25070', risk: 'DTSC EnviroStor · CAL FIRE' } },
+      { id: 3, tag: 'Faith-based', name: 'Congregation parking lot', apn: '000-000-03', ac: 1.1, built: 22, dev: 71, loc: 74, risk: 18, conf: 'Medium',
+        cx: 520, cy: 98, poly: '490,76 555,73 559,122 494,126',
+        drivers: { dev: ['Religious-use parcel', 'Faith-based housing law may apply', 'Mid-size lot'], loc: ['Bus stop 0.4 mi', 'School 0.5 mi'], risk: ['Low hazard exposure', 'Not on historic list'] },
+        src: { dev: 'OC Assessor use codes', loc: 'OCTA GTFS · CDE schools', risk: 'FEMA · CAL FIRE · state historic inventory' } },
+      { id: 4, tag: 'Tax-defaulted', name: 'Tax-defaulted small lot', apn: '000-000-04', ac: 0.4, built: 0, dev: 52, loc: 68, risk: 40, conf: 'Low',
+        cx: 218, cy: 290, poly: '198,270 242,268 245,312 201,314',
+        drivers: { dev: ['Small lot', 'Not on site inventory'], loc: ['Bus stop 0.5 mi', 'Average opportunity'], risk: ['Partly in flood area', 'Oil well record nearby'] },
+        src: { dev: 'OC Treasurer-Tax Collector · Assessor', loc: 'OCTA GTFS · TCAC/HCD', risk: 'FEMA NFHL · CalGEM' } },
+      { id: 5, tag: 'Preservation', name: 'Subsidized building, affordability ending', apn: '000-000-05', ac: 1.5, built: 41, dev: 64, loc: 80, risk: 26, conf: 'Medium',
+        cx: 560, cy: 262, poly: '526,240 598,238 601,298 529,300',
+        drivers: { dev: ['64 affordable units at risk', 'Restriction end date known'], loc: ['Transit and grocery 0.4 mi', 'High CalEnviroScreen burden'], risk: ['Outside flood and fire zones', 'Building over 40 yrs'] },
+        src: { dev: 'HUD LIHTC database · CTCAC', loc: 'OCTA GTFS · CalEnviroScreen 4.0', risk: 'FEMA · CAL FIRE · Assessor year built' } },
+      { id: 6, tag: 'Housing Element', name: 'Rezone site: strip retail', apn: '000-000-06', ac: 3.1, built: 14, dev: 78, loc: 66, risk: 35, conf: 'Medium',
+        cx: 400, cy: 340, poly: '352,318 448,316 452,368 356,370',
+        drivers: { dev: ['Listed rezone site', 'Large lot, 14% coverage'], loc: ['Bus stop 0.6 mi', 'Grocery on site'], risk: ['Coastal-zone buffer', 'Creek setback'] },
+        src: { dev: 'City Housing Element list · Assessor', loc: 'OCTA GTFS · LODES', risk: 'Coastal Commission · FEMA' } }
+    ];
+    data.forEach(d => { d.total = Math.round(d.dev * 0.45 + d.loc * 0.35 + (100 - d.risk) * 0.20); });
+    data.sort((a, b) => b.total - a.total);
+    data.forEach((d, i) => { d.rank = i + 1; });
+
+    const filters = [['all', 'All'], ['Vacant or light', 'Vacant'], ['Housing Element', 'Housing Element'], ['Public or surplus', 'Public'], ['Faith-based', 'Faith'], ['Tax-defaulted', 'Tax-default'], ['Preservation', 'Preserve']];
+    const chips = filters.map(([k, label]) => {
+      const on = filter === k;
+      return {
+        label, on, n: k === 'all' ? data.length : data.filter(d => d.tag === k).length,
+        style: 'height:36px;padding:0 12px;border:0;border-right:1px solid #DDE1E8;font-size:14px;font-weight:600;cursor:pointer;background:' + (on ? '#1B1F2A' : '#FFFFFF') + ';color:' + (on ? '#FFFFFF' : '#1B1F2A'),
+        pick: () => this.setState({ filter: k })
+      };
+    });
+
+    const confColors = { High: ['#E3F3EA', '#0B5E34'], Medium: ['#FFF3CC', '#5A4000'], Low: ['#FBE7DD', '#8A3208'] };
+    const confStyle = (c) => 'display:inline-block;font-size:13px;line-height:16px;padding:2px 8px;border-radius:4px;font-weight:600;background:' + confColors[c][0] + ';color:' + confColors[c][1];
+
+    const visible = data.filter(d => filter === 'all' || d.tag === filter);
+    const selected = data.find(d => d.id === selId && visible.includes(d)) || visible[0] || null;
+
+    const rows = visible.map(d => {
+      const on = selected && d.id === selected.id;
+      return {
+        rank: d.rank, name: d.name, apn: d.apn, acres: d.ac, built: d.built, tag: d.tag, dev: d.dev, loc: d.loc, risk: d.risk, total: d.total, conf: d.conf, on,
+        label: 'Select rank ' + d.rank + ', ' + d.name,
+        style: 'background:' + (on ? '#E8EEFB' : '#FFFFFF') + ';box-shadow:' + (on ? 'inset 3px 0 0 #2B5FC7' : 'none'),
+        btn: 'width:100%;min-height:44px;border:0;background:transparent;font-family:inherit;font-size:14px;color:#1B1F2A;cursor:pointer;padding:0 0 0 16px;text-align:left',
+        confStyle: confStyle(d.conf),
+        pick: () => this.setState({ sel: d.id })
+      };
+    });
+
+    const polys = visible.map(d => {
+      const on = selected && d.id === selected.id;
+      return { points: d.poly, fill: on ? '#C2490F' : '#2B5FC7', stroke: on ? '#8A3208' : '#1E4399', sw: on ? 3 : 1.5 };
+    });
+    const pins = visible.map(d => {
+      const on = selected && d.id === selected.id;
+      const size = on ? 34 : 28;
+      return {
+        rank: d.rank, on, label: 'Rank ' + d.rank + ': ' + d.name + ', score ' + d.total,
+        style: 'position:absolute;left:' + (d.cx / 700 * 100) + '%;top:' + (d.cy / 380 * 100) + '%;width:' + size + 'px;height:' + size + 'px;margin:-' + (size / 2) + 'px 0 0 -' + (size / 2) + 'px;border-radius:6px;border:2px solid #FFFFFF;box-shadow:0 1px 4px rgba(0,0,0,0.3);font-family:\'JetBrains Mono\',monospace;font-size:14px;font-weight:600;cursor:pointer;color:#FFFFFF;background:' + (on ? '#C2490F' : '#1B1F2A') + ';z-index:' + (on ? 2 : 1),
+        pick: () => this.setState({ sel: d.id })
+      };
+    });
+
+    let sel = null;
+    if (selected) {
+      const d = selected;
+      const a = d.dev * 0.45, b = d.loc * 0.35, c = (100 - d.risk) * 0.20;
+      sel = {
+        apn: 'APN ' + d.apn, name: d.name, total: d.total, conf: d.conf, confStyle: confStyle(d.conf),
+        barLabel: 'Score composition: development ' + a.toFixed(1) + ', location ' + b.toFixed(1) + ', low risk ' + c.toFixed(1),
+        segDev: 'width:' + a + '%;background:#12844A',
+        segLoc: 'width:' + b + '%;background:#2B5FC7',
+        segSafe: 'width:' + c + '%;background:#E8A800',
+        groups: [
+          { label: 'Development potential', value: d.dev, drivers: d.drivers.dev, src: d.src.dev },
+          { label: 'Location quality', value: d.loc, drivers: d.drivers.loc, src: d.src.loc },
+          { label: 'Feasibility risk (lower is better)', value: d.risk, drivers: d.drivers.risk, src: d.src.risk }
+        ]
+      };
+    }
+
+    return { zip, count: visible.length, chips, rows, polys, pins, sel, empty: visible.length === 0, setZip: (e) => this.setState({ zip: e.target.value }) };
+  }
+}
+</script>
+</body>
+</html>
