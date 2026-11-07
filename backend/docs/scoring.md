@@ -70,6 +70,8 @@ Points are additive, capped at 100:
 
 A parcel with zero risk keeps its full potential. At maximum risk it keeps 30%.
 
+**Confidence discount.** A Low-confidence parcel's score stands on thin data, so it is multiplied by 0.66 (`LOW_CONFIDENCE_OPP_FACTOR`). That keeps it at 66 or below, never in the High band (67+), and keeps the order of parcels unchanged. Medium and High confidence are not discounted. Insufficient parcels are not scored. Development potential and Feasibility risk are shown undiscounted.
+
 ## Reasons
 
 - Each score gets a summary such as `"High: Housing Element rezone site, vacant (no building footprint), inside HQTA."`.

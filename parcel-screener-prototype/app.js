@@ -23,6 +23,7 @@
   var THIN_DATA_THRESHOLD = 0.2;                   // banner when > 20% of parcels are Insufficient
   var PAGE_SIZE = 10;
   var RISK_DAMPING = 0.7;                          // must match backend/parcel_engine/scoring.py
+  var LOW_CONF_FACTOR = 0.66;                      // Low-confidence scores are discounted; must match scoring.py
   var SIGNALS = ['Lot size', 'Building coverage', 'Year built', 'Land use code', 'Housing Element status',
     'Transit access', 'Jobs access', 'Opportunity area', 'Rent burden / income', 'Hazard layers'];
   var DATA_AS_OF = 'sample data';
@@ -184,6 +185,7 @@
         var scored = p.level !== 'Insufficient';
         p.dp = scored ? dp : null; p.risk = scored ? risk : null;
         p.opp = scored ? Math.round(dp * (1 - RISK_DAMPING * risk / 100)) : null;
+        if (scored && p.level === 'Low') p.opp = Math.round(p.opp * LOW_CONF_FACTOR);
         p.dev_reason = scored ? band(dp) + ': ' + ups.slice(0, 2).map(function (u) { return u.split(' — ')[0].toLowerCase(); }).join(', ') + '.' : null;
         p.risk_reason = scored ? riskBand(risk) + ': ' + (riskItems.length ? riskItems.map(function (x) { return x[1]; }).join(', ') : 'no hazard or constraint flags found') + '.' : null;
         p.opp_reason = scored ? band(p.opp) + ': development potential ' + dp + (risk ? ', reduced by feasibility risk ' + risk : ', no risk deductions') + '.' : 'Not scored: ' + nFound + ' of 10 signals found.';
@@ -622,7 +624,7 @@
         '<div class="sel-score">' + (scored ? dialHtml(p.opp) + '<span class="big">' + p.opp + '<span class="of"> / 100</span></span><span class="sel-sub">Opportunity · ' + band(p.opp) + '</span>'
           : '<span class="big none">Not scored</span><span class="sel-sub">Too little data to score fairly</span>') + confChip(p.level) + '</div>' +
         '<button type="button" class="icon-btn" data-action="close" aria-label="Close selected site">' + ICON_X + '</button></div>' +
-      (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100).</span></p>' :
+      (scored ? '<p class="sel-reason">' + esc(p.opp_reason) + ' <span class="formula">Opportunity = development potential × (1 − 0.7 × risk ÷ 100), multiplied by 0.66 when confidence is Low.</span></p>' :
         '<p class="sel-reason">No score is shown because fewer than 5 of 10 signals are available. Check county records directly.</p>') +
       '<div class="tiles">' + (scored ? scoreTile('dp', p) + scoreTile('risk', p) : '') + confTile(p) + '</div>' +
       '<p class="muted-note">Zoning isn’t included yet, so these scores don’t reflect what is allowed on this parcel.</p>' +
