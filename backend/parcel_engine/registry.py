@@ -88,7 +88,7 @@ DATASETS: list[dict] = [
          landing_url=f"{OCGIS}/Address_Point_Final_Planning_Addressing/FeatureServer",
          license=OCGIS_TERMS, license_verified=False, refresh_date="verify at ingest", refresh_verified=False,
          notes="Fills parcels whose SITE_ADDRESS is blank: the address point inside the parcel, else the "
-               "nearest one within 150 ft. Parcels with no address point are labeled by APN."),
+               "nearest one within 150 ft. Parcels with no address point stay blank and the front end shows ADDRESS NOT AVAILABLE."),
     dict(id="scag_land_use", name="SCAG 2024 Existing Land Use, Orange County", signals=["Land use code"],
          access="arcgis_rest", url="https://maps.scag.ca.gov/scaggis/rest/services/LDX/Existinglanduse_poly_OR/MapServer/0",
          landing_url="https://gisdata-scag.opendata.arcgis.com/",

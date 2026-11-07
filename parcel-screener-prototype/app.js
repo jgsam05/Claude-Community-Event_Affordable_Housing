@@ -96,7 +96,7 @@
       for (var k in p) o[k] = p[k];
       o.id = i;
       o.geometry = f.geometry;  // EPSG:4326, drawn by the live Leaflet map
-      o.address = p.address || ('APN ' + p.apn);
+      o.address = (p.address && String(p.address).trim()) || NO_ADDRESS;
       o.missing = p.missing || [];
       o.reasons = p.reasons || [];
       o.lowInputs = p.low_confidence_inputs || [];
@@ -109,6 +109,7 @@
       return o;
     });
   }
+  var NO_ADDRESS = 'ADDRESS NOT AVAILABLE';
   function loadZip(zip) {
     return fetch(API_BASE + '/zip/' + zip).then(function (r) {
       return r.json().then(function (body) {
@@ -357,6 +358,7 @@
     var jur = meta.jurisdictions ? Object.keys(meta.jurisdictions) : uniq(all.map(function (p) { return p.jurisdiction; }).filter(Boolean));
 
     var chips = [{ id: 'all', label: 'All sites', n: all.length }].concat(TAGS.map(function (t) { return { id: t.id, label: t.label, n: tagCounts[t.id] }; }))
+      .filter(function (c) { return c.id === 'all' || c.n > 0 || state.tag === c.id; })
       .map(function (c) {
         return '<button type="button" class="chip" data-action="tag" data-value="' + c.id + '" data-key="tag-' + c.id + '" aria-pressed="' + (state.tag === c.id) + '"' + (c.n === 0 && c.id !== 'all' ? ' disabled' : '') + '>' + esc(c.label) + ' <span class="count">' + c.n + '</span></button>';
       }).join('');
@@ -393,8 +395,8 @@
         whatOca(true) +
         '<div class="results-head"><div><h1 tabindex="-1" id="results-title">' + scoredCount + ' places to look in ' + esc(zip) + '</h1>' +
           '<p class="sub">' + all.length + ' parcels checked' + (jur.length ? ' across ' + esc(jur.join(', ')) : '') + (jur.length > 1 ? ' · this ZIP crosses city lines' : '') + '. ' +
-          'Best matches first. ' + esc(dataLabel(zip)) + (dataLabel(zip) !== 'Public records' ? ', for layout and testing only' : ', as of ' + esc(DATA_AS_OF)) + '. Always confirm zoning and ownership before acting.</p></div>' +
-          '<button type="button" class="btn-secondary" data-action="csv">Save list as CSV</button></div>' +
+          'Best matches first. <a href="#" class="csv-link" data-action="csv" title="Download this list as a CSV file" aria-label="' + esc(dataLabel(zip)) + '. Download this list as a CSV file">' + esc(dataLabel(zip)) + '</a>' + (dataLabel(zip) !== 'Public records' ? ', for layout and testing only' : ', as of ' + esc(DATA_AS_OF)) + '. Always confirm zoning and ownership before acting.</p></div>' +
+        '</div>' +
         '<div class="filters">' +
           '<div role="group" aria-label="Filter by kind of site" class="chip-row">' + chips + '</div>' +
           '<div class="filter-row">' +
@@ -418,7 +420,7 @@
 
   function ringHtml(p) {
     if (p.opp === null) return '<span class="ring ring-none" aria-hidden="true"><span>—</span></span>';
-    return '<span class="ring" aria-hidden="true" style="background:conic-gradient(' + ringColor(p.opp) + ' ' + p.opp + '%,#DDE1E8 0)"><span>' + p.opp + '</span></span>';
+    return '<span class="ring-dial" aria-hidden="true">' + dialHtml(p.opp, true) + '</span>';
   }
   function cardHtml(p, sel) {
     var why = p.opp === null ? (p.sig + ' of 10 signals found — not scored.') : (p.dev_reason || (p.reasons[0] && p.reasons[0].text) || '');
@@ -587,26 +589,28 @@
       '</ul>' : '') +
     '</div>';
   }
-  // Half-circle dial for a 0-100 score: grey track, colored arc to the value, tick at each band edge, needle.
-  function dialHtml(v) {
-    var cx = 100, cy = 100, r = 80;
+  // Half-circle dial for a 0-100 score: grey track, colored arc to the value, needle.
+  // mini = compact version for list cards (number inside the dial, no end labels or ticks).
+  function dialHtml(v, mini) {
+    var cx = mini ? 60 : 100, cy = mini ? 54 : 100, r = mini ? 46 : 80, sw = mini ? 10 : 16;
     function pt(x, rad) { var a = Math.PI * (1 - x / 100); return [cx + rad * Math.cos(a), cy - rad * Math.sin(a)]; }
     function arc(from, to) {
       var a = pt(from, r), b = pt(to, r);
       return 'M' + a[0].toFixed(1) + ' ' + a[1].toFixed(1) + ' A' + r + ' ' + r + ' 0 0 1 ' + b[0].toFixed(1) + ' ' + b[1].toFixed(1);
     }
-    var col = ringColor(v), tip = pt(v, 64);
-    var ticks = [34, 67].map(function (t) {
+    var col = ringColor(v), tip = pt(v, mini ? 36 : 64);
+    var ticks = mini ? '' : [34, 67].map(function (t) {
       var a = pt(t, r - 12), b = pt(t, r + 8);
       return '<line x1="' + a[0].toFixed(1) + '" y1="' + a[1].toFixed(1) + '" x2="' + b[0].toFixed(1) + '" y2="' + b[1].toFixed(1) + '" stroke="#8A93A5" stroke-width="2"/>';
     }).join('');
-    return '<svg class="dial" viewBox="0 0 200 116" role="img" aria-label="Opportunity ' + v + ' of 100, ' + band(v) + '">' +
-      '<path d="' + arc(0, 100) + '" fill="none" stroke="#DDE1E8" stroke-width="16" stroke-linecap="round"/>' +
-      (v > 0 ? '<path d="' + arc(0, v) + '" fill="none" stroke="' + col + '" stroke-width="16" stroke-linecap="round"/>' : '') +
+    return '<svg class="dial' + (mini ? ' dial-mini' : '') + '" viewBox="0 0 ' + (mini ? '120 80' : '200 116') + '" role="img" aria-label="Opportunity ' + v + ' of 100, ' + band(v) + '">' +
+      '<path d="' + arc(0, 100) + '" fill="none" stroke="#DDE1E8" stroke-width="' + sw + '" stroke-linecap="round"/>' +
+      (v > 0 ? '<path d="' + arc(0, v) + '" fill="none" stroke="' + col + '" stroke-width="' + sw + '" stroke-linecap="round"/>' : '') +
       ticks +
-      '<line x1="' + cx + '" y1="' + cy + '" x2="' + tip[0].toFixed(1) + '" y2="' + tip[1].toFixed(1) + '" stroke="#1B1F2A" stroke-width="4" stroke-linecap="round"/>' +
-      '<circle cx="' + cx + '" cy="' + cy + '" r="8" fill="#1B1F2A"/>' +
-      '<text x="14" y="114" class="dial-end">0</text><text x="186" y="114" class="dial-end" text-anchor="end">100</text>' +
+      '<line x1="' + cx + '" y1="' + cy + '" x2="' + tip[0].toFixed(1) + '" y2="' + tip[1].toFixed(1) + '" stroke="#1B1F2A" stroke-width="' + (mini ? 3 : 4) + '" stroke-linecap="round"/>' +
+      '<circle cx="' + cx + '" cy="' + cy + '" r="' + (mini ? 5 : 8) + '" fill="#1B1F2A"/>' +
+      (mini ? '<text x="60" y="78" text-anchor="middle" class="dial-num">' + v + '</text>'
+            : '<text x="14" y="114" class="dial-end">0</text><text x="186" y="114" class="dial-end" text-anchor="end">100</text>') +
     '</svg>';
   }
   function selectedHtml(p, zip) {
@@ -790,6 +794,7 @@
     if (!t || t.disabled) return;
     var route = parseRoute(), action = t.getAttribute('data-action'), v = t.getAttribute('data-value');
     var key = t.getAttribute('data-key'), base = '#/zip/' + route.zip;
+    if (action === 'csv') e.preventDefault();
     if (action === 'mode') { state.mode = v; render({ focusKey: key }); announce('Map colored by ' + v + '.'); }
     else if (action === 'view') { state.view = v; render({ focusKey: key }); }
     else if (action === 'tag') { state.tag = v; state.limit = PAGE_SIZE; render({ focusKey: key }); announce(t.textContent.replace(/\d+$/, '').trim() + ' selected.'); }

@@ -47,8 +47,9 @@ ADDRESS_NEAR_FT = 150
 
 
 def _fill_addresses(parcels: gpd.GeoDataFrame, points: gpd.GeoDataFrame | None) -> pd.Series:
-    """Every parcel gets a label. Blank SITE_ADDRESS -> address point inside the parcel, else the
-    nearest point within ADDRESS_NEAR_FT, else 'APN <apn>' (open space, ROW and similar have no address)."""
+    """Fill blank addresses. Blank SITE_ADDRESS -> address point inside the parcel, else the
+    nearest point within ADDRESS_NEAR_FT, else left blank (open space, ROW and similar have no address;
+    the front end shows ADDRESS NOT AVAILABLE)."""
     addr = parcels["address"].fillna("").astype(str).str.strip()
     blank = addr == ""
     if blank.any() and points is not None and not points.empty and "Address" in points.columns:
@@ -66,8 +67,6 @@ def _fill_addresses(parcels: gpd.GeoDataFrame, points: gpd.GeoDataFrame | None) 
             near = gpd.sjoin_nearest(left, pts, max_distance=ADDRESS_NEAR_FT, how="inner")
             near = near[~near.index.duplicated()]
             addr.loc[near.index] = near["label"]
-    still = addr == ""
-    addr.loc[still] = "APN " + parcels.loc[still, "apn"].astype(str)
     return addr
 
 

@@ -197,7 +197,7 @@ Most data files are not stored in this repo. They are either queried live by the
 - **Refresh date:** verify at ingest (verified: **no**)
 - **How to get it:** Queried live from the ArcGIS REST layer, clipped to the ZIP. Nothing to download.
 - **How it's used:** Fills blank parcel addresses from the address point inside the parcel, else the nearest within 150 ft.
-- **Notes:** Fills parcels whose SITE_ADDRESS is blank: the address point inside the parcel, else the nearest one within 150 ft. Parcels with no address point are labeled by APN.
+- **Notes:** Fills parcels whose SITE_ADDRESS is blank: the address point inside the parcel, else the nearest one within 150 ft. Parcels with no address point stay blank and the front end shows ADDRESS NOT AVAILABLE.
 
 ### scag-land-use
 
