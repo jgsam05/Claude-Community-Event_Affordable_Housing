@@ -12,7 +12,13 @@
   'use strict';
 
   // ---------- Config (replace with real values) ----------
-  var COVERED_ZIPS = ['92602', '92603', '92604', '92606', '92612', '92614', '92617', '92618', '92620'];
+  // Backend: set window.PARCEL_API (e.g. 'http://localhost:8000') before app.js, or ?api=... in the URL.
+  // Empty = built-in sample data, no backend.
+  var API_BASE = (function () {
+    var m = location.search.match(/[?&]api=([^&]+)/);
+    return (m ? decodeURIComponent(m[1]) : (window.PARCEL_API || '')).replace(/\/$/, '');
+  })();
+  var COVERED_ZIPS = ['92602', '92603', '92604', '92606', '92612', '92614', '92617', '92618', '92620', '92705'];
   var COVERAGE_LABEL = '[YOUR COVERAGE AREA]';
   var DATA_AS_OF = '[DATA DATE]';
   var THIN_DATA_THRESHOLD = 0.2; // banner when > 20% of parcels in the ZIP are Insufficient
@@ -63,6 +69,54 @@
 
   // ---------- Sample data ----------
   var cache = {};
+  var apiMeta = {};
+
+  // ---------- Backend adapter: GeoJSON FeatureCollection -> parcel objects ----------
+  function ringBounds(geom) {
+    var b = [Infinity, Infinity, -Infinity, -Infinity];
+    var polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+    polys.forEach(function (poly) { poly[0].forEach(function (c) {
+      b[0] = Math.min(b[0], c[0]); b[1] = Math.min(b[1], c[1]); b[2] = Math.max(b[2], c[0]); b[3] = Math.max(b[3], c[1]);
+    }); });
+    return b;
+  }
+  function adaptFeatures(fc) {
+    var feats = fc.features.filter(function (f) { return f.geometry; });
+    var bs = feats.map(function (f) { return ringBounds(f.geometry); });
+    var ext = bs.reduce(function (a, b) { return [Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[2], b[2]), Math.max(a[3], b[3])]; },
+      [Infinity, Infinity, -Infinity, -Infinity]);
+    var kx = Math.cos(((ext[1] + ext[3]) / 2) * Math.PI / 180);           // keep lon/lat aspect roughly true
+    var span = Math.max((ext[2] - ext[0]) * kx, ext[3] - ext[1]) || 1;
+    var pad = 3, scale = (100 - 2 * pad) / span;
+    return feats.map(function (f, i) {
+      var p = f.properties, b = bs[i];
+      return {
+        id: i, apn: p.apn, address: p.address || ('APN ' + p.apn),
+        sig: p.sig, level: p.level, opp: p.opp === null || p.opp === undefined ? null : p.opp,
+        missing: p.missing || [], reasons: p.reasons || [],
+        dp: p.development_potential, risk: p.feasibility_risk,
+        oppReason: p.opp_reason, devReason: p.dev_reason, riskReason: p.risk_reason,
+        jurisdiction: p.jurisdiction, cap: p.confidence_cap,
+        left: pad + (b[0] - ext[0]) * kx * scale, top: pad + (ext[3] - b[3]) * scale,
+        w: Math.max((b[2] - b[0]) * kx * scale, 0.4), h: Math.max((b[3] - b[1]) * scale, 0.4)
+      };
+    });
+  }
+  function loadZip(zip) {
+    return fetch(API_BASE + '/zip/' + zip).then(function (r) {
+      return r.json().then(function (body) {
+        if (!r.ok) { var e = new Error(body.detail || ('HTTP ' + r.status)); e.status = r.status; throw e; }
+        return body;
+      });
+    }).then(function (fc) {
+      apiMeta[zip] = fc.metadata || {};
+      if (apiMeta[zip].signals) SIGNALS = apiMeta[zip].signals;
+      if (apiMeta[zip].data_as_of) DATA_AS_OF = apiMeta[zip].data_as_of;
+      cache[zip] = adaptFeatures(fc);
+      return cache[zip];
+    });
+  }
+
   function parcelsFor(zip) {
     if (cache[zip]) return cache[zip];
     var seed = parseInt(zip, 10) * 0.37;
@@ -176,12 +230,12 @@
   }
 
   // ---------- Results ----------
-  function renderOutsideCoverage(zip) {
+  function renderOutsideCoverage(zip, detail) {
     document.title = 'ZIP not covered · Parcel Screener';
     app.innerHTML =
       '<div class="message-wrap"><div class="message-card">' +
         '<h1 tabindex="-1">We don’t cover ' + esc(zip) + ' yet</h1>' +
-        '<p>Parcel data is available for ZIP codes in ' + esc(COVERAGE_LABEL) + ': ' + COVERED_ZIPS.join(', ') + '.</p>' +
+        (detail ? '<p>' + esc(detail) + '.</p>' : '<p>Parcel data is available for ZIP codes in ' + esc(COVERAGE_LABEL) + ': ' + COVERED_ZIPS.join(', ') + '.</p>') +
         '<div class="actions"><a class="btn-primary" href="#/">Try another ZIP</a><a href="#/methods">See coverage</a></div>' +
       '</div></div>';
     app.querySelector('h1').focus();
@@ -190,11 +244,21 @@
   function renderResults(route, opts) {
     var zip = route.zip;
     if (!/^\d{5}$/.test(zip)) { renderSearch({ name: 'search' }, zip, 'Enter a 5-digit ZIP code.'); return; }
-    if (COVERED_ZIPS.indexOf(zip) < 0) { renderOutsideCoverage(zip); return; }
+    if (API_BASE && !cache[zip]) {
+      app.innerHTML = '<div class="message-wrap"><div class="message-card"><h1 tabindex="-1">Screening ' + esc(zip) + '…</h1><p>Loading scored parcels.</p></div></div>';
+      loadZip(zip).then(function () { if (parseRoute().zip === zip) render(opts); }, function (e) {
+        if (parseRoute().zip !== zip) return;
+        if (e.status === 404) renderOutsideCoverage(zip, e.message);
+        else if (e.status === 400) renderSearch({ name: 'search' }, zip, 'Enter a 5-digit ZIP code.');
+        else app.innerHTML = '<div class="message-wrap"><div class="message-card"><h1 tabindex="-1">Couldn’t load ' + esc(zip) + '</h1><p>' + esc(e.message) + '</p><div class="actions"><a class="btn-primary" href="#/">Try another ZIP</a></div></div></div>';
+      });
+      return;
+    }
+    if (!API_BASE && COVERED_ZIPS.indexOf(zip) < 0) { renderOutsideCoverage(zip); return; }
 
     headerCtx.innerHTML =
       '<div class="zip-chip"><span class="label">ZIP</span><span class="value">' + esc(zip) + '</span><a href="#/">Change</a></div>' +
-      '<span class="pill-sample">Sample data</span>';
+      '<span class="pill-sample">' + (!API_BASE ? 'Sample data' : (apiMeta[zip] && apiMeta[zip].mode === 'fixture') ? 'Synthetic test data' : 'Public records') + '</span>';
     document.title = 'Results for ' + zip + ' · Parcel Screener';
 
     var all = parcelsFor(zip);
@@ -296,8 +360,8 @@
         '</section>' +
         '<section class="map-panel" aria-label="Parcel map. The list has the same information as text.">' +
           mapHtml +
-          '<span class="street-label" style="top:33.2%" aria-hidden="true">' + STREETS[1] + '</span>' +
-          '<span class="street-label" style="top:65.2%" aria-hidden="true">' + STREETS[5] + '</span>' +
+          (API_BASE ? '' : '<span class="street-label" style="top:33.2%" aria-hidden="true">' + STREETS[1] + '</span>' +
+          '<span class="street-label" style="top:65.2%" aria-hidden="true">' + STREETS[5] + '</span>') +
           '<div class="zoom"><button type="button" aria-label="Zoom in"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16181D" stroke-width="2" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>' +
           '<button type="button" aria-label="Zoom out"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16181D" stroke-width="2" aria-hidden="true"><path d="M5 12h14"></path></svg></button></div>' +
           '<div class="legend" role="group" aria-label="Map legend">' + legendHtml + '</div>' +
@@ -346,6 +410,15 @@
       '<section aria-labelledby="why-conf"><h3 id="why-conf">Why this confidence</h3><p>' + confSentence + '</p>' + missingList +
         '<span class="asof">County records as of ' + esc(DATA_AS_OF) + '</span></section>' +
       '<section aria-labelledby="drivers"><h3 id="drivers">What drives the score</h3>' + reasons + '</section>' +
+      (scored && p.dp !== undefined && p.dp !== null
+        ? '<section aria-labelledby="breakdown"><h3 id="breakdown">Score breakdown</h3><ul>' +
+            '<li><span><b>Opportunity ' + p.opp + '.</b> ' + esc(p.oppReason || '') + '</span></li>' +
+            '<li><span><b>Development potential ' + p.dp + '.</b> ' + esc(p.devReason || '') + '</span></li>' +
+            '<li><span><b>Feasibility risk ' + p.risk + '.</b> ' + esc(p.riskReason || '') + '</span></li>' +
+            (p.jurisdiction ? '<li><span>Jurisdiction: ' + esc(p.jurisdiction) + '</span></li>' : '') +
+            (p.cap ? '<li><span>' + esc(p.cap) + '</span></li>' : '') +
+          '</ul></section>'
+        : '') +
       '<section class="muted" aria-labelledby="not-incl"><h3 id="not-incl">Not included yet</h3><p>Zoning isn’t included yet, so this score doesn’t reflect what can be built here.</p></section>' +
       '<div class="detail-foot"><p>This is a screening tool, not a feasibility study. Verify every figure with the county and a professional before making an offer or decision.</p>' +
         '<a href="#/methods">View sources for this parcel</a></div>' +

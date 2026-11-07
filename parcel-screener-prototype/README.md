@@ -2,7 +2,14 @@
 
 Front-end prototype for screening parcels by ZIP code. Each parcel shows an **opportunity score (0–100)** and a **confidence level** (High, Medium, Low, Insufficient) that says how much data the score stands on.
 
-**All data is generated sample data.** Nothing here reads real county records.
+By default all data is generated sample data. To use the backend in `../backend`, start the API and open the page with `?api=`:
+
+```
+cd ../backend && uvicorn parcel_engine.api:app --port 8000
+# then: http://localhost:8001/?api=http://localhost:8000#/zip/92705   (serve this folder on 8001)
+```
+
+Or set `window.PARCEL_API = 'http://localhost:8000'` before `app.js` loads. With an API set, coverage, signals and the data date come from the backend, and the map draws each parcel's real bounding box.
 
 ## Run it
 
