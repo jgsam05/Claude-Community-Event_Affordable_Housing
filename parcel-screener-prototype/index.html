@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Parcel Screener</title>
+  <meta name="description" content="Clickable prototype: parcel opportunity scores with confidence levels, by ZIP code. Sample data only.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#app">Skip to content</a>
+  <header class="site-header">
+    <div class="header-left">
+      <a class="brand" href="#/">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1F5FAE" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="8" height="8"></rect><rect x="13" y="3" width="8" height="8"></rect><rect x="3" y="13" width="8" height="8"></rect><rect x="13" y="13" width="8" height="8" fill="#1F5FAE"></rect></svg>
+        <span class="brand-name">Parcel Screener</span>
+      </a>
+      <div id="header-context" style="display:flex;flex-wrap:wrap;align-items:center;gap:12px"></div>
+    </div>
+    <nav class="site-nav" aria-label="Main">
+      <a href="#/" data-route="search">Search</a>
+      <a href="#/methods" data-route="methods">Sources &amp; methods</a>
+    </nav>
+  </header>
+
+  <main id="app" tabindex="-1"></main>
+
+  <footer class="site-footer">
+    <span>Screening tool, not a feasibility study.</span>
+    <span>Zoning isn’t included yet.</span>
+    <span>Parcels marked Insufficient aren’t scored.</span>
+    <a href="#/methods">How confidence works</a>
+  </footer>
+
+  <div id="live" class="sr-only" aria-live="polite"></div>
+  <script src="app.js"></script>
+</body>
+</html>
