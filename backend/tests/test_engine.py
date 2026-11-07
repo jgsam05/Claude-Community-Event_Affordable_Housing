@@ -168,3 +168,11 @@ def test_validation_lift(fcs):
     res = validation.validate(df, pd.DataFrame({"apn_norm": top, "units": 1}))
     assert res["status"] == "ok" and res["lift_top_decile"] > 1 and res["auc"] > 0.8
     assert validation.validate(df, None)["status"] == "not_run"
+
+
+def test_catalog_covers_every_dataset(tmp_path):
+    from parcel_engine import catalog
+    md, csvp = catalog.write(tmp_path / "D.md", tmp_path / "d.csv")
+    text = md.read_text()
+    assert all(f"### {d['id'].replace('_', '-')}" in text for d in registry.DATASETS)
+    assert len(pd.read_csv(csvp)) == len(registry.DATASETS)

@@ -5,6 +5,7 @@
   samples                  build the three Phase 1 sample ZIPs
   parse-tax-pdfs [folder]  extract APNs from OC Treasurer PDFs
   registry                 print registry and Phase 1 gaps
+  catalog                  write docs/DATASETS.md and docs/datasets.csv from the registry
 """
 from __future__ import annotations
 
@@ -12,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import arcgis, pipeline, registry, tax_default
+from . import arcgis, catalog, pipeline, registry, tax_default
 from .config import SAMPLE_ZIPS
 
 
@@ -37,6 +38,8 @@ def main(argv=None):
         print(json.dumps(tax_default.parse_folder(Path(args[0]) if args else None), indent=2))
     elif cmd == "registry":
         print(json.dumps({"datasets": registry.records(), "phase1_gaps": registry.phase1_gaps()}, indent=2))
+    elif cmd == "catalog":
+        print(*catalog.write(), sep="\n")
     else:
         print(__doc__)
         return 1
