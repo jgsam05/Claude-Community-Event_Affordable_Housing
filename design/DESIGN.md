@@ -88,15 +88,19 @@ Use sentence case for headings, labels and buttons. Only the name OCA is in capi
 
 ## 9. The three scores
 
-Every site gets three scores out of 100. Overall = 45% development potential + 35% location quality + 20% (100 minus feasibility risk).
+Every site gets three scores out of 100, computed by `backend/parcel_engine/scoring.py` (method in `backend/docs/scoring.md`). The front end shows what the engine returns; it never recomputes scores.
+
+**Opportunity = Development potential × (1 − 0.7 × Feasibility risk ÷ 100).** A site with no risk keeps its full potential; at maximum risk it keeps 30%.
 
 | Score | Direction | Plain-English question | Inputs |
 | --- | --- | --- | --- |
-| Development potential | Higher is better | Can homes fit? | Lot size, buildable area, building coverage, Housing Element status, state-law pathways |
-| Location quality | Higher is better | Is it a good location? | Transit, jobs, schools, grocery, opportunity area, CalEnviroScreen, rent burden |
-| Feasibility risk | Lower is better | What could go wrong? | Flood, fire, seismic, coastal, oil wells, contamination, historic |
+| Opportunity | Higher is better | Where should I look first? | Development potential, reduced by feasibility risk |
+| Development potential | Higher is better | Can homes fit? | Lot size, building coverage, transit, jobs, opportunity area, land use, building age, nearby grocery and schools, plus bonuses for Housing Element sites, public or surplus land, faith-based parcels, SB 35, builder's remedy watch and tax default |
+| Feasibility risk | Lower is better | What could go wrong? | Flood, fire, liquefaction, fault zone, coastal, oil wells, contamination, National Register, small lot, narrow frontage, existing affordable housing (preservation), CalEnviroScreen |
 
-Every component lists a value, its public source and a confidence level.
+Location factors (transit, jobs, opportunity area, amenities) are components of development potential, not a separate score. An earlier draft of this guide had a separate "location quality" score and a 45/35/20 weighting; the engine does not compute either, so they were dropped. The mockups in `oca-canvas/` still show the old three-score layout.
+
+Confidence comes with every score: High, Medium, Low or Insufficient (not scored), from how many of the 10 signals were found. Every component lists a value, its public source and a confidence level in the parcel score report.
 
 ## 10. The six kinds of sites
 

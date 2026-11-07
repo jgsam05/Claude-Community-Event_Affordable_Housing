@@ -1,0 +1,6 @@
+data/raw/
+data/cache/
+data/scored/
+data/registry_state.json
+__pycache__/
+.pytest_cache/
