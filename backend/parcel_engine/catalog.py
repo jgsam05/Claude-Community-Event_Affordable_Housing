@@ -10,6 +10,11 @@ from pathlib import Path
 from . import registry
 
 REPO = Path(__file__).resolve().parents[2]
+RAW = registry.DATA_DIR / "raw"
+
+
+def _in_repo(d: dict) -> bool:
+    return d["access"] == "file" and (RAW / d.get("local_file", "")).is_file()
 
 CATEGORIES = [
     ("Base geography", ["ocgis_parcels", "ocgis_city_boundaries", "ocgis_unincorporated", "census_zcta",
@@ -88,6 +93,7 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
     lic_ok = sum(bool(d["license_verified"]) for d in registry.DATASETS)
     ref_ok = sum(bool(d["refresh_verified"]) for d in registry.DATASETS)
     live = sum(d["access"] in ("arcgis_rest", "census_api") for d in registry.DATASETS)
+    stored = [d for d in registry.DATASETS if _in_repo(d)]
 
     lines = [
         "# Dataset catalog",
@@ -96,12 +102,13 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
         "`backend/parcel_engine/registry.py` by `python -m parcel_engine.cli catalog`; edit the registry, "
         "not this file. A machine-readable copy is in [`datasets.csv`](datasets.csv).",
         "",
-        "The data files themselves are **not** stored in this repo. They come from the publishers, either "
-        "queried live by the backend or downloaded into `backend/data/raw/` (git-ignored).",
+        "Most data files are not stored in this repo. They are either queried live by the backend or downloaded "
+        "into `backend/data/raw/`. Files already committed there are marked *In repo* below.",
         "",
         "## Status",
         "",
-        f"- {n} datasets: {live} pulled live by the backend, {n - live} need a manual download.",
+        f"- {n} datasets: {live} pulled live by the backend, {len(stored)} committed in `backend/data/raw/` "
+        f"({', '.join(d['id'] for d in stored) or 'none'}), {n - live - len(stored)} still need a manual download.",
         f"- License checked against the publisher: {lic_ok} of {n}.",
         f"- Refresh date checked against the publisher: {ref_ok} of {n}.",
         "- Phase 1 requires every source documented with source, license and refresh date. Rows marked "
@@ -116,13 +123,15 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
     for _, ids in CATEGORIES:
         for i in ids:
             d = by_id[i]
-            lines.append(f"| [{d['name']}](#{i.replace('_', '-')}) | {', '.join(d['signals'])} | {d['access']} | "
+            lines.append(f"| [{d['name']}](#{i.replace('_', '-')}) | {', '.join(d['signals'])} | {'in repo' if _in_repo(d) else d['access']} | "
                          f"{d['license']} | {d['refresh_date']} | {_yes(d['license_verified'])} / {_yes(d['refresh_verified'])} |")
     for cat, ids in CATEGORIES:
         lines += ["", f"## {cat}"]
         for i in ids:
             d = by_id[i]
             access = ACCESS[d["access"]].format(local_file=d.get("local_file", ""))
+            if _in_repo(d):
+                access = f"**In repo:** `backend/data/raw/{d['local_file']}`."
             lines += [
                 "", f"### {i.replace('_', '-')}", "", f"**{d['name']}**", "",
                 f"- **Signals:** {', '.join(d['signals'])}",
@@ -161,7 +170,7 @@ def write(md_path: Path | None = None, csv_path: Path | None = None) -> tuple[Pa
             for i in ids:
                 d = by_id[i]
                 w.writerow({"id": i, "category": cat, "name": d["name"], "signals": "; ".join(d["signals"]),
-                            "access": d["access"], "url": d["url"], "landing_url": d["landing_url"],
+                            "access": "in_repo" if _in_repo(d) else d["access"], "url": d["url"], "landing_url": d["landing_url"],
                             "local_file": d.get("local_file", ""), "license": d["license"],
                             "license_verified": d["license_verified"], "refresh_date": d["refresh_date"],
                             "refresh_verified": d["refresh_verified"], "low_confidence": bool(d.get("low_confidence")),

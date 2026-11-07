@@ -2,11 +2,11 @@
 
 Every input to the parcel screener, one entry per source. Generated from `backend/parcel_engine/registry.py` by `python -m parcel_engine.cli catalog`; edit the registry, not this file. A machine-readable copy is in [`datasets.csv`](datasets.csv).
 
-The data files themselves are **not** stored in this repo. They come from the publishers, either queried live by the backend or downloaded into `backend/data/raw/` (git-ignored).
+Most data files are not stored in this repo. They are either queried live by the backend or downloaded into `backend/data/raw/`. Files already committed there are marked *In repo* below.
 
 ## Status
 
-- 43 datasets: 13 pulled live by the backend, 30 need a manual download.
+- 43 datasets: 13 pulled live by the backend, 2 committed in `backend/data/raw/` (lodes_wac, cde_schools), 28 still need a manual download.
 - License checked against the publisher: 12 of 43.
 - Refresh date checked against the publisher: 2 of 43.
 - Phase 1 requires every source documented with source, license and refresh date. Rows marked **no** under *Verified* still need someone to open the publisher's page and confirm.
@@ -37,8 +37,8 @@ The data files themselves are **not** stored in this repo. They come from the pu
 | [SCAG High Quality Transit Areas](#scag-hqta) | Transit (HQTA) | file | SCAG Open Data terms of use | Connect SoCal 2024 HQTA (verify) | **no** / **no** |
 | [OCTA GTFS stops](#octa-gtfs) | Transit stops | file | OCTA GTFS license (verify) | Per service change; read feed_info.txt | **no** / **no** |
 | [Metrolink GTFS stops](#metrolink-gtfs) | Transit stops | file | Metrolink GTFS license (verify) | Per service change; read feed_info.txt | **no** / **no** |
-| [Census LEHD LODES8 WAC (jobs by workplace)](#lodes-wac) | Jobs access | file | Public domain (U.S. Government work) | LODES8, 2022 job year | yes / **no** |
-| [CDE public schools](#cde-schools) | Schools | file | California public record; state open-data terms | Updated daily; record download date | **no** / **no** |
+| [Census LEHD LODES8 WAC (jobs by workplace)](#lodes-wac) | Jobs access | in repo | Public domain (U.S. Government work) | LODES8, 2022 job year | yes / **no** |
+| [CDE public schools](#cde-schools) | Schools | in repo | California public record; state open-data terms | Updated daily; record download date | **no** / **no** |
 | [OSM/Overture grocery stores](#osm-grocery) | Grocery | file | ODbL 1.0 (attribution + share-alike) | Record extract date | yes / **no** |
 | [TCAC/HCD Opportunity Map](#tcac-opportunity) | Opportunity area | file | California public record; state open-data terms | Annual map; record map year | **no** / **no** |
 | [ACS 5-year (rent burden, median household income)](#acs5) | Rent burden / income | census_api | Public domain (U.S. Government work) | 2019-2023 ACS 5-year (released Dec 2024) | yes / **no** |
@@ -339,7 +339,7 @@ The data files themselves are **not** stored in this repo. They come from the pu
 - **Publisher page:** https://lehd.ces.census.gov/data/
 - **License:** Public domain (U.S. Government work) (verified: yes)
 - **Refresh date:** LODES8, 2022 job year (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/ca_wac_S000_JT00_2022.csv.gz`.
+- **How to get it:** **In repo:** `backend/data/raw/ca_wac_S000_JT00_2022.csv.gz`.
 - **How it's used:** Block-level jobs (C000) summed to tract to give `tract_jobs`.
 - **Notes:** Block-level C000 summed to tract (first 11 digits of w_geocode).
 
@@ -352,7 +352,7 @@ The data files themselves are **not** stored in this repo. They come from the pu
 - **Publisher page:** https://www.cde.ca.gov/ds/si/ds/pubschls.asp
 - **License:** California public record; state open-data terms (verified: **no**)
 - **Refresh date:** Updated daily; record download date (verified: **no**)
-- **How to get it:** Manual download. Save as `backend/data/raw/pubschls.txt`.
+- **How to get it:** **In repo:** `backend/data/raw/pubschls.txt`.
 - **How it's used:** Parcel gets `dist_school_ft`: feet to the nearest feature (capped at 3 miles).
 
 ### osm-grocery
